@@ -48,15 +48,15 @@ ctypedef fused UCSString:
     UCS4String
 
 
-cdef Py_ssize_t _reader_tell(ReaderRef self) nogil:
+cdef inline Py_ssize_t _reader_tell(ReaderRef self) nogil:
     return self.position
 
 
-cdef boolean _reader_good(ReaderRef self) nogil:
+cdef inline boolean _reader_good(ReaderRef self) nogil:
     return (self.remaining > 0)
 
 
-cdef uint32_t _reader_get(ReaderRef self) nogil:
+cdef inline uint32_t _reader_get(ReaderRef self) nogil:
     cdef uint32_t c0 = cast_to_uint32(self.string[0])
     self.string += 1
     self.position += 1
@@ -71,5 +71,5 @@ cdef boolean _reader_enter(ReaderRef self) except False:
     return True
 
 
-cdef void _reader_leave(ReaderRef self) nogil:
+cdef inline void _reader_leave(ReaderRef self) nogil:
     self.max_depth += 1

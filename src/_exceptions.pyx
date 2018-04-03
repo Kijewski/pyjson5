@@ -6,10 +6,6 @@ cdef class Json5ExtraData(Json5EncoderException):
     pass
 
 
-cdef class Json5UnclosedComment(Json5EncoderException):
-    pass
-
-
 cdef class Json5IllegalCharacter(Json5EncoderException):
     pass
 

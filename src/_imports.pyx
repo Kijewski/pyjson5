@@ -1,3 +1,4 @@
+from libc.stddef cimport wchar_t
 from libcpp cimport bool as boolean
 from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyObject

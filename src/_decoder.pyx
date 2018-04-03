@@ -23,7 +23,7 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
                 return True
             seen_asterisk = False
 
-    raise Json5UnclosedComment(f'Unclosed comment starting near {comment_start}')
+    return _raise_unclosed('comment', comment_start)
 
 
 #    data found
@@ -43,13 +43,13 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
                 seen_slash = True
         elif c0 == b'*':
             if not seen_slash:
-                raise Json5IllegalCharacter(f'Stray asterisk near {_reader_tell(reader)}')
+                _raise_stray_character('asterisk', _reader_tell(reader))
 
             _skip_multiline_comment(reader)
             seen_slash = False
         elif _is_ws_zs(c0):
             if seen_slash:
-                raise Json5IllegalCharacter(f'Stray slash near {_reader_tell(reader)}')
+                _raise_stray_character('slash', _reader_tell(reader))
         else:
             c1 = cast_to_int32(c0)
             break
@@ -61,7 +61,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
             break
 
     if seen_slash:
-        raise Json5IllegalCharacter(f'Stray slash near {_reader_tell(reader)}')
+        _raise_stray_character('slash', _reader_tell(reader))
 
     return c1
 
@@ -96,13 +96,14 @@ cdef int32_t _skip_comma(
     Py_ssize_t start,
     boolean *needs_comma,
     uint32_t terminator,
+    str what,
 ) except -2:
     cdef int32_t c0
     cdef uint32_t c1
     while True:
         c0 = _skip_to_data(reader)
         if c0 < 0:
-            raise Json5EOF(f'Unclosed object or array starting near {start}')
+            _raise_unclosed(what, start)
         c1 = cast_to_uint32(c0)
 
         if c1 == terminator:
@@ -110,18 +111,15 @@ cdef int32_t _skip_comma(
             break
         elif c1 == b',':
             if not needs_comma[0]:
-                raise Json5IllegalCharacter(f'Stray comma near {_reader_tell(reader)}')
+                _raise_stray_character('comma', _reader_tell(reader))
             needs_comma[0] = False
             continue
         elif needs_comma[0]:
-            raise Json5IllegalCharacter(
-                f'Expected comma or U+{terminator:04x} near {_reader_tell(reader)}, '
-                f'found U+{c1:04x}'
-            )
+            _raise_expected_sc('comma', terminator, _reader_tell(reader), c1)
 
         c0 = _skip_to_data_sub(reader, c1)
         if c0 < 0:
-            raise Json5EOF(f'Unclosed object or array starting near {start}')
+            _raise_unclosed(what, start)
         else:
             needs_comma[0] = True
             break
@@ -176,16 +174,13 @@ cdef unicode _decode_identifier_name(ReaderRef reader, uint32_t *c_in_out):
     try:
         c1 = c_in_out[0]
         if not _is_identifier_start(c1):
-            raise Json5IllegalCharacter(
-                f'Expected IdentifierStart near {_reader_tell(reader)}, '
-                f'found U+{c1:04x}'
-            )
+            _raise_expected_s('IdentifierStart', _reader_tell(reader), c1)
 
         _unicode_append(&buf, &pos, &length, c1)
 
         while True:
             if not _reader_good(reader):
-                raise Json5EOF(f'Unfinished IdentifierName starting near {start}')
+                _raise_unclosed('IdentifierName', start)
 
             c1 = _reader_get(reader)
             if not _is_identifier_part(c1):
@@ -215,7 +210,7 @@ cdef dict _decode_object(ReaderRef reader):
     start = _reader_tell(reader)
     needs_comma = False
     while True:
-        c0 = _skip_comma(reader, start, &needs_comma, <unsigned char>b'}')
+        c0 = _skip_comma(reader, start, &needs_comma, <unsigned char>b'}', 'object')
         if c0 < 0:
             break
         c1 = cast_to_uint32(c0)
@@ -227,10 +222,8 @@ cdef dict _decode_object(ReaderRef reader):
             key = _decode_identifier_name(reader, &c1)
             c0 = _skip_to_data_sub(reader, c1)
 
-        print(f'key={key!r}')
-
         if c0 < 0:
-            raise Json5EOF(f'Unclosed object starting near {start}')
+            _raise_unclosed('object', start)
         c1 = cast_to_uint32(c0)
 
         value = _decode_recursive(reader, c1)
@@ -249,7 +242,7 @@ cdef list _decode_array(ReaderRef reader):
     start = _reader_tell(reader)
     needs_comma = False
     while True:
-        c0 = _skip_comma(reader, start, &needs_comma, <unsigned char>b']')
+        c0 = _skip_comma(reader, start, &needs_comma, <unsigned char>b']', 'array')
         if c0 < 0:
             break
         c1 = cast_to_uint32(c0)
@@ -272,11 +265,11 @@ cdef boolean _accept_string(ReaderRef reader, const char *string) except False:
             break
 
         if not _reader_good(reader):
-            raise Json5EOF('Truncated literal')
+            _raise_unclosed('literal', start)
 
         c1 = _reader_get(reader)
         if c0 != c1:
-            raise Json5IllegalCharacter(f'Expected: U+{c0:04X}, found: U+{c1:04X} in literal starting near {start}')
+            _raise_expected_c(c0, start, c1)
 
     return True
 
@@ -358,7 +351,7 @@ cdef boolean _expect_exhausted(ReaderRef reader) except False:
     c0 = _skip_to_data(reader)
     if c0 >= 0:
         c1 = cast_to_uint32(c0)
-        raise Json5ExtraData(f'Extra data U+{c1:04X} near {_reader_tell(reader)}')
+        _raise_extra_data(c1, _reader_tell(reader))
 
     return True
 
@@ -372,7 +365,7 @@ cdef object _decode_all(ReaderRef reader):
     start = _reader_tell(reader)
     c0 = _skip_to_data(reader)
     if c0 < 0:
-        raise Json5EOF(f'End of input near {start}')
+        _raise_no_data(start)
     c1 = cast_to_uint32(c0)
 
     result = _decode_recursive(reader, c1)
