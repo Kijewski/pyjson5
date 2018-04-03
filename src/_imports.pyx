@@ -1,5 +1,6 @@
 from libcpp cimport bool as boolean
 from cpython.bytes cimport PyBytes_AsStringAndSize
+from cpython.object cimport PyObject
 
 
 cdef extern from '<cstdint>' namespace 'std' nogil:
@@ -22,6 +23,8 @@ cdef extern from 'Python.h':
         PyUnicode_2BYTE_KIND
         PyUnicode_4BYTE_KIND
 
+    ctypedef void CompactUnicodeObject 'PyCompactUnicodeObject'
+
     int PyUnicode_READY(object o) except -1
     Py_ssize_t PyUnicode_GET_LENGTH(object o)
     int PyUnicode_KIND(object o)
@@ -31,6 +34,13 @@ cdef extern from 'Python.h':
 
     boolean Py_EnterRecursiveCall(const char *where) except True
     void Py_LeaveRecursiveCall()
+
+    bint Py_UNICODE_ISALPHA(Py_UCS4 ch) nogil
+    bint Py_UNICODE_ISDIGIT(Py_UCS4 ch) nogil
+
+    bint UnicodeResize 'PyUnicode_Resize'(PyObject **obj, Py_ssize_t length) nogil except -1
+    PyObject *UnicodeFromKindAndData 'PyUnicode_FromKindAndData'(int kind, const void *buf, Py_ssize_t size) nogil except NULL
+    void XDecRef 'Py_XDECREF'(PyObject *o)
 
 
 cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:

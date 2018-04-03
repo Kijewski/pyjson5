@@ -40,3 +40,46 @@ cdef boolean _is_ws_zs(uint32_t c) nogil:
         0x205F,  # MEDIUM MATHEMATICAL SPACE
         0x3000,  # IDEOGRAPHIC SPACE
     )
+
+
+cdef boolean _is_pc(uint32_t c) nogil:
+    # http://www.fileformat.info/info/unicode/category/Pc/list.htm 
+    return c in (
+        0x005F,  # LOW LINE
+        0x203F,  # UNDERTIE
+        0x2040,  # CHARACTER TIE
+        0x2054,  # INVERTED UNDERTIE
+        0xFE33,  # PRESENTATION FORM FOR VERTICAL LOW LINE
+        0xFE34,  # PRESENTATION FORM FOR VERTICAL WAVY LOW LINE
+        0xFE4D,  # DASHED LOW LINE
+        0xFE4E,  # CENTRELINE LOW LINE
+        0xFE4F,  # WAVY LOW LINE
+        0xFF3F,  # FULLWIDTH LOW LINE
+    )
+
+
+cdef boolean _is_identifier_start(uint32_t c) nogil:
+    return (
+        (b'A' <= c <= b'Z') or
+        (b'a' <= c <= b'z') or
+        (c in b'$_') or
+        Py_UNICODE_ISALPHA(c) or
+        False
+    )
+
+
+cdef boolean _is_identifier_part(uint32_t c) nogil:
+    return (
+        # IdentifierStart
+        _is_identifier_start(c) or
+        # UnicodeCombiningMark
+        _is_mn(c) or
+        _is_mc(c) or
+        # UnicodeDigit
+        Py_UNICODE_ISDIGIT(c) or
+        # UnicodeConnectorPunctuation
+        _is_pc(c) or
+        # ZWNJ and ZWJ
+        (c in (0x200C, 0x200D)) or
+        False
+    )

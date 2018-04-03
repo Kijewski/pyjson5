@@ -4,8 +4,8 @@
 include 'src/_imports.pyx'
 include 'src/_exceptions.pyx'
 include 'src/_unicode.pyx'
+include 'src/_unicode_mc.pyx'
+include 'src/_unicode_mn.pyx'
 include 'src/_readers.pyx'
 include 'src/_decoder.pyx'
-
-
-__all__ = 'decode', 'decode_str', 'decode_latin1', 'UNLIMITED',
+include 'src/_exports.pyx'
