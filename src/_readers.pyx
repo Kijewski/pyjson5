@@ -68,8 +68,12 @@ cdef boolean _reader_enter(ReaderRef self) except False:
     self.max_depth -= 1
     if self.max_depth == 0:
         raise Json5NestingTooDeep('Maximum nesting level exceeded')
+
+    Py_EnterRecursiveCall(' while decoding nested JSON5 object')
+
     return True
 
 
-cdef inline void _reader_leave(ReaderRef self) nogil:
+cdef void _reader_leave(ReaderRef self):
+    Py_LeaveRecursiveCall()
     self.max_depth += 1

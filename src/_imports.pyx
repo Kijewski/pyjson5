@@ -8,10 +8,12 @@ cdef extern from '<cstdint>' namespace 'std' nogil:
     ctypedef unsigned char uint8_t
     ctypedef unsigned short uint16_t
     ctypedef unsigned long uint32_t
+    ctypedef unsigned long long uint64_t
 
     ctypedef signed char int8_t
     ctypedef signed short int16_t
     ctypedef signed long int32_t
+    ctypedef signed long long int64_t
 
 
 cdef extern from 'Python.h':
@@ -38,6 +40,10 @@ cdef extern from 'Python.h':
 
     bint Py_UNICODE_ISALPHA(Py_UCS4 ch) nogil
     bint Py_UNICODE_ISDIGIT(Py_UCS4 ch) nogil
+    bint Py_UNICODE_IS_SURROGATE(Py_UCS4 ch) nogil
+    bint Py_UNICODE_IS_HIGH_SURROGATE(Py_UCS4 ch) nogil
+    bint Py_UNICODE_IS_LOW_SURROGATE(Py_UCS4 ch) nogil
+    Py_UCS4 Py_UNICODE_JOIN_SURROGATES(Py_UCS4 high, Py_UCS4 low) nogil
 
     bint UnicodeResize 'PyUnicode_Resize'(PyObject **obj, Py_ssize_t length) nogil except -1
     PyObject *UnicodeFromKindAndData 'PyUnicode_FromKindAndData'(int kind, const void *buf, Py_ssize_t size) nogil except NULL

@@ -80,8 +80,138 @@ cdef int32_t _skip_to_data(ReaderRef reader) except -2:
     return c1
 
 
+cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
+    cdef Py_ssize_t start
+    cdef uint32_t c0
+    cdef uint32_t result
+    cdef Py_ssize_t index
+
+    start = _reader_tell(reader)
+    result = 0
+    for index in range(length):
+        result <<= 4
+        if not _reader_good(reader):
+            _raise_unclosed('escape sequence', start)
+
+        c0 = _reader_get(reader)
+        if b'0' <= c0 <= b'9':
+            result |= c0 - <uint32_t> b'0'
+        elif b'a' <= c0 <= b'f':
+            result |= c0 - <uint32_t> b'a' + 10
+        elif b'A' <= c0 <= b'F':
+            result |= c0 - <uint32_t> b'A' + 10
+        else:
+            _raise_expected_s('hexadecimal character', start, c0)
+
+    if not (0 <= result <= 0x10ffff):
+        _raise_expected_s('Unicode code point', start, result)
+
+    return cast_to_int32(result)
+
+
+# >=  0: character to append
+#    -1: skip
+# <  -1: -(next character + 1)
+cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) except 0x7ffffff:
+    cdef uint32_t c0
+    cdef uint32_t c1
+
+    c0 = _reader_get(reader)
+    if not _reader_good(reader):
+        _raise_unclosed('string', start)
+
+    if c0 == b'b':
+        return 0x0008
+    elif c0 == b'f':
+        return 0x000c
+    elif c0 == b'n':
+        return 0x000a
+    elif c0 == b'r':
+        return 0x000d
+    elif c0 == b't':
+        return 0x0009
+    elif c0 == b'v':
+        return 0x000b
+    elif c0 == b'0':
+        return 0x0000
+    elif c0 == b'x':
+        return _get_hex_character(reader, 2)
+    elif c0 == b'u':
+        c0 = cast_to_uint32(_get_hex_character(reader, 4))
+        if not Py_UNICODE_IS_HIGH_SURROGATE(c0):
+            return c0
+
+        _accept_string(reader, b'\\u')
+
+        c1 = cast_to_uint32(_get_hex_character(reader, 4))
+        if not Py_UNICODE_IS_LOW_SURROGATE(c1):
+            _raise_expected_s('low surrogate', start, c1)
+
+        return Py_UNICODE_JOIN_SURROGATES(c0, c1)
+    elif c0 == b'U':
+        return _get_hex_character(reader, 8)
+    elif b'1' <= c0 <= b'9':
+        _raise_expected_s('escape sequence', start, c0)
+        return -2
+    elif _is_line_terminator(c0):
+        if c0 != 0x000D:
+            return -1
+
+        c0 = _reader_get(reader)
+        if c0 == 0x000A:
+            return -1
+
+        return -cast_to_int32(c0 + 1)
+    else:
+        return cast_to_int32(c0)
+
+
 cdef object _decode_string(ReaderRef reader, uint32_t delim):
-    raise Json5Todo(f'TODO near {_reader_tell(reader)}')  # TODO
+    cdef uint32_t c0
+    cdef int32_t c1
+    cdef Py_ssize_t start
+
+    cdef PyObject *buf = NULL
+    cdef Py_ssize_t pos = 0
+    cdef Py_ssize_t length = 0
+
+    start = _reader_tell(reader)
+    try:
+        if not _reader_good(reader):
+            _raise_unclosed('string', start)
+
+        c0 = _reader_get(reader)
+        while True:
+            if c0 == delim:
+                break
+
+            if not _reader_good(reader):
+                _raise_unclosed('string', start)
+
+            if c0 != b'\\':
+                _unicode_append(&buf, &pos, &length, c0)
+                c0 = _reader_get(reader)
+                continue
+
+            c1 = _get_escape_sequence(reader, start)
+            if c1 >= -1:
+                if not _reader_good(reader):
+                    _raise_unclosed('string', start)
+                c0 = _reader_get(reader)
+
+                if c1 >= 0:
+                    _unicode_append(&buf, &pos, &length, cast_to_uint32(c1))
+            else:
+                c0 = cast_to_uint32(-(c1 + 1))
+
+        if pos == 0:
+            return ''
+        elif pos < length:
+            UnicodeResize(&buf, pos)
+
+        return <object> buf
+    finally:
+        XDecRef(buf)
 
 
 cdef object _decode_number(ReaderRef reader, uint32_t c0):
@@ -143,6 +273,7 @@ cdef boolean _unicode_append(
     if buf is NULL:
         ucs4 = 0x10FFFF
         buf = UnicodeFromKindAndData(PyUnicode_4BYTE_KIND, &ucs4, 1)
+        length = 1
 
     if pos == length:
         if length <= 0:
@@ -203,9 +334,9 @@ cdef dict _decode_object(ReaderRef reader):
     cdef uint32_t c1
     cdef Py_ssize_t start
     cdef boolean needs_comma
-    cdef dict result = {}
     cdef object key
     cdef object value
+    cdef dict result = {}
 
     start = _reader_tell(reader)
     needs_comma = False
@@ -213,8 +344,8 @@ cdef dict _decode_object(ReaderRef reader):
         c0 = _skip_comma(reader, start, &needs_comma, <unsigned char>b'}', 'object')
         if c0 < 0:
             break
-        c1 = cast_to_uint32(c0)
 
+        c1 = cast_to_uint32(c0)
         if c1 in b'"\'':
             key = _decode_string(reader, c1)
             c0 = _skip_to_data(reader)
@@ -224,9 +355,18 @@ cdef dict _decode_object(ReaderRef reader):
 
         if c0 < 0:
             _raise_unclosed('object', start)
-        c1 = cast_to_uint32(c0)
 
+        c1 = cast_to_uint32(c0)
+        if c1 != b':':
+            _raise_expected_s('colon', _reader_tell(reader), c1)
+
+        c0 = _skip_to_data(reader)
+        if c0 < 0:
+            _raise_unclosed('object', start)
+
+        c1 = cast_to_uint32(c0)
         value = _decode_recursive(reader, c1)
+
         result[key] = value
     return result
 
@@ -308,14 +448,12 @@ cdef object _decode_recursive_enter(ReaderRef reader, uint32_t c0):
     cdef object result
 
     _reader_enter(reader)
-    Py_EnterRecursiveCall(' while decoding nested JSON5 object')
     try:
         if c0 == b'{':
             result = _decode_object(reader)
         else:
             result = _decode_array(reader)
     finally:
-        Py_LeaveRecursiveCall()
         _reader_leave(reader)
 
     return result
