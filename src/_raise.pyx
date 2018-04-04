@@ -15,7 +15,7 @@ cdef boolean _raise_expected_s(str char_a, Py_ssize_t near, uint32_t found) exce
 
 
 cdef boolean _raise_expected_c(uint32_t char_a, Py_ssize_t near, uint32_t found) except False:
-    raise Json5IllegalCharacter(f'Expected {char_a:04x} near {near}, found U+{found:04x}')
+    raise Json5IllegalCharacter(f'Expected U+{char_a:04x} near {near}, found U+{found:04x}')
 
 
 cdef boolean _raise_extra_data(uint32_t found, Py_ssize_t where) except False:

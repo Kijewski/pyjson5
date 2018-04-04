@@ -1,8 +1,7 @@
-from libc.stddef cimport wchar_t
 from libcpp cimport bool as boolean
 from libcpp.vector cimport vector
-from cpython.bytes cimport PyBytes_AsStringAndSize
-from cpython.object cimport PyObject
+from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
+from cpython.long cimport PyLong_FromString
 
 
 cdef extern from '<cstdint>' namespace 'std' nogil:

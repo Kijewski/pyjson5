@@ -6,6 +6,19 @@ cdef void _skip_single_line(ReaderRef reader) nogil:
             break
 
 
+cdef int32_t _get_c_out(ReaderRef reader) except -2:
+    cdef uint32_t c0
+    cdef int32_t c1
+
+    if _reader_good(reader):
+        c0 = _reader_get(reader)
+        c1 = cast_to_int32(c0)
+    else:
+        c1 = -1
+
+    return c1
+
+
 cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
     cdef uint32_t c0
     cdef boolean seen_asterisk = False
@@ -213,58 +226,154 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     c0 = _reader_get(reader)
     result = _decode_string_sub(reader, delim, start, c0)
 
-    if _reader_good(reader):
-        c0 = _reader_get(reader)
-        c1 = cast_to_int32(c0)
+    c1 = _get_c_out(reader)
+    c_in_out[0] = c1
+
+    return result
+
+
+cdef object _decode_number_leading_zero(ReaderRef reader, vector[char] &buf, int32_t *c_in_out):
+    cdef uint32_t c0
+    cdef int32_t c1
+    cdef object pybuf
+
+    if not _reader_good(reader):
+        c_in_out[0] = -1
+        return 0
+
+    c0 = _reader_get(reader)
+    if c0 in b'xX':
+        while True:
+            if not _reader_good(reader):
+                c1 = -1
+                break
+
+            c0 = _reader_get(reader)
+            if c0 in b'01233456789abcdefABCDEF':
+                buf.push_back(<char> <unsigned char> c0)
+            else:
+                c1 = cast_to_int32(c0)
+                break
+
+        c_in_out[0] = c1
+        pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
+        return int(pybuf, 16)
+    elif c0 in b'.eE':
+        buf.push_back('.')
+
+        while True:
+            if not _reader_good(reader):
+                c1 = -1
+                break
+
+            c0 = _reader_get(reader)
+            if c0 in b'0123456789.eE+-':
+                buf.push_back(<char> <unsigned char> c0)
+            else:
+                c1 = cast_to_int32(c0)
+                break
+
+        c_in_out[0] = c1
+        pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
+        return float(pybuf)
     else:
-        c1 = -1
+        c1 = _get_c_out(reader)
+        c_in_out[0] = c1
+        return 0
+
+
+cdef object _decode_number_any(ReaderRef reader, vector[char] &buf, int32_t *c_in_out):
+    cdef uint32_t c0
+    cdef int32_t c1
+    cdef boolean is_float
+    cdef object pybuf
+
+    c1 = c_in_out[0]
+    c0 = cast_to_uint32(c1)
+
+    is_float = False
+    while True:
+        if c0 in b'0123456789':
+            pass
+        elif c0 in b'abcdefABCDEF.+-':
+            is_float = True
+        else:
+            c1 = cast_to_int32(c0)
+            break
+
+        buf.push_back(<char> <unsigned char> c0)
+
+        if not _reader_good(reader):
+            c1 = -1
+            break
+
+        c0 = _reader_get(reader)
 
     c_in_out[0] = c1
-    return result
+
+    pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
+    if is_float:
+        return float(pybuf)
+    else:
+        return int(pybuf, 10)
+
+
+cdef int32_t _accept_string_and_get_out(ReaderRef reader, const char *string) except -2:
+    _accept_string(reader, string)
+    return _get_c_out(reader)
 
 
 cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef Py_ssize_t start
-    cdef boolean is_negative
-    cdef vector[uint32_t] buf
-
-    start = _reader_tell(reader)
+    cdef vector[char] buf
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
 
     if c0 == b'+':
+        start = _reader_tell(reader)
         if not _reader_good(reader):
             _raise_unclosed('number', start)
 
         c0 = _reader_get(reader)
         if c0 == 'I':
-            _accept_string(reader, b'nfinity')
+            c1 = _accept_string_and_get_out(reader, b'nfinity')
+            c_in_out[0] = c1
             return CONST_POS_INF
-        elif c0 == 'N':
-            _accept_string(reader, b'aN')
+        elif c0 == b'N':
+            c1 = _accept_string_and_get_out(reader, b'aN')
+            c_in_out[0] = c1
             return CONST_POS_NAN
 
-        is_negative = False
+        buf.reserve(16)
     elif c0 == b'-':
+        start = _reader_tell(reader)
         if not _reader_good(reader):
             _raise_unclosed('number', start)
 
         c0 = _reader_get(reader)
         if c0 == 'I':
-            _accept_string(reader, b'nfinity')
+            c1 = _accept_string_and_get_out(reader, b'nfinity')
+            c_in_out[0] = c1
             return CONST_NEG_INF
-        elif c0 == 'N':
-            _accept_string(reader, b'aN')
+        elif c0 == b'N':
+            c1 = _accept_string_and_get_out(reader, b'aN')
+            c_in_out[0] = c1
             return CONST_NEG_NAN
 
-        is_negative = True
+        buf.reserve(16)
+        buf.push_back(b'-')
     else:
-        is_negative = False
+        buf.reserve(16)
 
-    '''TODO'''
+    if c0 == b'0':
+        return _decode_number_leading_zero(reader, buf, c_in_out)
+    else:
+        c1 = cast_to_int32(c0)
+        c_in_out[0] = c1
+        return _decode_number_any(reader, buf, c_in_out)
 
 
 #  1: done
@@ -293,11 +402,8 @@ cdef uint32_t _skip_comma(
 
         c1 = cast_to_uint32(c0)
         if c1 == terminator:
-            if _reader_good(reader):
-                c1 = _reader_get(reader)
-                c_in_out[0] = cast_to_int32(c1)
-            else:
-                c_in_out[0] = -1
+            c0 = _get_c_out(reader)
+            c_in_out[0] = c0
             return 1
 
         if c1 != b',':
@@ -359,49 +465,46 @@ cdef dict _decode_object(ReaderRef reader):
     start = _reader_tell(reader)
 
     c0 = _skip_to_data(reader)
-    if c0 < 0:
-        _raise_unclosed('object', start)
-
-    c1 = cast_to_uint32(c0)
-    if c1 == b'}':
-        return result
-
-    while True:
-        if c1 in b'"\'':
-            key = _decode_string(reader, &c0)
-        else:
-            key = _decode_identifier_name(reader, &c0)
-        if c0 < 0:
-            break
-
+    if c0 >= 0:
         c1 = cast_to_uint32(c0)
-        c0 = _skip_to_data_sub(reader, c1)
-        if c0 < 0:
-            break
-
-        c1 = cast_to_uint32(c0)
-        if c1 != b':':
-            _raise_expected_s('colon', _reader_tell(reader), c1)
-
-        if not _reader_good(reader):
-            break
-
-        c1 = _reader_get(reader)
-        c0 = _skip_to_data_sub(reader, c1)
-        if c0 < 0:
-            break
-
-        value = _decode_recursive(reader, &c0)
-        if c0 < 0:
-            break
-
-        result[key] = value
-
-        done = _skip_comma(reader, start, <unsigned char>b'}', 'object', &c0)
-        if done:
+        if c1 == b'}':
             return result
 
-        c1 = cast_to_uint32(c0)
+        while True:
+            if c1 in b'"\'':
+                key = _decode_string(reader, &c0)
+            else:
+                key = _decode_identifier_name(reader, &c0)
+            if c0 < 0:
+                break
+
+            c1 = cast_to_uint32(c0)
+            c0 = _skip_to_data_sub(reader, c1)
+            if c0 < 0:
+                break
+
+            c1 = cast_to_uint32(c0)
+            if c1 != b':':
+                _raise_expected_s('colon', _reader_tell(reader), c1)
+
+            if not _reader_good(reader):
+                break
+
+            c0 = _skip_to_data(reader)
+            if c0 < 0:
+                break
+
+            value = _decode_recursive(reader, &c0)
+            if c0 < 0:
+                break
+
+            result[key] = value
+
+            done = _skip_comma(reader, start, <unsigned char>b'}', 'object', &c0)
+            if done:
+                return result
+
+            c1 = cast_to_uint32(c0)
 
     _raise_unclosed('object', start)
 
@@ -417,23 +520,21 @@ cdef list _decode_array(ReaderRef reader):
     start = _reader_tell(reader)
 
     c0 = _skip_to_data(reader)
-    if c0 < 0:
-        _raise_unclosed('object', start)
-
-    c1 = cast_to_uint32(c0)
-    if c1 == b']':
-        return result
-
-    while True:
-        value = _decode_recursive(reader, &c0)
-        if c0 < 0:
-            break
-
-        result.append(value)
-
-        done = _skip_comma(reader, start, <unsigned char>b']', 'array', &c0)
-        if done:
+    if c0 >= 0:
+        c1 = cast_to_uint32(c0)
+        if c1 == b']':
             return result
+
+        while True:
+            value = _decode_recursive(reader, &c0)
+            if c0 < 0:
+                break
+
+            result.append(value)
+
+            done = _skip_comma(reader, start, <unsigned char>b']', 'array', &c0)
+            if done:
+                return result
 
     _raise_unclosed('array', start)
 
@@ -615,8 +716,10 @@ cdef object _decode_unicode(object data, Py_ssize_t max_depth):
         return _decode_ucs1(PyUnicode_1BYTE_DATA(data), length, max_depth)
     elif kind == PyUnicode_2BYTE_KIND:
         return _decode_ucs2(PyUnicode_2BYTE_DATA(data), length, max_depth)
-    else:  # elif kind == PyUnicode_4BYTE_KIND:
+    elif kind == PyUnicode_4BYTE_KIND:
         return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, max_depth)
+    else:
+        pass  # impossible
 
 
 cdef object _decode_latin1(object data, Py_ssize_t max_depth):
