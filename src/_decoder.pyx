@@ -728,3 +728,14 @@ cdef object _decode_latin1(object data, Py_ssize_t max_depth):
 
     PyBytes_AsStringAndSize(data, &string, &length)
     return _decode_ucs1(<const Py_UCS1*> string, length, max_depth)
+
+
+cdef object _decode_buffer(Py_buffer &view, int32_t word_length, Py_ssize_t max_depth):
+    if word_length == 1:
+        return _decode_ucs1(<const Py_UCS1*> view.buf, view.len // 1, max_depth)
+    elif word_length == 2:
+        return _decode_ucs2(<const Py_UCS2*> view.buf, view.len // 2, max_depth)
+    elif word_length == 4:
+        return _decode_ucs4(<const Py_UCS4*> view.buf, view.len // 4, max_depth)
+    else:
+        raise ValueError('word_length must be 1, 2 or 4')

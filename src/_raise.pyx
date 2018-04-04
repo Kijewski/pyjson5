@@ -23,4 +23,4 @@ cdef boolean _raise_extra_data(uint32_t found, Py_ssize_t where) except False:
 
 
 cdef boolean _raise_no_data(Py_ssize_t where) except False:
-    raise Json5ExtraData(f'No JSON data found near {where}')
+    raise Json5EOF(f'No JSON data found near {where}')

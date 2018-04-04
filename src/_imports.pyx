@@ -1,7 +1,11 @@
 from libcpp cimport bool as boolean
 from libcpp.vector cimport vector
+from cpython.buffer cimport (
+    PyObject_GetBuffer, PyObject_GetBuffer, PyBUF_CONTIG_RO, PyBuffer_Release,
+)
 from cpython.bytes cimport PyBytes_AsStringAndSize, PyBytes_FromStringAndSize
 from cpython.long cimport PyLong_FromString
+from cpython.object cimport PyObject
 
 
 cdef extern from '<cstdint>' namespace 'std' nogil:
