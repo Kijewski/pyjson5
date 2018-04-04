@@ -1,5 +1,6 @@
 from libc.stddef cimport wchar_t
 from libcpp cimport bool as boolean
+from libcpp.vector cimport vector
 from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.object cimport PyObject
 
@@ -26,8 +27,6 @@ cdef extern from 'Python.h':
         PyUnicode_2BYTE_KIND
         PyUnicode_4BYTE_KIND
 
-    ctypedef void CompactUnicodeObject 'PyCompactUnicodeObject'
-
     int PyUnicode_READY(object o) except -1
     Py_ssize_t PyUnicode_GET_LENGTH(object o)
     int PyUnicode_KIND(object o)
@@ -45,9 +44,7 @@ cdef extern from 'Python.h':
     bint Py_UNICODE_IS_LOW_SURROGATE(Py_UCS4 ch) nogil
     Py_UCS4 Py_UNICODE_JOIN_SURROGATES(Py_UCS4 high, Py_UCS4 low) nogil
 
-    bint UnicodeResize 'PyUnicode_Resize'(PyObject **obj, Py_ssize_t length) nogil except -1
-    PyObject *UnicodeFromKindAndData 'PyUnicode_FromKindAndData'(int kind, const void *buf, Py_ssize_t size) nogil except NULL
-    void XDecRef 'Py_XDECREF'(PyObject *o)
+    object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
 
 
 cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
