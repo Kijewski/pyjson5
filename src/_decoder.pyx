@@ -6,7 +6,7 @@ cdef void _skip_single_line(ReaderRef reader) nogil:
             break
 
 
-cdef int32_t _get_c_out(ReaderRef reader) except -2:
+cdef int32_t _get_c_out(ReaderRef reader) nogil except -2:
     cdef uint32_t c0
     cdef int32_t c1
 
@@ -19,7 +19,7 @@ cdef int32_t _get_c_out(ReaderRef reader) except -2:
     return c1
 
 
-cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
+cdef boolean _skip_multiline_comment(ReaderRef reader) nogil except False:
     cdef uint32_t c0
     cdef boolean seen_asterisk = False
     cdef Py_ssize_t comment_start = _reader_tell(reader)
@@ -36,13 +36,13 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
                 return True
             seen_asterisk = False
 
-    return _raise_unclosed('comment', comment_start)
+    return _raise_unclosed(b'comment', comment_start)
 
 
 #     data found
 # -1: exhausted
 # -2: exception
-cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
+cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
     cdef int32_t c1
     cdef boolean seen_slash
 
@@ -80,7 +80,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
 #    data found
 # -1 exhausted
 # -2 exception
-cdef int32_t _skip_to_data(ReaderRef reader) except -2:
+cdef int32_t _skip_to_data(ReaderRef reader) nogil except -2:
     cdef uint32_t c0
     cdef int32_t c1
     if _reader_good(reader):
@@ -91,7 +91,7 @@ cdef int32_t _skip_to_data(ReaderRef reader) except -2:
     return c1
 
 
-cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
+cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) nogil except -1:
     cdef Py_ssize_t start
     cdef uint32_t c0
     cdef uint32_t result
@@ -102,7 +102,7 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
     for index in range(length):
         result <<= 4
         if not _reader_good(reader):
-            _raise_unclosed('escape sequence', start)
+            _raise_unclosed(b'escape sequence', start)
 
         c0 = _reader_get(reader)
         if b'0' <= c0 <= b'9':
@@ -123,13 +123,13 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
 # >=  0: character to append
 #    -1: skip
 # <  -1: -(next character + 1)
-cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) except 0x7ffffff:
+cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil except 0x7ffffff:
     cdef uint32_t c0
     cdef uint32_t c1
 
     c0 = _reader_get(reader)
     if not _reader_good(reader):
-        _raise_unclosed('string', start)
+        _raise_unclosed(b'string', start)
 
     if c0 == b'b':
         return 0x0008
@@ -186,7 +186,7 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t star
             break
 
         if not _reader_good(reader):
-            _raise_unclosed('string', start)
+            _raise_unclosed(b'string', start)
 
         if c0 != b'\\':
             buf.push_back(c0)
@@ -196,7 +196,7 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t star
         c1 = _get_escape_sequence(reader, start)
         if c1 >= -1:
             if not _reader_good(reader):
-                _raise_unclosed('string', start)
+                _raise_unclosed(b'string', start)
 
             if c1 >= 0:
                 c0 = cast_to_uint32(c1)
@@ -221,7 +221,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     start = _reader_tell(reader)
 
     if not _reader_good(reader):
-        _raise_unclosed('string', start)
+        _raise_unclosed(b'string', start)
 
     c0 = _reader_get(reader)
     result = _decode_string_sub(reader, delim, start, c0)
@@ -318,7 +318,7 @@ cdef object _decode_number_any(ReaderRef reader, vector[char] &buf, int32_t *c_i
         return int(pybuf, 10)
 
 
-cdef int32_t _accept_string_and_get_out(ReaderRef reader, const char *string) except -2:
+cdef int32_t _accept_string_and_get_out(ReaderRef reader, const char *string) nogil except -2:
     _accept_string(reader, string)
     return _get_c_out(reader)
 
@@ -335,7 +335,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     if c0 == b'+':
         start = _reader_tell(reader)
         if not _reader_good(reader):
-            _raise_unclosed('number', start)
+            _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
         if c0 == 'I':
@@ -351,7 +351,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     elif c0 == b'-':
         start = _reader_tell(reader)
         if not _reader_good(reader):
-            _raise_unclosed('number', start)
+            _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
         if c0 == 'I':
@@ -383,9 +383,9 @@ cdef uint32_t _skip_comma(
     ReaderRef reader,
     Py_ssize_t start,
     uint32_t terminator,
-    str what,
+    const char *what,
     int32_t *c_in_out,
-) except -1:
+) nogil except -1:
     cdef int32_t c0
     cdef uint32_t c1
     cdef boolean needs_comma
@@ -422,6 +422,7 @@ cdef uint32_t _skip_comma(
         needs_comma = False
 
     _raise_unclosed(what, start)
+    return -1
 
 
 cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
@@ -500,13 +501,13 @@ cdef dict _decode_object(ReaderRef reader):
 
             result[key] = value
 
-            done = _skip_comma(reader, start, <unsigned char>b'}', 'object', &c0)
+            done = _skip_comma(reader, start, <unsigned char>b'}', b'object', &c0)
             if done:
                 return result
 
             c1 = cast_to_uint32(c0)
 
-    _raise_unclosed('object', start)
+    _raise_unclosed(b'object', start)
 
 
 cdef list _decode_array(ReaderRef reader):
@@ -532,14 +533,14 @@ cdef list _decode_array(ReaderRef reader):
 
             result.append(value)
 
-            done = _skip_comma(reader, start, <unsigned char>b']', 'array', &c0)
+            done = _skip_comma(reader, start, <unsigned char>b']', b'array', &c0)
             if done:
                 return result
 
-    _raise_unclosed('array', start)
+    _raise_unclosed(b'array', start)
 
 
-cdef boolean _accept_string(ReaderRef reader, const char *string) except False:
+cdef boolean _accept_string(ReaderRef reader, const char *string) nogil except False:
     cdef uint32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
@@ -552,7 +553,7 @@ cdef boolean _accept_string(ReaderRef reader, const char *string) except False:
             break
 
         if not _reader_good(reader):
-            _raise_unclosed('literal', start)
+            _raise_unclosed(b'literal', start)
 
         c1 = _reader_get(reader)
         if c0 != c1:
