@@ -53,3 +53,5 @@ cdef extern from 'Python.h':
 cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
     int32_t cast_to_int32(...)
     uint32_t cast_to_uint32(...)
+
+    ctypedef boolean AlwaysTrue

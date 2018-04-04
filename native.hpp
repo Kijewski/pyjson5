@@ -34,5 +34,23 @@ constexpr std::int32_t cast_to_int32(const From &from) {
     return static_cast<std::int32_t>(unsigned_from);
 }
 
+struct AlwaysTrue {
+    constexpr inline AlwaysTrue() = default;
+    inline ~AlwaysTrue() = default;
+
+    constexpr inline AlwaysTrue(const AlwaysTrue&) = default;
+    constexpr inline AlwaysTrue(AlwaysTrue&&) = default;
+    constexpr inline AlwaysTrue &operator =(const AlwaysTrue&) = default;
+    constexpr inline AlwaysTrue &operator =(AlwaysTrue&&) = default;
+
+    template <class T>
+    constexpr inline AlwaysTrue(T&&) : AlwaysTrue() {}
+
+    template <class T>
+    constexpr inline bool operator ==(T&&) const { return true; }
+
+    constexpr inline operator bool () const { return true; }
+};
+
 }
 }
