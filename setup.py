@@ -21,16 +21,16 @@ extra_compile_args = [
 ]
 
 setup(
-    name='my_json_encoder',
-    version='0.4.2',
-    description='JSON ...',
+    name='json5',
+    version='0.1.0',
+    description='JSON5 ...',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',
     url='https://bib.vetmed.fu-berlin.de/',
     ext_modules=[
         Extension(
-            'my_json_encoder',
-            sources=['my_json_encoder.pyx'],
+            'json5',
+            sources=['json5.pyx'],
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_compile_args,
             language='c++',

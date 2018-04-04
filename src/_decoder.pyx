@@ -215,7 +215,46 @@ cdef object _decode_string(ReaderRef reader, uint32_t delim):
 
 
 cdef object _decode_number(ReaderRef reader, uint32_t c0):
-    raise Json5Todo(f'TODO near {_reader_tell(reader)}')  # TODO
+    cdef uint32_t c0
+    cdef int32_t c1
+    cdef Py_ssize_t start
+
+    # TODO: bytes
+    #cdef PyObject *buf = NULL
+    #cdef Py_ssize_t pos = 0
+    #cdef Py_ssize_t length = 0
+
+    cdef boolean is_float = False
+    cdef boolean is_negative = False
+
+    if c0 == b'+':
+        if not _reader_good(reader):
+            _raise_unclosed('number', start)
+
+        c0 = _reader_get(reader)
+        if c == 'I':
+            _accept_string(reader, b'nfinity')
+            return CONST_POS_INF
+        elif c == 'N':
+            _accept_string(reader, b'aN')
+            return CONST_POS_NAN
+    elif c0 == b'-':
+        if not _reader_good(reader):
+            _raise_unclosed('number', start)
+
+        c0 = _reader_get(reader)
+        if c == 'I':
+            _accept_string(reader, b'nfinity')
+            return CONST_NEG_INF
+        elif c == 'N':
+            _accept_string(reader, b'aN')
+            return CONST_NEG_NAN
+
+        is_negative = True
+
+    try:
+    finally:
+        XDecRef(buf)
 
 
 #    data found
