@@ -26,9 +26,9 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
     return _raise_unclosed('comment', comment_start)
 
 
-#    data found
-# -1 exhausted
-# -2 exception
+#     data found
+# -1: exhausted
+# -2: exception
 cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
     cdef int32_t c1
     cdef boolean seen_slash
@@ -47,18 +47,16 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
 
             _skip_multiline_comment(reader)
             seen_slash = False
-        elif _is_ws_zs(c0):
-            if seen_slash:
-                _raise_stray_character('slash', _reader_tell(reader))
-        else:
+        elif not _is_ws_zs(c0):
             c1 = cast_to_int32(c0)
             break
-
-        if _reader_good(reader):
-            c0 = _reader_get(reader)
-        else:
+        elif seen_slash:
+            _raise_stray_character('slash', _reader_tell(reader))
+        elif not _reader_good(reader):
             c1 = -1
             break
+
+        c0 = _reader_get(reader)
 
     if seen_slash:
         _raise_stray_character('slash', _reader_tell(reader))
