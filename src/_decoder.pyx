@@ -183,7 +183,7 @@ cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil exce
 
 cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t start, uint32_t c0):
     cdef int32_t c1
-    cdef vector[uint32_t] buf
+    cdef std_vector[uint32_t] buf
 
     while True:
         if c0 == delim:
@@ -234,7 +234,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     return result
 
 
-cdef object _decode_number_leading_zero(ReaderRef reader, vector[char] &buf, int32_t *c_in_out):
+cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef object pybuf
@@ -284,7 +284,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, vector[char] &buf, int
         return 0
 
 
-cdef object _decode_number_any(ReaderRef reader, vector[char] &buf, int32_t *c_in_out):
+cdef object _decode_number_any(ReaderRef reader, std_vector[char] &buf, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef boolean is_float
@@ -329,7 +329,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef Py_ssize_t start
-    cdef vector[char] buf
+    cdef std_vector[char] buf
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
@@ -431,7 +431,7 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
-    cdef vector[uint32_t] buf
+    cdef std_vector[uint32_t] buf
 
     start = _reader_tell(reader)
 
@@ -562,12 +562,6 @@ cdef boolean _accept_string(ReaderRef reader, const char *string) nogil except F
             _raise_expected_c(c0, start, c1)
 
     return True
-
-
-cdef object CONST_POS_NAN = float('+NaN')
-cdef object CONST_POS_INF = float('+Infinity')
-cdef object CONST_NEG_NAN = float('-NaN')
-cdef object CONST_NEG_INF = float('-Infinity')
 
 
 cdef object _decode_literal(ReaderRef reader, int32_t *c_in_out):
