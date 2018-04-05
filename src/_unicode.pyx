@@ -39,6 +39,8 @@ cdef boolean _is_ws_zs(uint32_t c) nogil:
         0x202F,  # NARROW NO-BREAK SPACE
         0x205F,  # MEDIUM MATHEMATICAL SPACE
         0x3000,  # IDEOGRAPHIC SPACE
+
+        NO_EXTRA_DATA,
     )
 
 

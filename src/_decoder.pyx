@@ -1,3 +1,7 @@
+cdef enum:
+    NO_EXTRA_DATA = 0x0011_0000
+
+
 cdef void _skip_single_line(ReaderRef reader) nogil:
     cdef uint32_t c0
     while _reader_good(reader):
@@ -226,9 +230,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     c0 = _reader_get(reader)
     result = _decode_string_sub(reader, delim, start, c0)
 
-    c1 = _get_c_out(reader)
-    c_in_out[0] = c1
-
+    c_in_out[0] = NO_EXTRA_DATA
     return result
 
 
@@ -593,14 +595,7 @@ cdef object _decode_literal(ReaderRef reader, int32_t *c_in_out):
 
     _accept_string(reader, tail)
 
-
-    if _reader_good(reader):
-        c0 = _reader_get(reader)
-        c1 = cast_to_int32(c0)
-    else:
-        c1 = -1
-
-    c_in_out[0] = c1
+    c_in_out[0] = NO_EXTRA_DATA
     return result
 
 
@@ -621,14 +616,7 @@ cdef object _decode_recursive_enter(ReaderRef reader, int32_t *c_in_out):
     finally:
         _reader_leave(reader)
 
-    if _reader_good(reader):
-        c1 = _reader_get(reader)
-        c0 = cast_to_int32(c1)
-    else:
-        c0 = -1
-
-    c_in_out[0] = c0
-
+    c_in_out[0] = NO_EXTRA_DATA
     return result
 
 
@@ -666,7 +654,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
     return decoder(reader, c_in_out)
 
 
-cdef object _decode_all(ReaderRef reader):
+cdef object _decode_all(ReaderRef reader, boolean some):
     cdef Py_ssize_t start
     cdef int32_t c0
     cdef uint32_t c1
@@ -678,33 +666,39 @@ cdef object _decode_all(ReaderRef reader):
         _raise_no_data(start)
 
     result = _decode_recursive(reader, &c0)
-    if c0 >= 0:
+    if c0 < 0:
+        pass
+    elif not some:
         start = _reader_tell(reader)
         c1 = cast_to_uint32(c0)
         c0 = _skip_to_data_sub(reader, c1)
         if c0 >= 0:
             c1 = cast_to_uint32(c0)
-            _raise_extra_data(c1, start)
+            _raise_extra_data(c1, result, start)
+    elif not _is_ws_zs(c0):
+        start = _reader_tell(reader)
+        c1 = cast_to_uint32(c0)
+        _raise_unframed_data(c1, result, start)
 
     return result
 
 
-cdef object _decode_ucs1(const Py_UCS1 *string, Py_ssize_t length, Py_ssize_t max_depth):
+cdef object _decode_ucs1(const Py_UCS1 *string, Py_ssize_t length, Py_ssize_t max_depth, boolean some):
     cdef ReaderUCS1 reader = ReaderUCS1(string, length, 0, max_depth)
-    return _decode_all(reader)
+    return _decode_all(reader, some)
 
 
-cdef object _decode_ucs2(const Py_UCS2 *string, Py_ssize_t length, Py_ssize_t max_depth):
+cdef object _decode_ucs2(const Py_UCS2 *string, Py_ssize_t length, Py_ssize_t max_depth, boolean some):
     cdef ReaderUCS2 reader = ReaderUCS2(string, length, 0, max_depth)
-    return _decode_all(reader)
+    return _decode_all(reader, some)
 
 
-cdef object _decode_ucs4(const Py_UCS4 *string, Py_ssize_t length, Py_ssize_t max_depth):
+cdef object _decode_ucs4(const Py_UCS4 *string, Py_ssize_t length, Py_ssize_t max_depth, boolean some):
     cdef ReaderUCS4 reader = ReaderUCS4(string, length, 0, max_depth)
-    return _decode_all(reader)
+    return _decode_all(reader, some)
 
 
-cdef object _decode_unicode(object data, Py_ssize_t max_depth):
+cdef object _decode_unicode(object data, Py_ssize_t max_depth, boolean some):
     cdef Py_ssize_t length
     cdef int kind
 
@@ -714,35 +708,35 @@ cdef object _decode_unicode(object data, Py_ssize_t max_depth):
     kind = PyUnicode_KIND(data)
 
     if kind == PyUnicode_1BYTE_KIND:
-        return _decode_ucs1(PyUnicode_1BYTE_DATA(data), length, max_depth)
+        return _decode_ucs1(PyUnicode_1BYTE_DATA(data), length, max_depth, some)
     elif kind == PyUnicode_2BYTE_KIND:
-        return _decode_ucs2(PyUnicode_2BYTE_DATA(data), length, max_depth)
+        return _decode_ucs2(PyUnicode_2BYTE_DATA(data), length, max_depth, some)
     elif kind == PyUnicode_4BYTE_KIND:
-        return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, max_depth)
+        return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, max_depth, some)
     else:
         pass  # impossible
 
 
-cdef object _decode_latin1(object data, Py_ssize_t max_depth):
+cdef object _decode_latin1(object data, Py_ssize_t max_depth, boolean some):
     cdef char *string
     cdef Py_ssize_t length
 
     PyBytes_AsStringAndSize(data, &string, &length)
-    return _decode_ucs1(<const Py_UCS1*> string, length, max_depth)
+    return _decode_ucs1(<const Py_UCS1*> string, length, max_depth, some)
 
 
-cdef object _decode_buffer(Py_buffer &view, int32_t word_length, Py_ssize_t max_depth):
+cdef object _decode_buffer(Py_buffer &view, int32_t word_length, Py_ssize_t max_depth, boolean some):
     if word_length == 1:
-        return _decode_ucs1(<const Py_UCS1*> view.buf, view.len // 1, max_depth)
+        return _decode_ucs1(<const Py_UCS1*> view.buf, view.len // 1, max_depth, some)
     elif word_length == 2:
-        return _decode_ucs2(<const Py_UCS2*> view.buf, view.len // 2, max_depth)
+        return _decode_ucs2(<const Py_UCS2*> view.buf, view.len // 2, max_depth, some)
     elif word_length == 4:
-        return _decode_ucs4(<const Py_UCS4*> view.buf, view.len // 4, max_depth)
+        return _decode_ucs4(<const Py_UCS4*> view.buf, view.len // 4, max_depth, some)
     else:
         raise ValueError('word_length must be 1, 2 or 4')
 
 
 
-cdef object _decode_callable(PyObject *cb, Py_ssize_t max_depth):
+cdef object _decode_callable(PyObject *cb, Py_ssize_t max_depth, boolean some):
     cdef ReaderIterCodepoints reader = ReaderIterCodepoints(cb, -1, 0, max_depth)
-    return _decode_all(reader)
+    return _decode_all(reader, some)

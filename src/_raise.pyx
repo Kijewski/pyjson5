@@ -23,11 +23,16 @@ cdef AlwaysTrue _raise_expected_c(uint32_t char_a, Py_ssize_t near, uint32_t fou
         raise Json5IllegalCharacter(f'Expected U+{char_a:04x} near {near}, found U+{found:04x}')
 
 
-cdef AlwaysTrue _raise_extra_data(uint32_t found, Py_ssize_t where) nogil except True:
+cdef AlwaysTrue _raise_extra_data(uint32_t found, object datum, Py_ssize_t where) nogil except True:
     with gil:
-        raise Json5ExtraData(f'Extra data U+{found:04X} near {where}')
+        raise Json5ExtraData(f'Extra data U+{found:04X} near {where}', datum, f'{found:c}')
 
 
 cdef AlwaysTrue _raise_no_data(Py_ssize_t where) nogil except True:
     with gil:
         raise Json5EOF(f'No JSON data found near {where}')
+
+
+cdef AlwaysTrue _raise_unframed_data(uint32_t found, object datum, Py_ssize_t where) nogil except True:
+    with gil:
+        raise Json5UnframedData(f'Lost unframed data near {where}', datum, f'{found:c}')
