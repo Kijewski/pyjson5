@@ -736,7 +736,6 @@ cdef object _decode_buffer(Py_buffer &view, int32_t word_length, Py_ssize_t max_
         raise ValueError('word_length must be 1, 2 or 4')
 
 
-
 cdef object _decode_callable(PyObject *cb, Py_ssize_t max_depth, boolean some):
     cdef ReaderIterCodepoints reader = ReaderIterCodepoints(cb, -1, 0, max_depth)
     return _decode_all(reader, some)
