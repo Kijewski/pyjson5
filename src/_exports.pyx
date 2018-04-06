@@ -51,6 +51,37 @@ def encode(data):
     return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())
 
 
+def encode_unicode(data):
+    cdef void *temp = NULL
+    cdef object result
+    cdef WriterUnicode writer = WriterUnicode(0, 0, NULL)
+
+    try:
+        _encode(writer, data)
+
+        temp = ObjectRealloc(writer.obj, sizeof(PyASCIIObject) + writer.position + 1)
+        if temp is not NULL:
+            writer.obj = <AsciiObject*> temp
+        writer.obj.data[writer.position] = 0
+
+        result = ObjectInit(<PyObject*> writer.obj, unicode)
+        writer.obj = NULL
+
+        (<PyASCIIObject*> <PyObject*> result).length = writer.position
+        (<PyASCIIObject*> <PyObject*> result).hash = -1
+        (<PyASCIIObject*> <PyObject*> result).wstr = NULL
+        (<PyASCIIObject*> <PyObject*> result).state.interned = SSTATE_NOT_INTERNED
+        (<PyASCIIObject*> <PyObject*> result).state.kind = PyUnicode_1BYTE_KIND
+        (<PyASCIIObject*> <PyObject*> result).state.compact = True
+        (<PyASCIIObject*> <PyObject*> result).state.ready = True
+        (<PyASCIIObject*> <PyObject*> result).state.ascii = True
+
+        return result
+    finally:
+        if writer.obj is not NULL:
+            ObjectFree(writer.obj)
+
+
 def encode_bytes(data):
     cdef WriterVector writer
     _encode(writer, data)

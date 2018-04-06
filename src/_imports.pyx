@@ -55,12 +55,26 @@ cdef extern from '<utility>' namespace 'std' nogil:
     void swap[T](T&, T&)
 
 
+cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
+    int32_t cast_to_int32(...)
+    uint32_t cast_to_uint32(...)
+
+    ctypedef boolean AlwaysTrue
+    boolean obj_has_iter(object obj)
+
+    ctypedef char EscapeDctItem[8]
+    struct EscapeDct:
+        EscapeDctItem items[0x10000]
+    EscapeDct ESCAPE_DCT
+
+
 cdef extern from 'Python.h':
     ctypedef signed char Py_UCS1
     ctypedef signed short Py_UCS2
     ctypedef signed long Py_UCS4
 
     enum:
+        PyUnicode_WCHAR_KIND
         PyUnicode_1BYTE_KIND
         PyUnicode_2BYTE_KIND
         PyUnicode_4BYTE_KIND
@@ -89,18 +103,37 @@ cdef extern from 'Python.h':
 
     object CallFunction 'PyObject_CallFunction'(PyObject *cb, const char *format, ...)
 
+    ctypedef signed long Py_hash
+    ctypedef signed short wchar_t
 
-cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
-    int32_t cast_to_int32(...)
-    uint32_t cast_to_uint32(...)
+    enum:
+        SSTATE_NOT_INTERNED
+        SSTATE_INTERNED_MORTAL
+        SSTATE_INTERNED_IMMORTAL
 
-    ctypedef boolean AlwaysTrue
-    boolean obj_has_iter(object obj)
+    ctypedef struct __ascii_object_state:
+        uint8_t interned
+        uint8_t kind
+        boolean compact
+        boolean ascii
+        boolean ready
 
-    ctypedef char EscapeDctItem[8]
-    struct EscapeDct:
-        EscapeDctItem items[0x10000]
-    EscapeDct ESCAPE_DCT
+    ctypedef struct PyASCIIObject:
+        Py_ssize_t length
+        Py_hash hash
+        wchar_t *wstr
+        __ascii_object_state state
+
+    AlwaysTrue ErrNoMemory 'PyErr_NoMemory'() except True
+    void *ObjectRealloc 'PyObject_Realloc'(void *p, size_t n)
+    void ObjectFree 'PyObject_Free'(void *p)
+    object ObjectInit 'PyObject_INIT'(PyObject *obj, type cls)
+    void XDecRef 'Py_XDECREF'(PyObject *o)
+
+
+ctypedef struct AsciiObject:
+    PyASCIIObject base
+    char data[1]
 
 
 cdef type Decimal, Mapping
