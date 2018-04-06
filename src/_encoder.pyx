@@ -20,7 +20,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
     cdef Py_ssize_t index
 
     _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
     for index in range(length):
         c = data[index]
         if UCSString is not UCS4String:
@@ -36,7 +36,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
 
                 snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
                 _writer_append_s(writer, buf, 2 * 6)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
 
     return True
 
@@ -62,21 +62,28 @@ cdef boolean _encode_unicode(WriterRef writer, object data, EncType enc_type) ex
     return True
 
 
-cdef boolean _encode_nested_data(WriterRef writer, const char *data, Py_ssize_t length) nogil except False:
+cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
+    cdef const char *string
     cdef char c
-    cdef Py_ssize_t index
+    cdef Py_ssize_t index, length
+    cdef WriterVector sub_writer
+
+    _encode(sub_writer, data)
+
+    length = sub_writer.buf.size()
+    string = sub_writer.buf.data()
 
     _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
     for index in range(length):
-        c = data[index]
+        c = string[index]
         if c not in b'\\"':
             _writer_append_c(writer, c)
         elif c == b'\\':
             _writer_append_s(writer, b'\\\\', 2)
         else:
             _writer_append_s(writer, b'\\u0022', 6)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
 
     return True
 
@@ -95,15 +102,15 @@ cdef boolean _encode_sequence(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object value
 
-    _writer_append_c(writer, b'[')
+    _writer_append_c(writer, <char> b'[')
     first = True
     for value in data:
         if not first:
-            _writer_append_c(writer, b',')
+            _writer_append_c(writer, <char> b',')
         else:
             first = False
         _encode(writer, value)
-    _writer_append_c(writer, b']')
+    _writer_append_c(writer, <char> b']')
 
     return True
 
@@ -112,22 +119,23 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object key, value
 
-    _writer_append_c(writer, b'{')
+    _writer_append_c(writer, <char> b'{')
     first = True
     for key in data:
         if not first:
-            _writer_append_c(writer, b',')
+            _writer_append_c(writer, <char> b',')
         else:
             first = False
         value = data[key]
 
-        if not PyUnicode_Check(key):
-            key = _encode_to_unicode(key)
+        if PyUnicode_Check(key):
+            _encode_unicode(writer, key, ENC_TYPE_UNICODE)
+        else:
+            _encode_nested_key(writer, key)
 
-        _encode_unicode(writer, key, ENC_TYPE_UNICODE)
-        _writer_append_c(writer, b':')
+        _writer_append_c(writer, <char> b':')
         _encode(writer, value)
-    _writer_append_c(writer, b'}')
+    _writer_append_c(writer, <char> b'}')
 
     return True
 
@@ -193,9 +201,9 @@ cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) e
     string = PyUnicode_AsUTF8AndSize(stringified, &length)
 
     _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
     _writer_append_s(writer, string, length)
-    _writer_append_c(writer, b'"')
+    _writer_append_c(writer, <char> b'"')
 
     return True
 
@@ -290,9 +298,3 @@ cdef boolean _encode(WriterRef writer, object data) except False:
 
     encoder(writer, data, enc_type)
     return True
-
-
-cdef object _encode_to_unicode(object data):
-    cdef WriterVector writer
-    _encode(writer, data)
-    return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())

@@ -46,7 +46,9 @@ def decode_iter(object cb, object max_depth=None, boolean some=False):
 
 
 def encode(data):
-    return _encode_to_unicode(data)
+    cdef WriterVector writer
+    _encode(writer, data)
+    return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())
 
 
 def encode_bytes(data):
