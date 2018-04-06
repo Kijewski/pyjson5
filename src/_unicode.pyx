@@ -85,3 +85,29 @@ cdef boolean _is_identifier_part(uint32_t c) nogil:
         (c in (0x200C, 0x200D)) or
         False
     )
+
+
+cdef boolean _is_x(uint32_t c) nogil:
+    return (c | 0x20) == b'x'
+
+cdef boolean _is_e(uint32_t c) nogil:
+    return (c | 0x20) == b'e'
+
+cdef boolean _is_decimal(uint32_t c) nogil:
+    return b'0' <= c <= b'9'
+
+cdef boolean _is_hex(uint32_t c) nogil:
+    return b'a' <= (c | 0x20) <= b'f'
+
+cdef boolean _is_hexadecimal(uint32_t c) nogil:
+    return _is_decimal(c) or _is_hex(c)
+
+cdef boolean _is_in_float_representation(uint32_t c) nogil:
+    if _is_decimal(c):
+        return True
+    if _is_e(c):
+        return True
+    elif c in b'.+-':
+        return True
+    else:
+        return False

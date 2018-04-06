@@ -1,5 +1,4 @@
-from libcpp cimport bool as boolean
-from libcpp.vector cimport vector as std_vector
+from cython import final
 from cpython cimport dict, int, list, long, tuple, type
 from cpython.bool cimport PyBool_Check
 from cpython.buffer cimport (
@@ -14,6 +13,8 @@ from cpython.int cimport PyInt_Check
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject
 from cpython.unicode cimport PyUnicode_Check
+from libcpp cimport bool as boolean
+from libcpp.vector cimport vector as std_vector
 
 
 cdef extern from '<cstddef>' namespace 'std' nogil:
@@ -50,6 +51,10 @@ cdef extern from '<cmath>' namespace 'std' nogil:
     int fpclassify(...)
 
 
+cdef extern from '<utility>' namespace 'std' nogil:
+    void swap[T](T&, T&)
+
+
 cdef extern from 'Python.h':
     ctypedef signed char Py_UCS1
     ctypedef signed short Py_UCS2
@@ -79,6 +84,10 @@ cdef extern from 'Python.h':
 
     object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
     char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
+
+    object PyByteArray_FromStringAndSize(const char *string, Py_ssize_t length)
+
+    object CallFunction 'PyObject_CallFunction'(PyObject *cb, const char *format, ...)
 
 
 cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:

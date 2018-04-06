@@ -244,24 +244,24 @@ cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
         return 0
 
     c0 = _reader_get(reader)
-    if c0 in b'xX':
+    if _is_x(c0):
         while True:
             if not _reader_good(reader):
                 c1 = -1
                 break
 
             c0 = _reader_get(reader)
-            if c0 in b'01233456789abcdefABCDEF':
+            if _is_hexadecimal(c0):
                 buf.push_back(<char> <unsigned char> c0)
-            else:
+            elif c0 != b'_':
                 c1 = cast_to_int32(c0)
                 break
 
         c_in_out[0] = c1
         pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
         return int(pybuf, 16)
-    elif c0 in b'.eE':
-        buf.push_back('.')
+    elif c0 == b'.':
+        buf.push_back(b'.')
 
         while True:
             if not _reader_good(reader):
@@ -269,15 +269,32 @@ cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
                 break
 
             c0 = _reader_get(reader)
-            if c0 in b'0123456789.eE+-':
+            if _is_in_float_representation(c0):
                 buf.push_back(<char> <unsigned char> c0)
-            else:
+            elif c0 != b'_':
                 c1 = cast_to_int32(c0)
                 break
 
         c_in_out[0] = c1
         pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
         return float(pybuf)
+    elif _is_e(c0):
+        while True:
+            if not _reader_good(reader):
+                c1 = -1
+                break
+
+            c0 = _reader_get(reader)
+            if _is_in_float_representation(c0):
+                pass
+            elif c0 == b'_':
+                pass
+            else:
+                c1 = cast_to_int32(c0)
+                break
+
+        c_in_out[0] = c1
+        return 0.0
     else:
         c1 = _get_c_out(reader)
         c_in_out[0] = c1
@@ -295,15 +312,16 @@ cdef object _decode_number_any(ReaderRef reader, std_vector[char] &buf, int32_t 
 
     is_float = False
     while True:
-        if c0 in b'0123456789':
+        if _is_decimal(c0):
             pass
-        elif c0 in b'abcdefABCDEF.+-':
+        elif _is_in_float_representation(c0):
             is_float = True
-        else:
+        elif c0 != b'_':
             c1 = cast_to_int32(c0)
             break
 
-        buf.push_back(<char> <unsigned char> c0)
+        if c0 != b'_':
+            buf.push_back(<char> <unsigned char> c0)
 
         if not _reader_good(reader):
             c1 = -1

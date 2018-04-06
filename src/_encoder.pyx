@@ -298,3 +298,27 @@ cdef boolean _encode(WriterRef writer, object data) except False:
 
     encoder(writer, data, enc_type)
     return True
+
+
+cdef Py_ssize_t EncodedMemoryView_ONE = 1
+
+@final
+cdef class EncodedMemoryView:
+    cdef std_vector[char] buf
+    cdef Py_ssize_t length
+
+    def __getbuffer__(self, Py_buffer *view, int flags):
+        view.buf = self.buf.data()
+        view.obj = self
+        view.len = self.length
+        view.readonly = False
+        view.itemsize = 1
+        view.format = b'c'
+        view.ndim = 1
+        view.shape = &self.length
+        view.strides = &EncodedMemoryView_ONE
+        view.suboffsets = NULL
+        view.internal = NULL
+
+    def __releasebuffer__(self, Py_buffer *view):
+        pass

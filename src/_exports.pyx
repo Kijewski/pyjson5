@@ -57,8 +57,31 @@ def encode_bytes(data):
     return PyBytes_FromStringAndSize(writer.buf.data(), writer.buf.size())
 
 
+def encode_buffer(data):
+    cdef WriterVector writer
+    cdef EncodedMemoryView result = EncodedMemoryView()
+
+    _encode(writer, data)
+
+    swap(result.buf, writer.buf)
+    result.buf.shrink_to_fit()
+    result.length = result.buf.size()
+
+    return memoryview(result)
+
+
+def encode_bytearray(data):
+    cdef WriterVector writer
+    _encode(writer, data)
+    return PyByteArray_FromStringAndSize(writer.buf.data(), writer.buf.size())
+
+
+def encode_callback(data, object cb):
+    cdef WriterCallback writer = WriterCallback(<PyObject*> cb)
+    _encode(writer, data)
+
+
 __all__ = (
-    'DEFAULT_MAX_NESTING_LEVEL', 'UNLIMITED',
     'decode', 'decode_latin1', 'decode_buffer', 'decode_iter',
-    'encode', 'encode_bytes',
+    'encode', 'encode_bytes', 'encode_buffer', 'encode_callback',
 )
