@@ -303,6 +303,8 @@ cdef boolean _encode(WriterRef writer, object data) except False:
 cdef Py_ssize_t EncodedMemoryView_ONE = 1
 
 @final
+@no_gc
+@auto_pickle(False)
 cdef class EncodedMemoryView:
     cdef std_vector[char] buf
     cdef Py_ssize_t length

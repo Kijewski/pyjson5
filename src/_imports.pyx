@@ -1,4 +1,4 @@
-from cython import final
+from cython import final, no_gc, auto_pickle
 from cpython cimport dict, int, list, long, tuple, type
 from cpython.bool cimport PyBool_Check
 from cpython.buffer cimport (

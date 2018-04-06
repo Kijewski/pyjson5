@@ -35,7 +35,7 @@ cdef AlwaysTrue _raise_no_data(Py_ssize_t where) nogil except True:
 
 cdef AlwaysTrue _raise_unframed_data(uint32_t found, object datum, Py_ssize_t where) nogil except True:
     with gil:
-        raise Json5UnframedData(f'Lost unframed data near {where}', datum, f'{found:c}')
+        raise Json5ExtraData(f'Lost unframed data near {where}', datum, f'{found:c}')
 
 
 cdef AlwaysTrue _raise_unstringifiable(object data) nogil except True:
