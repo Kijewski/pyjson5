@@ -1,7 +1,6 @@
 DEFAULT_MAX_NESTING_LEVEL = 32
 UNLIMITED = -1
 TO_JSON = None
-RETURN_BYTES = False
 
 
 def decode(object data, object max_depth=None, boolean some=False):
@@ -46,23 +45,18 @@ def decode_iter(object cb, object max_depth=None, boolean some=False):
     return _decode_callable(<PyObject*> cb, max_depth, some)
 
 
-def encode(object data, object return_bytes=None):
+def encode(data):
+    return _encode_to_unicode(data)
+
+
+def encode_bytes(data):
     cdef WriterVector writer
-
-    if return_bytes is None:
-        return_bytes = RETURN_BYTES
-    return_bytes = bool(return_bytes)
-
     _encode(writer, data)
-
-    if return_bytes is not True:
-        return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())
-    else:
-        return PyBytes_FromStringAndSize(writer.buf.data(), writer.buf.size())
+    return PyBytes_FromStringAndSize(writer.buf.data(), writer.buf.size())
 
 
 __all__ = (
     'DEFAULT_MAX_NESTING_LEVEL', 'UNLIMITED',
     'decode', 'decode_latin1', 'decode_buffer', 'decode_iter',
-    'encode',
+    'encode', 'encode_bytes',
 )

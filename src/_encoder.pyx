@@ -35,7 +35,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
                 s2 = 0xdc00 | (c & 0x3ff)
 
                 snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
-                _writer_append_sz(writer, buf, 2 * 6)
+                _writer_append_s(writer, buf, 2 * 6)
     _writer_append_c(writer, b'"')
 
     return True
@@ -62,7 +62,7 @@ cdef boolean _encode_unicode(WriterRef writer, object data, EncType enc_type) ex
     return True
 
 
-cdef boolean _encode_nested_data(WriterRef writer, const char *data, Py_ssize_t length) except False:
+cdef boolean _encode_nested_data(WriterRef writer, const char *data, Py_ssize_t length) nogil except False:
     cdef char c
     cdef Py_ssize_t index
 
@@ -73,9 +73,9 @@ cdef boolean _encode_nested_data(WriterRef writer, const char *data, Py_ssize_t 
         if c not in b'\\"':
             _writer_append_c(writer, c)
         elif c == b'\\':
-            _writer_append_sz(writer, b'\\\\', 2)
+            _writer_append_s(writer, b'\\\\', 2)
         else:
-            _writer_append_sz(writer, b'\\u0022', 6)
+            _writer_append_s(writer, b'\\u0022', 6)
     _writer_append_c(writer, b'"')
 
     return True
@@ -86,7 +86,7 @@ cdef boolean _append_ascii(WriterRef writer, object data) except False:
     cdef Py_ssize_t length
 
     PyBytes_AsStringAndSize(data, &buf, &length)
-    _writer_append_sz(writer, buf, length)
+    _writer_append_s(writer, buf, length)
 
     return True
 
@@ -111,7 +111,6 @@ cdef boolean _encode_sequence(WriterRef writer, object data) except False:
 cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object key, value
-    cdef WriterVector key_writer
 
     _writer_append_c(writer, b'{')
     first = True
@@ -122,15 +121,11 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
             first = False
         value = data[key]
 
-        if PyUnicode_Check(key):
-            _encode_unicode(writer, key, ENC_TYPE_UNICODE)
-        else:
-            _encode(key_writer, key)
-            _encode_nested_data(writer, key_writer.buf.data(), key_writer.buf.size())
-            key_writer.buf.clear()
+        if not PyUnicode_Check(key):
+            key = _encode_to_unicode(key)
 
+        _encode_unicode(writer, key, ENC_TYPE_UNICODE)
         _writer_append_c(writer, b':')
-
         _encode(writer, value)
     _writer_append_c(writer, b'}')
 
@@ -179,7 +174,7 @@ cdef boolean _encode_constant(WriterRef writer, object data, EncType enc_type) e
         string = b'null'
         length = 4
 
-    _writer_append_sz(writer, string, length)
+    _writer_append_s(writer, string, length)
     return True
 
 
@@ -199,7 +194,7 @@ cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) e
 
     _writer_reserve(writer, 2 + length)
     _writer_append_c(writer, b'"')
-    _writer_append_sz(writer, string, length)
+    _writer_append_s(writer, string, length)
     _writer_append_c(writer, b'"')
 
     return True
@@ -233,7 +228,7 @@ cdef boolean _encode_numeric(WriterRef writer, object data, EncType enc_type) ex
                 string = b'-Infinity'
                 length = 9
 
-            _writer_append_sz(writer, string, length)
+            _writer_append_s(writer, string, length)
             return True
         else:
             formatter_string = '%.6e'
@@ -253,10 +248,12 @@ cdef boolean _encode_recursive(WriterRef writer, object data, EncType enc_type) 
 
     Py_EnterRecursiveCall(' while encoding nested JSON5 object')
     try:
-        if to_json is not None:
-            to_json_callback = getattr(data, TO_JSON, SCAPE_GOAT)
-            if to_json_callback is not SCAPE_GOAT:
-                _append_ascii(writer, to_json_callback())
+        if to_json:
+            to_json = getattr(data, to_json, None)
+            if to_json is not None:
+                if callable(to_json):
+                    to_json = to_json()
+                _append_ascii(writer, to_json)
                 return True
 
         if enc_type == ENC_TYPE_SEQUENCE:
@@ -293,3 +290,9 @@ cdef boolean _encode(WriterRef writer, object data) except False:
 
     encoder(writer, data, enc_type)
     return True
+
+
+cdef object _encode_to_unicode(object data):
+    cdef WriterVector writer
+    _encode(writer, data)
+    return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())
