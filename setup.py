@@ -15,7 +15,7 @@ except ImportError:
 
 extra_compile_args = [
     '-std=gnu++14',
-    '-Os', '-flto', '-fPIC',
+    '-O2', '-flto', '-fPIC',
     '-march=native', '-mtune=native', '-ggdb1', '-pipe',
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]
