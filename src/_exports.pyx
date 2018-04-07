@@ -32,20 +32,17 @@ def decode_buffer(object obj, int32_t word_length=1, object max_depth=None, bool
         PyBuffer_Release(&view)
 
 
-def decode_iter(object cb, object max_depth=None, boolean some=False):
+def decode_callback(object callback, object max_depth=None, boolean some=False):
     if max_depth is None:
         max_depth = DEFAULT_MAX_NESTING_LEVEL
 
-    if not callable(cb):
-        try:
-            cb = iter(cb).__next__
-        except Exception as ex:
-            raise TypeError('cb must be callable') from ex
+    if not callable(callback):
+        raise TypeError('callback must be callable') from ex
 
-    return _decode_callable(<PyObject*> cb, max_depth, some)
+    return _decode_callable(<PyObject*> callback, max_depth, some)
 
 
-cpdef encode(data):
+def encode(data):
     cdef void *temp = NULL
     cdef object result
     cdef Py_ssize_t start = <Py_ssize_t> <void*> &(<AsciiObject*> 0).data[0]
@@ -57,7 +54,10 @@ cpdef encode(data):
 
     try:
         _encode(writer.base, data)
-        if writer.position <= 0:
+
+        length = writer.position - start
+        if length <= 0:
+            # impossible
             return u''
 
         temp = ObjectRealloc(writer.obj, writer.position + 1)
@@ -65,7 +65,6 @@ cpdef encode(data):
             writer.obj = temp
         (<char*> writer.obj)[writer.position] = 0
 
-        length = writer.position - start
         result = ObjectInit(<PyObject*> writer.obj, unicode)
         writer.obj = NULL
 
@@ -96,7 +95,10 @@ def encode_bytes(data):
 
     try:
         _encode(writer.base, data)
-        if writer.position <= 0:
+
+        length = writer.position - start
+        if length <= 0:
+            # impossible
             return b''
 
         temp = ObjectRealloc(writer.obj, writer.position + 1)
@@ -104,7 +106,6 @@ def encode_bytes(data):
             writer.obj = temp
         (<char*> writer.obj)[writer.position] = 0
 
-        length = writer.position - start
         result = <object> <PyObject*> ObjectInitVar((<PyVarObject*> writer.obj), bytes, length)
         (<PyBytesObject*> writer.obj).ob_shash = -1
 
