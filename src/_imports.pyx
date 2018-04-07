@@ -145,6 +145,10 @@ ctypedef struct AsciiObject:
     char data[1]
 
 
+cdef extern from * nogil:
+    boolean expect '__builtin_expect'(boolean actual, boolean expected)
+
+
 cdef type Decimal, Mapping
 cdef object saferepr
 

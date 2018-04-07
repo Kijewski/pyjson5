@@ -12,18 +12,18 @@ cdef boolean _WriterReallocatable_reserve(WriterRef writer_, size_t amount) exce
     cdef void *temp
     cdef WriterReallocatable *writer = <WriterReallocatable*> &writer_
 
-    if amount < 0:
+    if expect(amount <= 0, False):
         return True
 
     needed_size = writer.position + amount
     current_size = writer.length
-    if needed_size < current_size:
+    if expect(needed_size < current_size, True):
         return True
 
     new_size = current_size
     while new_size <= needed_size:
         new_size = (new_size + 32) + (new_size // 4)
-        if new_size < current_size:
+        if expect(new_size < current_size, False):
             ErrNoMemory()
 
     temp = ObjectRealloc(writer.obj, new_size + 1)
@@ -49,7 +49,7 @@ cdef boolean _WriterReallocatable_append_c(Writer &writer_, char datum) except F
 cdef boolean _WriterReallocatable_append_s(Writer &writer_, const char *s, Py_ssize_t length) except False:
     cdef WriterReallocatable *writer = <WriterReallocatable*> &writer_
 
-    if length < 0:
+    if expect(length <= 0, False):
         return True
 
     _WriterReallocatable_reserve(writer.base, length)

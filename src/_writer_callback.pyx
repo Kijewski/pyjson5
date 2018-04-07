@@ -6,7 +6,7 @@ cdef struct WriterCallback:
 cdef boolean _WriterCallback_reserve(WriterRef writer_, size_t amount) except False:
     cdef WriterCallback *writer = <WriterCallback*> &writer_
 
-    if amount < 0:
+    if expect(amount <= 0, False):
         return True
 
     pass
@@ -25,7 +25,7 @@ cdef boolean _WriterCallback_append_c(Writer &writer_, char datum) except False:
 cdef boolean _WriterCallback_append_s(Writer &writer_, const char *s, Py_ssize_t length) except False:
     cdef WriterCallback *writer = <WriterCallback*> &writer_
 
-    if length < 0:
+    if expect(length <= 0, False):
         return True
 
     CallFunction(writer.callback, b'U#', s, <int> length)

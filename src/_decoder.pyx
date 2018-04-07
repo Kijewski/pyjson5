@@ -31,7 +31,10 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) nogil except False:
     comment_start = _reader_tell(reader)
 
     seen_asterisk = False
-    while _reader_good(reader):
+    while True:
+        if expect(not _reader_good(reader), False):
+            break
+
         c0 = _reader_get(reader)
         if c0 == b'*':
             seen_asterisk = True
@@ -40,7 +43,8 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) nogil except False:
                 return True
             seen_asterisk = False
 
-    return _raise_unclosed(b'comment', comment_start)
+    _raise_unclosed(b'comment', comment_start)
+    return False
 
 
 #     data found
@@ -59,7 +63,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
             else:
                 seen_slash = True
         elif c0 == b'*':
-            if not seen_slash:
+            if expect(not seen_slash, False):
                 _raise_stray_character('asterisk', _reader_tell(reader))
 
             _skip_multiline_comment(reader)
@@ -67,7 +71,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
         elif not _is_ws_zs(c0):
             c1 = cast_to_int32(c0)
             break
-        elif seen_slash:
+        elif expect(seen_slash, False):
             _raise_stray_character('slash', _reader_tell(reader))
         elif not _reader_good(reader):
             c1 = -1
@@ -75,7 +79,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
 
         c0 = _reader_get(reader)
 
-    if seen_slash:
+    if expect(seen_slash, False):
         _raise_stray_character('slash', _reader_tell(reader))
 
     return c1
@@ -105,7 +109,7 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) nogil excep
     result = 0
     for index in range(length):
         result <<= 4
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             _raise_unclosed(b'escape sequence', start)
 
         c0 = _reader_get(reader)
@@ -115,10 +119,10 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) nogil excep
             result |= c0 - <uint32_t> b'a' + 10
         elif b'A' <= c0 <= b'F':
             result |= c0 - <uint32_t> b'A' + 10
-        else:
+        elif expect(True, False):
             _raise_expected_s('hexadecimal character', start, c0)
 
-    if not (0 <= result <= 0x10ffff):
+    if expect(not (0 <= result <= 0x10ffff), False):
         _raise_expected_s('Unicode code point', start, result)
 
     return cast_to_int32(result)
@@ -132,7 +136,7 @@ cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil exce
     cdef uint32_t c1
 
     c0 = _reader_get(reader)
-    if not _reader_good(reader):
+    if expect(not _reader_good(reader), False):
         _raise_unclosed(b'string', start)
 
     if c0 == b'b':
@@ -159,13 +163,13 @@ cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil exce
         _accept_string(reader, b'\\u')
 
         c1 = cast_to_uint32(_get_hex_character(reader, 4))
-        if not Py_UNICODE_IS_LOW_SURROGATE(c1):
+        if expect(not Py_UNICODE_IS_LOW_SURROGATE(c1), False):
             _raise_expected_s('low surrogate', start, c1)
 
         return Py_UNICODE_JOIN_SURROGATES(c0, c1)
     elif c0 == b'U':
         return _get_hex_character(reader, 8)
-    elif b'1' <= c0 <= b'9':
+    elif expect(b'1' <= c0 <= b'9', False):
         _raise_expected_s('escape sequence', start, c0)
         return -2
     elif _is_line_terminator(c0):
@@ -189,7 +193,7 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t star
         if c0 == delim:
             break
 
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             _raise_unclosed(b'string', start)
 
         if c0 != b'\\':
@@ -199,7 +203,7 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t star
 
         c1 = _get_escape_sequence(reader, start)
         if c1 >= -1:
-            if not _reader_good(reader):
+            if expect(not _reader_good(reader), False):
                 _raise_unclosed(b'string', start)
 
             if c1 >= 0:
@@ -224,7 +228,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     delim = cast_to_uint32(c1)
     start = _reader_tell(reader)
 
-    if not _reader_good(reader):
+    if expect(not _reader_good(reader), False):
         _raise_unclosed(b'string', start)
 
     c0 = _reader_get(reader)
@@ -354,7 +358,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
 
     if c0 == b'+':
         start = _reader_tell(reader)
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
@@ -370,7 +374,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
         buf.reserve(16)
     elif c0 == b'-':
         start = _reader_tell(reader)
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
@@ -427,15 +431,15 @@ cdef uint32_t _skip_comma(
             return 1
 
         if c1 != b',':
-            if needs_comma:
+            if expect(needs_comma, False):
                 _raise_expected_sc('comma', terminator, _reader_tell(reader), c1)
             c_in_out[0] = c0
             return 0
 
-        if not needs_comma:
+        if expect(not needs_comma, False):
             _raise_stray_character('comma', _reader_tell(reader))
 
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             break
 
         c1 = _reader_get(reader)
@@ -455,7 +459,7 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
 
     c0 = c_in_out[0]
     c1 = cast_to_uint32(c0)
-    if not _is_identifier_start(c1):
+    if expect(False, not _is_identifier_start(c1)):
         _raise_expected_s('IdentifierStart', _reader_tell(reader), c1)
 
     while True:
@@ -486,7 +490,7 @@ cdef dict _decode_object(ReaderRef reader):
     start = _reader_tell(reader)
 
     c0 = _skip_to_data(reader)
-    if c0 >= 0:
+    if expect(c0 >= 0, True):
         c1 = cast_to_uint32(c0)
         if c1 == b'}':
             return result
@@ -496,27 +500,27 @@ cdef dict _decode_object(ReaderRef reader):
                 key = _decode_string(reader, &c0)
             else:
                 key = _decode_identifier_name(reader, &c0)
-            if c0 < 0:
+            if expect(c0 < 0, False):
                 break
 
             c1 = cast_to_uint32(c0)
             c0 = _skip_to_data_sub(reader, c1)
-            if c0 < 0:
+            if expect(c0 < 0, False):
                 break
 
             c1 = cast_to_uint32(c0)
-            if c1 != b':':
+            if expect(c1 != b':', False):
                 _raise_expected_s('colon', _reader_tell(reader), c1)
 
-            if not _reader_good(reader):
+            if expect(not _reader_good(reader), False):
                 break
 
             c0 = _skip_to_data(reader)
-            if c0 < 0:
+            if expect(c0 < 0, False):
                 break
 
             value = _decode_recursive(reader, &c0)
-            if c0 < 0:
+            if expect(c0 < 0, False):
                 break
 
             result[key] = value
@@ -541,14 +545,14 @@ cdef list _decode_array(ReaderRef reader):
     start = _reader_tell(reader)
 
     c0 = _skip_to_data(reader)
-    if c0 >= 0:
+    if expect(c0 >= 0, True):
         c1 = cast_to_uint32(c0)
         if c1 == b']':
             return result
 
         while True:
             value = _decode_recursive(reader, &c0)
-            if c0 < 0:
+            if expect(c0 < 0, False):
                 break
 
             result.append(value)
@@ -572,11 +576,11 @@ cdef boolean _accept_string(ReaderRef reader, const char *string) nogil except F
         if not c0:
             break
 
-        if not _reader_good(reader):
+        if expect(not _reader_good(reader), False):
             _raise_unclosed(b'literal', start)
 
         c1 = _reader_get(reader)
-        if c0 != c1:
+        if expect(c0 != c1, False):
             _raise_expected_c(c0, start, c1)
 
     return True
@@ -660,7 +664,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
         decoder = _decode_number
     elif c1 in b'{[':
         decoder = _decode_recursive_enter
-    else:
+    elif expect(True, False):
         decoder = _decoder_unknown
 
     return decoder(reader, c_in_out)
@@ -674,7 +678,7 @@ cdef object _decode_all(ReaderRef reader, boolean some):
 
     start = _reader_tell(reader)
     c0 = _skip_to_data(reader)
-    if c0 < 0:
+    if expect(c0 < 0, False):
         _raise_no_data(start)
 
     result = _decode_recursive(reader, &c0)
@@ -684,10 +688,10 @@ cdef object _decode_all(ReaderRef reader, boolean some):
         start = _reader_tell(reader)
         c1 = cast_to_uint32(c0)
         c0 = _skip_to_data_sub(reader, c1)
-        if c0 >= 0:
+        if expect(c0 >= 0, False):
             c1 = cast_to_uint32(c0)
             _raise_extra_data(c1, result, start)
-    elif not _is_ws_zs(c0):
+    elif expect(not _is_ws_zs(c0), False):
         start = _reader_tell(reader)
         c1 = cast_to_uint32(c0)
         _raise_unframed_data(c1, result, start)

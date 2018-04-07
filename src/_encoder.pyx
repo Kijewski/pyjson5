@@ -289,7 +289,7 @@ cdef boolean _encode_recursive(WriterRef writer, object data, EncType enc_type) 
             encoder = _encode_sequence
         elif enc_type == ENC_TYPE_MAPPING:
             encoder = _encode_mapping
-        else:
+        elif expect(True, False):
             _raise_unstringifiable(data)
 
         encoder(writer, data)
