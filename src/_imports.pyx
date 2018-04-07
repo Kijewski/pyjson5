@@ -40,6 +40,7 @@ cdef extern from '<cstdio>' namespace 'std' nogil:
 
 cdef extern from '<cstring>' namespace 'std' nogil:
     void memcpy(void *dest, const void *std, size_t count)
+    void memset(void *dest, char value, size_t count)
     size_t strlen(const char *s)
 
 
@@ -124,11 +125,19 @@ cdef extern from 'Python.h':
         wchar_t *wstr
         __ascii_object_state state
 
+    ctypedef struct PyVarObject:
+        pass
+
+    ctypedef struct PyBytesObject:
+        PyVarObject ob_base
+        Py_hash ob_shash
+        char ob_sval[1]
+
     AlwaysTrue ErrNoMemory 'PyErr_NoMemory'() except True
     void *ObjectRealloc 'PyObject_Realloc'(void *p, size_t n)
     void ObjectFree 'PyObject_Free'(void *p)
     object ObjectInit 'PyObject_INIT'(PyObject *obj, type cls)
-    void XDecRef 'Py_XDECREF'(PyObject *o)
+    PyVarObject *ObjectInitVar 'PyObject_InitVar'(PyVarObject *obj, type cls, Py_ssize_t size)
 
 
 ctypedef struct AsciiObject:

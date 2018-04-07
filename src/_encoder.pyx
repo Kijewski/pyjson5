@@ -13,21 +13,35 @@ cdef enum EncType:
     ENC_TYPE_SEQUENCE
 
 
-cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t length) nogil except False:
+cdef boolean _append_i(WriterRef writer, Py_ssize_t index) except False:
+    cdef const char *s
+    cdef Py_ssize_t length
+
+    s = &ESCAPE_DCT.items[index][0]
+    length = s[7]
+    if length == 1:
+        writer.append_c(writer, s[0])
+    else:
+        writer.append_s(writer, s, length)
+
+    return True
+
+
+cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t length) except False:
     cdef char buf[16]
     cdef uint32_t c
     cdef uint32_t s1, s2
     cdef Py_ssize_t index
 
-    _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, <char> b'"')
+    writer.reserve(writer, 2 + length)
+    writer.append_c(writer, <char> b'"')
     for index in range(length):
         c = data[index]
         if UCSString is not UCS4String:
-            _writer_append_i(writer, c)
+            _append_i(writer, c)
         else:
             if c < 0x10000:
-                _writer_append_i(writer, c)
+                _append_i(writer, c)
             else:
                 # surrogate pair
                 c -= 0x10000
@@ -35,8 +49,8 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
                 s2 = 0xdc00 | (c & 0x3ff)
 
                 snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
-                _writer_append_s(writer, buf, 2 * 6)
-    _writer_append_c(writer, <char> b'"')
+                writer.append_s(writer, buf, 2 * 6)
+    writer.append_c(writer, <char> b'"')
 
     return True
 
@@ -66,24 +80,31 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
     cdef const char *string
     cdef char c
     cdef Py_ssize_t index, length
-    cdef WriterVector sub_writer
 
-    _encode(sub_writer, data)
+    cdef WriterReallocatable sub_writer = WriterReallocatable(
+        Writer(_WriterReallocatable_reserve, _WriterReallocatable_append_c, _WriterReallocatable_append_s),
+        0, 0, NULL,
+    )
+    try:
+        _encode(sub_writer.base, data)
 
-    length = sub_writer.buf.size()
-    string = sub_writer.buf.data()
+        length = sub_writer.position
+        string = <char*> sub_writer.obj
 
-    _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, <char> b'"')
-    for index in range(length):
-        c = string[index]
-        if c not in b'\\"':
-            _writer_append_c(writer, c)
-        elif c == b'\\':
-            _writer_append_s(writer, b'\\\\', 2)
-        else:
-            _writer_append_s(writer, b'\\u0022', 6)
-    _writer_append_c(writer, <char> b'"')
+        writer.reserve(writer, 2 + length)
+        writer.append_c(writer, <char> b'"')
+        for index in range(length):
+            c = string[index]
+            if c not in b'\\"':
+                writer.append_c(writer, c)
+            elif c == b'\\':
+                writer.append_s(writer, b'\\\\', 2)
+            else:
+                writer.append_s(writer, b'\\u0022', 6)
+        writer.append_c(writer, <char> b'"')
+    finally:
+        if sub_writer.obj is not NULL:
+            ObjectFree(sub_writer.obj)
 
     return True
 
@@ -93,7 +114,7 @@ cdef boolean _append_ascii(WriterRef writer, object data) except False:
     cdef Py_ssize_t length
 
     PyBytes_AsStringAndSize(data, &buf, &length)
-    _writer_append_s(writer, buf, length)
+    writer.append_s(writer, buf, length)
 
     return True
 
@@ -102,15 +123,15 @@ cdef boolean _encode_sequence(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object value
 
-    _writer_append_c(writer, <char> b'[')
+    writer.append_c(writer, <char> b'[')
     first = True
     for value in data:
         if not first:
-            _writer_append_c(writer, <char> b',')
+            writer.append_c(writer, <char> b',')
         else:
             first = False
         _encode(writer, value)
-    _writer_append_c(writer, <char> b']')
+    writer.append_c(writer, <char> b']')
 
     return True
 
@@ -119,11 +140,11 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object key, value
 
-    _writer_append_c(writer, <char> b'{')
+    writer.append_c(writer, <char> b'{')
     first = True
     for key in data:
         if not first:
-            _writer_append_c(writer, <char> b',')
+            writer.append_c(writer, <char> b',')
         else:
             first = False
         value = data[key]
@@ -133,9 +154,9 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
         else:
             _encode_nested_key(writer, key)
 
-        _writer_append_c(writer, <char> b':')
+        writer.append_c(writer, <char> b':')
         _encode(writer, value)
-    _writer_append_c(writer, <char> b'}')
+    writer.append_c(writer, <char> b'}')
 
     return True
 
@@ -182,7 +203,7 @@ cdef boolean _encode_constant(WriterRef writer, object data, EncType enc_type) e
         string = b'null'
         length = 4
 
-    _writer_append_s(writer, string, length)
+    writer.append_s(writer, string, length)
     return True
 
 
@@ -200,10 +221,10 @@ cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) e
     stringified = data.isoformat()
     string = PyUnicode_AsUTF8AndSize(stringified, &length)
 
-    _writer_reserve(writer, 2 + length)
-    _writer_append_c(writer, <char> b'"')
-    _writer_append_s(writer, string, length)
-    _writer_append_c(writer, <char> b'"')
+    writer.reserve(writer, 2 + length)
+    writer.append_c(writer, <char> b'"')
+    writer.append_s(writer, string, length)
+    writer.append_c(writer, <char> b'"')
 
     return True
 
@@ -236,7 +257,7 @@ cdef boolean _encode_numeric(WriterRef writer, object data, EncType enc_type) ex
                 string = b'-Infinity'
                 length = 9
 
-            _writer_append_s(writer, string, length)
+            writer.append_s(writer, string, length)
             return True
         else:
             formatter_string = '%.6e'
@@ -298,29 +319,3 @@ cdef boolean _encode(WriterRef writer, object data) except False:
 
     encoder(writer, data, enc_type)
     return True
-
-
-cdef Py_ssize_t EncodedMemoryView_ONE = 1
-
-@final
-@no_gc
-@auto_pickle(False)
-cdef class EncodedMemoryView:
-    cdef std_vector[char] buf
-    cdef Py_ssize_t length
-
-    def __getbuffer__(self, Py_buffer *view, int flags):
-        view.buf = self.buf.data()
-        view.obj = self
-        view.len = self.length
-        view.readonly = False
-        view.itemsize = 1
-        view.format = b'c'
-        view.ndim = 1
-        view.shape = &self.length
-        view.strides = &EncodedMemoryView_ONE
-        view.suboffsets = NULL
-        view.internal = NULL
-
-    def __releasebuffer__(self, Py_buffer *view):
-        pass

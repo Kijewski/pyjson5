@@ -45,29 +45,31 @@ def decode_iter(object cb, object max_depth=None, boolean some=False):
     return _decode_callable(<PyObject*> cb, max_depth, some)
 
 
-def encode(data):
-    cdef WriterVector writer
-    _encode(writer, data)
-    return PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, writer.buf.data(), writer.buf.size())
-
-
-def encode_unicode(data):
+cpdef encode(data):
     cdef void *temp = NULL
     cdef object result
-    cdef WriterUnicode writer = WriterUnicode(0, 0, NULL)
+    cdef Py_ssize_t start = <Py_ssize_t> <void*> &(<AsciiObject*> 0).data[0]
+    cdef Py_ssize_t length
+    cdef WriterReallocatable writer = WriterReallocatable(
+        Writer(_WriterReallocatable_reserve, _WriterReallocatable_append_c, _WriterReallocatable_append_s),
+        start, 0, NULL,
+    )
 
     try:
-        _encode(writer, data)
+        _encode(writer.base, data)
+        if writer.position <= 0:
+            return u''
 
-        temp = ObjectRealloc(writer.obj, sizeof(PyASCIIObject) + writer.position + 1)
+        temp = ObjectRealloc(writer.obj, writer.position + 1)
         if temp is not NULL:
-            writer.obj = <AsciiObject*> temp
-        writer.obj.data[writer.position] = 0
+            writer.obj = temp
+        (<char*> writer.obj)[writer.position] = 0
 
+        length = writer.position - start
         result = ObjectInit(<PyObject*> writer.obj, unicode)
         writer.obj = NULL
 
-        (<PyASCIIObject*> <PyObject*> result).length = writer.position
+        (<PyASCIIObject*> <PyObject*> result).length = length
         (<PyASCIIObject*> <PyObject*> result).hash = -1
         (<PyASCIIObject*> <PyObject*> result).wstr = NULL
         (<PyASCIIObject*> <PyObject*> result).state.interned = SSTATE_NOT_INTERNED
@@ -83,36 +85,46 @@ def encode_unicode(data):
 
 
 def encode_bytes(data):
-    cdef WriterVector writer
-    _encode(writer, data)
-    return PyBytes_FromStringAndSize(writer.buf.data(), writer.buf.size())
+    cdef void *temp = NULL
+    cdef object result
+    cdef Py_ssize_t start = <Py_ssize_t> <void*> &(<PyBytesObject*> 0).ob_sval[0]
+    cdef Py_ssize_t length
+    cdef WriterReallocatable writer = WriterReallocatable(
+        Writer(_WriterReallocatable_reserve, _WriterReallocatable_append_c, _WriterReallocatable_append_s),
+        start, 0, NULL,
+    )
 
+    try:
+        _encode(writer.base, data)
+        if writer.position <= 0:
+            return b''
 
-def encode_buffer(data):
-    cdef WriterVector writer
-    cdef EncodedMemoryView result = EncodedMemoryView()
+        temp = ObjectRealloc(writer.obj, writer.position + 1)
+        if temp is not NULL:
+            writer.obj = temp
+        (<char*> writer.obj)[writer.position] = 0
 
-    _encode(writer, data)
+        length = writer.position - start
+        result = <object> <PyObject*> ObjectInitVar((<PyVarObject*> writer.obj), bytes, length)
+        (<PyBytesObject*> writer.obj).ob_shash = -1
 
-    swap(result.buf, writer.buf)
-    result.buf.shrink_to_fit()
-    result.length = result.buf.size()
+        writer.obj = NULL
 
-    return memoryview(result)
-
-
-def encode_bytearray(data):
-    cdef WriterVector writer
-    _encode(writer, data)
-    return PyByteArray_FromStringAndSize(writer.buf.data(), writer.buf.size())
+        return result
+    finally:
+        if writer.obj is not NULL:
+            ObjectFree(writer.obj)
 
 
 def encode_callback(data, object cb):
-    cdef WriterCallback writer = WriterCallback(<PyObject*> cb)
-    _encode(writer, data)
+    cdef WriterCallback writer = WriterCallback(
+        Writer(_WriterCallback_reserve, _WriterCallback_append_c, _WriterCallback_append_s),
+        <PyObject*> cb,
+    )
+    _encode(writer.base, data)
 
 
 __all__ = (
     'decode', 'decode_latin1', 'decode_buffer', 'decode_iter',
-    'encode', 'encode_bytes', 'encode_buffer', 'encode_callback',
+    'encode', 'encode_bytes', 'encode_callback',
 )
