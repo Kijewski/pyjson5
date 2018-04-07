@@ -1,5 +1,4 @@
 DEFAULT_MAX_NESTING_LEVEL = 32
-UNLIMITED = -1
 TO_JSON = None
 
 
@@ -107,9 +106,9 @@ def encode_bytes(data):
         (<char*> writer.obj)[writer.position] = 0
 
         result = <object> <PyObject*> ObjectInitVar((<PyVarObject*> writer.obj), bytes, length)
-        (<PyBytesObject*> writer.obj).ob_shash = -1
-
         writer.obj = NULL
+
+        (<PyBytesObject*> writer.obj).ob_shash = -1
 
         return result
     finally:

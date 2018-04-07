@@ -81,11 +81,12 @@ cdef extern from 'Python.h':
         PyUnicode_4BYTE_KIND
 
     int PyUnicode_READY(object o) except -1
-    Py_ssize_t PyUnicode_GET_LENGTH(object o)
-    int PyUnicode_KIND(object o)
-    Py_UCS1 *PyUnicode_1BYTE_DATA(object o)
-    Py_UCS2 *PyUnicode_2BYTE_DATA(object o)
-    Py_UCS4 *PyUnicode_4BYTE_DATA(object o)
+    Py_ssize_t PyUnicode_GET_LENGTH(object o) nogil
+    int PyUnicode_KIND(object o) nogil
+    boolean PyUnicode_IS_ASCII(object) nogil
+    Py_UCS1 *PyUnicode_1BYTE_DATA(object o) nogil
+    Py_UCS2 *PyUnicode_2BYTE_DATA(object o) nogil
+    Py_UCS4 *PyUnicode_4BYTE_DATA(object o) nogil
 
     boolean Py_EnterRecursiveCall(const char *where) except True
     void Py_LeaveRecursiveCall()
@@ -99,8 +100,6 @@ cdef extern from 'Python.h':
 
     object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
     char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
-
-    object PyByteArray_FromStringAndSize(const char *string, Py_ssize_t length)
 
     object CallFunction 'PyObject_CallFunction'(PyObject *cb, const char *format, ...)
 

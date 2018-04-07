@@ -110,11 +110,26 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
 
 
 cdef boolean _append_ascii(WriterRef writer, object data) except False:
-    cdef char *buf
-    cdef Py_ssize_t length
+    cdef Py_buffer view
+    cdef const char *buf
 
-    PyBytes_AsStringAndSize(data, &buf, &length)
-    writer.append_s(writer, buf, length)
+    if PyUnicode_Check(data):
+        PyUnicode_READY(data)
+        if not PyUnicode_IS_ASCII(data):
+            raise TypeError('Expected ASCII data')
+        writer.append_s(writer, <const char*> PyUnicode_1BYTE_DATA(data), PyUnicode_GET_LENGTH(data))
+    else:
+        PyObject_GetBuffer(data, &view, PyBUF_CONTIG_RO)
+        try:
+            buf = <const char*> view.buf
+            for index in range(view.len):
+                c = buf[index]
+                if c & ~0x7f:
+                    raise TypeError('Expected ASCII data')
+
+            writer.append_s(writer, buf, view.len)
+        finally:
+            PyBuffer_Release(&view)
 
     return True
 
@@ -159,34 +174,6 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     writer.append_c(writer, <char> b'}')
 
     return True
-
-
-cdef EncType _enc_type_of(object data) except ENC_TYPE_EXCEPTION:
-    if data is None:
-        return ENC_TYPE_NONE
-    elif PyUnicode_Check(data):
-        return ENC_TYPE_UNICODE
-    elif PyBool_Check(data):
-        return ENC_TYPE_BOOL
-    elif PyBytes_Check(data):
-        return ENC_TYPE_BYTES
-    elif PyLong_Check(data):
-        return ENC_TYPE_LONG
-    elif PyFloat_Check(data):
-        return ENC_TYPE_FLOAT
-    elif obj_has_iter(data):
-        if isinstance(data, Mapping):
-            return ENC_TYPE_MAPPING
-        else:
-            return ENC_TYPE_SEQUENCE
-    if isinstance(data, Decimal):
-        return ENC_TYPE_DECIMAL
-    elif isinstance(data, DATETIME_CLASSES):
-        return ENC_TYPE_DATETIME
-    elif data == None:
-        return ENC_TYPE_NONE
-    else:
-        return ENC_TYPE_UNKNOWN
 
 
 cdef boolean _encode_constant(WriterRef writer, object data, EncType enc_type) except False:
@@ -263,9 +250,8 @@ cdef boolean _encode_numeric(WriterRef writer, object data, EncType enc_type) ex
             formatter_string = '%.6e'
 
     formatted_data = (formatter_string % data)
-
     string = PyUnicode_AsUTF8AndSize(formatted_data, &length)
-    _append_ascii(writer, string)
+    writer.append_s(writer, string, length)
 
     return True
 
@@ -302,7 +288,31 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     cdef boolean (*encoder)(WriterRef, object, EncType) except False
     cdef EncType enc_type
 
-    enc_type = _enc_type_of(data)
+    if data is None:
+        enc_type = ENC_TYPE_NONE
+    elif PyUnicode_Check(data):
+        enc_type = ENC_TYPE_UNICODE
+    elif PyBool_Check(data):
+        enc_type = ENC_TYPE_BOOL
+    elif PyBytes_Check(data):
+        enc_type = ENC_TYPE_BYTES
+    elif PyLong_Check(data):
+        enc_type = ENC_TYPE_LONG
+    elif PyFloat_Check(data):
+        enc_type = ENC_TYPE_FLOAT
+    elif obj_has_iter(data):
+        if isinstance(data, Mapping):
+            enc_type = ENC_TYPE_MAPPING
+        else:
+            enc_type = ENC_TYPE_SEQUENCE
+    elif isinstance(data, Decimal):
+        enc_type = ENC_TYPE_DECIMAL
+    elif isinstance(data, DATETIME_CLASSES):
+        enc_type = ENC_TYPE_DATETIME
+    elif data == None:
+        enc_type = ENC_TYPE_NONE
+    else:
+        enc_type = ENC_TYPE_UNKNOWN
 
     if enc_type in (ENC_TYPE_NONE, ENC_TYPE_BOOL):
         encoder = _encode_constant
@@ -318,4 +328,5 @@ cdef boolean _encode(WriterRef writer, object data) except False:
         encoder = _encode_recursive
 
     encoder(writer, data, enc_type)
+
     return True

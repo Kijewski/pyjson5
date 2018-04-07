@@ -2,7 +2,7 @@ cdef enum:
     NO_EXTRA_DATA = 0x0011_0000
 
 
-cdef void _skip_single_line(ReaderRef reader) nogil:
+cdef void _skip_single_line(ReaderRef reader):
     cdef uint32_t c0
     while _reader_good(reader):
         c0 = _reader_get(reader)
@@ -10,20 +10,7 @@ cdef void _skip_single_line(ReaderRef reader) nogil:
             break
 
 
-cdef int32_t _get_c_out(ReaderRef reader) nogil except -2:
-    cdef uint32_t c0
-    cdef int32_t c1
-
-    if _reader_good(reader):
-        c0 = _reader_get(reader)
-        c1 = cast_to_int32(c0)
-    else:
-        c1 = -1
-
-    return c1
-
-
-cdef boolean _skip_multiline_comment(ReaderRef reader) nogil except False:
+cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
     cdef uint32_t c0
     cdef boolean seen_asterisk = False
     cdef Py_ssize_t comment_start = _reader_tell(reader)
@@ -50,7 +37,7 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) nogil except False:
 #     data found
 # -1: exhausted
 # -2: exception
-cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
+cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
     cdef int32_t c1
     cdef boolean seen_slash
 
@@ -88,7 +75,7 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) nogil except -2:
 #    data found
 # -1 exhausted
 # -2 exception
-cdef int32_t _skip_to_data(ReaderRef reader) nogil except -2:
+cdef int32_t _skip_to_data(ReaderRef reader) except -2:
     cdef uint32_t c0
     cdef int32_t c1
     if _reader_good(reader):
@@ -99,7 +86,7 @@ cdef int32_t _skip_to_data(ReaderRef reader) nogil except -2:
     return c1
 
 
-cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) nogil except -1:
+cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
     cdef Py_ssize_t start
     cdef uint32_t c0
     cdef uint32_t result
@@ -131,7 +118,7 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) nogil excep
 # >=  0: character to append
 #    -1: skip
 # <  -1: -(next character + 1)
-cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil except 0x7ffffff:
+cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) except 0x7ffffff:
     cdef uint32_t c0
     cdef uint32_t c1
 
@@ -344,11 +331,6 @@ cdef object _decode_number_any(ReaderRef reader, std_vector[char] &buf, int32_t 
         return int(pybuf, 10)
 
 
-cdef int32_t _accept_string_and_get_out(ReaderRef reader, const char *string) nogil except -2:
-    _accept_string(reader, string)
-    return _get_c_out(reader)
-
-
 cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
@@ -365,12 +347,12 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
 
         c0 = _reader_get(reader)
         if c0 == 'I':
-            c1 = _accept_string_and_get_out(reader, b'nfinity')
-            c_in_out[0] = c1
+            _accept_string(reader, b'nfinity')
+            c_in_out[0] = NO_EXTRA_DATA
             return CONST_POS_INF
         elif c0 == b'N':
-            c1 = _accept_string_and_get_out(reader, b'aN')
-            c_in_out[0] = c1
+            _accept_string(reader, b'aN')
+            c_in_out[0] = NO_EXTRA_DATA
             return CONST_POS_NAN
 
         buf.reserve(16)
@@ -381,12 +363,12 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
 
         c0 = _reader_get(reader)
         if c0 == 'I':
-            c1 = _accept_string_and_get_out(reader, b'nfinity')
-            c_in_out[0] = c1
+            _accept_string(reader, b'nfinity')
+            c_in_out[0] = NO_EXTRA_DATA
             return CONST_NEG_INF
         elif c0 == b'N':
-            c1 = _accept_string_and_get_out(reader, b'aN')
-            c_in_out[0] = c1
+            _accept_string(reader, b'aN')
+            c_in_out[0] = NO_EXTRA_DATA
             return CONST_NEG_NAN
 
         buf.reserve(16)
@@ -405,13 +387,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
 #  1: done
 #  0: data found
 # -1: exception (exhausted)
-cdef uint32_t _skip_comma(
-    ReaderRef reader,
-    Py_ssize_t start,
-    uint32_t terminator,
-    const char *what,
-    int32_t *c_in_out,
-) nogil except -1:
+cdef uint32_t _skip_comma(ReaderRef reader, Py_ssize_t start, uint32_t terminator, const char *what, int32_t *c_in_out) except -1:
     cdef int32_t c0
     cdef uint32_t c1
     cdef boolean needs_comma
@@ -565,7 +541,7 @@ cdef list _decode_array(ReaderRef reader):
     _raise_unclosed(b'array', start)
 
 
-cdef boolean _accept_string(ReaderRef reader, const char *string) nogil except False:
+cdef boolean _accept_string(ReaderRef reader, const char *string) except False:
     cdef uint32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
