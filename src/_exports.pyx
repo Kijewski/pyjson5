@@ -125,6 +125,6 @@ def encode_callback(data, object cb):
 
 
 __all__ = (
-    'decode', 'decode_latin1', 'decode_buffer', 'decode_iter',
+    'decode', 'decode_latin1', 'decode_buffer', 'decode_callback',
     'encode', 'encode_bytes', 'encode_callback',
 )
