@@ -300,7 +300,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
         c_in_out[0] = c1
         return 0.0
     else:
-        c1 = _get_c_out(reader)
+        c1 = cast_to_int32(c0)
         c_in_out[0] = c1
         return 0
 
@@ -426,8 +426,7 @@ cdef uint32_t _skip_comma(
 
         c1 = cast_to_uint32(c0)
         if c1 == terminator:
-            c0 = _get_c_out(reader)
-            c_in_out[0] = c0
+            c_in_out[0] = NO_EXTRA_DATA
             return 1
 
         if c1 != b',':

@@ -37,7 +37,7 @@ def decode_callback(object callback, object max_depth=None, boolean some=False):
         max_depth = DEFAULT_MAX_NESTING_LEVEL
 
     if not callable(callback):
-        raise TypeError('callback must be callable') from ex
+        raise TypeError('callback must be callable')
 
     return _decode_callable(<PyObject*> callback, max_depth, some)
 
