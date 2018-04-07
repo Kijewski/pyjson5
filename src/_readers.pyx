@@ -111,7 +111,7 @@ cdef int32_t _reader_good_fill(ReaderIterCodepointsRef self) nogil except -1:
 
     with gil:
         try:
-            result = (<object> self.get_next)()
+            result = CallFunction(self.get_next, b'')
             if result > 0x10_ffff:
                 raise ValueError(f'result={result!r} is not a valid Unicode codepoint')
             self.lookahead = cast_to_int32(result)
