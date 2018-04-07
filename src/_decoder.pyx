@@ -157,7 +157,9 @@ cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) nogil exce
         return _get_hex_character(reader, 2)
     elif c0 == b'u':
         c0 = cast_to_uint32(_get_hex_character(reader, 4))
-        if not Py_UNICODE_IS_HIGH_SURROGATE(c0):
+        if expect(Py_UNICODE_IS_LOW_SURROGATE(c0), False):
+            _raise_expected_s('high surrogate before low surrogate', start, c0)
+        elif not Py_UNICODE_IS_HIGH_SURROGATE(c0):
             return c0
 
         _accept_string(reader, b'\\u')
@@ -458,7 +460,7 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
 
     c0 = c_in_out[0]
     c1 = cast_to_uint32(c0)
-    if expect(False, not _is_identifier_start(c1)):
+    if expect(not _is_identifier_start(c1), False):
         _raise_expected_s('IdentifierStart', _reader_tell(reader), c1)
 
     while True:
