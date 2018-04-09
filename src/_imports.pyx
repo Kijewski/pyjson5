@@ -66,6 +66,8 @@ cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
     ctypedef char EscapeDctItem[8]
     struct EscapeDct:
         EscapeDctItem items[0x10000]
+        boolean is_escaped(uint32_t c)
+        Py_ssize_t find_unescaped_range(const char *start, Py_ssize_t length)
     EscapeDct ESCAPE_DCT
 
 

@@ -633,6 +633,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
     c0 = c_in_out[0]
     c1 = cast_to_uint32(c0)
 
+    decoder = _decoder_unknown
     if c1 in b'ntfIN':
         decoder = _decode_literal
     elif c1 in b'\'"':
@@ -641,8 +642,6 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
         decoder = _decode_number
     elif c1 in b'{[':
         decoder = _decode_recursive_enter
-    elif expect(True, False):
-        decoder = _decoder_unknown
 
     return decoder(reader, c_in_out)
 

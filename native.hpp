@@ -63,6 +63,7 @@ struct EscapeDct {
     static constexpr std::size_t length = 0x10000;
 
     Item items[length];
+    unsigned __int128 is_escaped_array;
 
     static constexpr Item unicode_item(size_t index) {
         constexpr char HEX[] = "0123456789abcdef";
@@ -86,16 +87,39 @@ struct EscapeDct {
         return { (char) (unsigned char) chr, 0, 0, 0, 0, 0, 0, 1 };
     }
 
-    constexpr EscapeDct() : items() {
+    inline bool is_escaped(uint32_t c) const {
+        return (c >= 0x0080) || (is_escaped_array & (
+            static_cast<unsigned __int128>(1) <<
+            static_cast<std::uint8_t>(c)
+        ));
+    }
+
+    inline std::size_t find_unescaped_range(const char *start, Py_ssize_t length) const {
+        Py_ssize_t index = 0;
+        while ((index < length) && !is_escaped(start[index])) {
+            ++index;
+        }
+        return index;
+    }
+
+    constexpr EscapeDct() :
+        items(),
+        is_escaped_array(static_cast<unsigned __int128>(0) - 1)
+    {
         for (std::size_t i = 0; i < length; ++i) {
             items[i] = unicode_item(i);
         }
         for (std::size_t i = 0x20; i < 0x7f; ++i) {
             switch (i) {
-                case '"': case '&': case '<': case '>':
+                case '"': case '\'': case '&': case '<': case '>': case '\\':
                     break;
                 default:
                     items[i] = verbatim_item(i);
+
+                    is_escaped_array &= ~(
+                        static_cast<unsigned __int128>(1) <<
+                        static_cast<std::uint8_t>(i)
+                    );
             }
         }
         items['\\'] = escaped_item('\\');
@@ -104,7 +128,6 @@ struct EscapeDct {
         items['\n'] = escaped_item('n');
         items['\r'] = escaped_item('r');
         items['\t'] = escaped_item('t');
-        items['/' ] = escaped_item('/');
     }
 };
 

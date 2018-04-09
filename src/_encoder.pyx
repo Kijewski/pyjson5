@@ -13,44 +13,66 @@ cdef enum EncType:
     ENC_TYPE_SEQUENCE
 
 
-cdef boolean _append_i(WriterRef writer, Py_ssize_t index) except False:
-    cdef const char *s
-    cdef Py_ssize_t length
-
-    s = &ESCAPE_DCT.items[index][0]
-    length = s[7]
-    if length == 1:
-        writer.append_c(writer, s[0])
-    else:
-        writer.append_s(writer, s, length)
-
-    return True
-
-
 cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t length) except False:
     cdef char buf[16]
     cdef uint32_t c
     cdef uint32_t s1, s2
     cdef Py_ssize_t index
+    cdef const char *escaped_string
+    cdef Py_ssize_t escaped_length
+    cdef size_t unescaped_length
 
-    writer.reserve(writer, 2 + length)
-    writer.append_c(writer, <char> b'"')
-    for index in range(length):
-        c = data[index]
-        if UCSString is not UCS4String:
-            _append_i(writer, c)
+    if length > 0:
+        writer.reserve(writer, 2 + length)
+        writer.append_c(writer, <char> b'"')
+        if UCSString is UCS1String:
+            while True:
+                unescaped_length = ESCAPE_DCT.find_unescaped_range(<const char*> data, length)
+                if unescaped_length > 0:
+                    writer.append_s(writer, <const char*> data, unescaped_length)
+
+                    data += unescaped_length
+                    length -= unescaped_length
+                    if length <= 0:
+                        break
+
+                c = data[0]
+                escaped_string = &ESCAPE_DCT.items[c][0]
+                escaped_length = ESCAPE_DCT.items[c][7]
+                writer.append_s(writer, escaped_string, escaped_length)
+
+                data += 1
+                length -= 1
+                if length <= 0:
+                    break
         else:
-            if c < 0x10000:
-                _append_i(writer, c)
-            else:
-                # surrogate pair
-                c -= 0x10000
-                s1 = 0xd800 | ((c >> 10) & 0x3ff)
-                s2 = 0xdc00 | (c & 0x3ff)
+            for index in range(length):
+                c = data[index]
+                if UCSString is UCS2String:
+                    if not ESCAPE_DCT.is_escaped(c):
+                        writer.append_c(writer, <char> <unsigned char> c)
+                    else:
+                        escaped_string = &ESCAPE_DCT.items[c][0]
+                        escaped_length = ESCAPE_DCT.items[c][7]
+                        writer.append_s(writer, escaped_string, escaped_length)
+                elif UCSString is UCS4String:
+                    if not ESCAPE_DCT.is_escaped(c):
+                        writer.append_c(writer, <char> <unsigned char> c)
+                    elif c < 0x10000:
+                        escaped_string = &ESCAPE_DCT.items[c][0]
+                        escaped_length = ESCAPE_DCT.items[c][7]
+                        writer.append_s(writer, escaped_string, escaped_length)
+                    else:
+                        # surrogate pair
+                        c -= 0x10000
+                        s1 = 0xd800 | ((c >> 10) & 0x3ff)
+                        s2 = 0xdc00 | (c & 0x3ff)
 
-                snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
-                writer.append_s(writer, buf, 2 * 6)
-    writer.append_c(writer, <char> b'"')
+                        snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
+                        writer.append_s(writer, buf, 2 * 6)
+        writer.append_c(writer, <char> b'"')
+    else:
+        writer.append_s(writer, b'""', 2)
 
     return True
 
@@ -314,6 +336,7 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     else:
         enc_type = ENC_TYPE_UNKNOWN
 
+    encoder = _encode_recursive
     if enc_type in (ENC_TYPE_NONE, ENC_TYPE_BOOL):
         encoder = _encode_constant
     elif enc_type == ENC_TYPE_UNICODE:
@@ -324,8 +347,6 @@ cdef boolean _encode(WriterRef writer, object data) except False:
         encoder = _encode_numeric
     elif enc_type == ENC_TYPE_DATETIME:
         encoder = _encode_datetime
-    else:
-        encoder = _encode_recursive
 
     encoder(writer, data, enc_type)
 
