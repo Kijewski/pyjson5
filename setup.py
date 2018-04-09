@@ -26,7 +26,7 @@ extra_compile_args = [
 
 setup(
     name='json5',
-    version='0.1.0',
+    version='0.2.0',
     description='JSON5 ...',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',

@@ -108,7 +108,7 @@ def encode_bytes(data):
         result = <object> <PyObject*> ObjectInitVar((<PyVarObject*> writer.obj), bytes, length)
         writer.obj = NULL
 
-        (<PyBytesObject*> writer.obj).ob_shash = -1
+        (<PyBytesObject*> result).ob_shash = -1
 
         return result
     finally:
