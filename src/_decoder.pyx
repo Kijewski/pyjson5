@@ -106,10 +106,10 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
             result |= c0 - <uint32_t> b'a' + 10
         elif b'A' <= c0 <= b'F':
             result |= c0 - <uint32_t> b'A' + 10
-        elif expect(True, False):
+        else:
             _raise_expected_s('hexadecimal character', start, c0)
 
-    if expect(not (0 <= result <= 0x10ffff), False):
+    if expect(result > 0x10ffff, False):
         _raise_expected_s('Unicode code point', start, result)
 
     return cast_to_int32(result)

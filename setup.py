@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from os import environ
 from distutils.core import setup
 from distutils.extension import Extension
 
@@ -13,9 +14,12 @@ except ImportError:
     from Cython.Distutils import build_ext
 
 
+if 'CC' not in environ:
+    environ['CC'] = 'clang++'
+
 extra_compile_args = [
     '-std=gnu++14',
-    '-O2', '-flto', '-fPIC',
+    '-O2', '-fPIC',
     '-march=native', '-mtune=native', '-ggdb1', '-pipe',
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]

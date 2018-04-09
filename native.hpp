@@ -67,7 +67,7 @@ struct EscapeDct {
 
     static constexpr Item unicode_item(size_t index) {
         constexpr char HEX[] = "0123456789abcdef";
-        return {
+        return {{
             '\\',
             'u',
             HEX[(index / 16 / 16 / 16 % 16)],
@@ -76,15 +76,15 @@ struct EscapeDct {
             HEX[(index                % 16)],
             0,
             6,
-        };
+        }};
     }
 
     static constexpr Item escaped_item(char chr) {
-        return { '\\', chr, 0, 0, 0, 0, 0, 2 };
+        return {{ '\\', chr, 0, 0, 0, 0, 0, 2 }};
     }
 
     static constexpr Item verbatim_item(size_t chr) {
-        return { (char) (unsigned char) chr, 0, 0, 0, 0, 0, 0, 1 };
+        return {{ (char) (unsigned char) chr, 0, 0, 0, 0, 0, 0, 1 }};
     }
 
     inline bool is_escaped(uint32_t c) const {
@@ -122,12 +122,12 @@ struct EscapeDct {
                     );
             }
         }
-        items['\\'] = escaped_item('\\');
-        items['\b'] = escaped_item('b');
-        items['\f'] = escaped_item('f');
-        items['\n'] = escaped_item('n');
-        items['\r'] = escaped_item('r');
-        items['\t'] = escaped_item('t');
+        items[(uint8_t) '\\'] = escaped_item('\\');
+        items[(uint8_t) '\b'] = escaped_item('b');
+        items[(uint8_t) '\f'] = escaped_item('f');
+        items[(uint8_t) '\n'] = escaped_item('n');
+        items[(uint8_t) '\r'] = escaped_item('r');
+        items[(uint8_t) '\t'] = escaped_item('t');
     }
 };
 
