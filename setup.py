@@ -26,11 +26,12 @@ extra_compile_args = [
 
 setup(
     name='json5',
-    version='0.2.0',
+    version='0.2.1',
     description='JSON5 ...',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',
     url='https://bib.vetmed.fu-berlin.de/',
+    python_requires='>= 3.3',
     ext_modules=[
         Extension(
             'json5',
