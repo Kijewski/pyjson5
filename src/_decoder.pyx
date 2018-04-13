@@ -511,7 +511,7 @@ cdef boolean _decode_object(ReaderRef reader, dict result) except False:
             try:
                 value = _decode_recursive(reader, &c0)
             except _DecoderException as ex:
-                result[key] = ex.result
+                result[key] = (<_DecoderException> ex).result
                 raise
 
             if expect(c0 < 0, False):
@@ -550,7 +550,7 @@ cdef boolean _decode_array(ReaderRef reader, list result) except False:
             try:
                 value = _decode_recursive(reader, &c0)
             except _DecoderException as ex:
-                result.append(ex.result)
+                result.append((<_DecoderException> ex).result)
                 raise
 
             if expect(c0 < 0, False):
@@ -637,7 +637,7 @@ cdef object _decode_recursive_enter(ReaderRef reader, int32_t *c_in_out):
     except RecursionError:
         _raise_nesting(_reader_tell(reader), result)
     except _DecoderException as ex:
-        ex.result = result
+        (<_DecoderException> ex).result = result
         raise ex
     finally:
         _reader_leave(reader)
@@ -706,19 +706,21 @@ cdef object _decode_all_sub(ReaderRef reader, boolean some):
             c1 = cast_to_uint32(c0)
             _raise_unframed_data(c1, start)
     except _DecoderException as ex:
-        ex.result = result
+        (<_DecoderException> ex).result = result
         raise ex
 
     return result
 
 
 cdef object _decode_all(ReaderRef reader, boolean some):
-    cdef Exception ex
+    cdef Exception ex_result
+    cdef _DecoderException ex
     try:
         return _decode_all_sub(reader, some)
     except _DecoderException as e:
-        ex = e.cls(e.msg, e.result, e.extra)
-    raise ex
+        ex = <_DecoderException> e
+        ex_result = ex.cls(ex.msg, ex.result, ex.extra)
+    raise ex_result
 
 
 cdef object _decode_ucs1(const void *string, Py_ssize_t length,

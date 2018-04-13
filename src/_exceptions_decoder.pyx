@@ -62,8 +62,15 @@ cdef class Json5IllegalType(Json5DecoderException):
         return self.args[2]
 
 
-class _DecoderException(BaseException):
-    def __init__(self, cls, msg, extra, result):
+@final
+@auto_pickle(False)
+cdef class _DecoderException(Exception):
+    cdef object cls
+    cdef object msg
+    cdef object extra
+    cdef object result
+
+    def __cinit__(self, cls, msg, extra, result):
         self.cls = cls
         self.msg = msg
         self.extra = extra
