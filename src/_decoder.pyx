@@ -119,7 +119,8 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
 # >=  0: character to append
 #    -1: skip
 # <  -1: -(next character + 1)
-cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) except 0x7ffffff:
+cdef int32_t _get_escape_sequence(ReaderRef reader,
+                                  Py_ssize_t start) except 0x7ffffff:
     cdef uint32_t c0
     cdef uint32_t c1
 
@@ -175,7 +176,8 @@ cdef int32_t _get_escape_sequence(ReaderRef reader, Py_ssize_t start) except 0x7
         return cast_to_int32(c0)
 
 
-cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t start, uint32_t c0):
+cdef object _decode_string_sub(ReaderRef reader, uint32_t delim,
+                               Py_ssize_t start, uint32_t c0):
     cdef int32_t c1
     cdef std_vector[uint32_t] buf
 
@@ -204,7 +206,9 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim, Py_ssize_t star
         else:
             c0 = cast_to_uint32(-(c1 + 1))
 
-    return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, buf.data(), buf.size())
+    return PyUnicode_FromKindAndData(
+        PyUnicode_4BYTE_KIND, buf.data(), buf.size(),
+    )
 
 
 cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
@@ -228,7 +232,8 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     return result
 
 
-cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf, int32_t *c_in_out):
+cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
+                                        int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef object pybuf
