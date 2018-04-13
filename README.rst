@@ -32,9 +32,9 @@ Functions
 
 Please look into ``help(pyjson5)`` or ``src/_exports.pyx``. :-)
 
-The library supplies a ``loads()`` and ``dumps()`` function, so you can use it
-inplace of Python's builtin ``json`` module, but you *should* use the functions
-``encode()`` and ``decode()`` instead.
+The library supplies load(s) and dump(s) functions, so you can use it as a
+drop-in replacement for Python's builtin ``json`` module, but you *should*
+use the functions ``encode_*()`` and ``decode_*()`` instead.
 
 
 Compatibility

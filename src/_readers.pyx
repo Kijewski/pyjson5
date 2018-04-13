@@ -5,10 +5,11 @@ ctypedef fused ReaderRef:
 
 cdef boolean _reader_enter(ReaderRef self) except False:
     if self.base.maxdepth == 0:
-        raise Json5NestingTooDeep('Maximum nesting level exceeded')
+        _raise_nesting(_reader_tell(self))
+
+    Py_EnterRecursiveCall(' while decoding nested JSON5 object')
 
     self.base.maxdepth -= 1
-    Py_EnterRecursiveCall(' while decoding nested JSON5 object')
 
     return True
 
@@ -19,21 +20,18 @@ cdef void _reader_leave(ReaderRef self):
 
 
 cdef inline Py_ssize_t _reader_tell(ReaderRef self):
-    if ReaderRef in ReaderUCSRef:
-        return _reader_ucs_tell(self)
-    elif ReaderRef in ReaderCallbackRef:
-        return _reader_callback_tell(self)
+    return self.base.position
 
 
 cdef inline uint32_t _reader_get(ReaderRef self):
     if ReaderRef in ReaderUCSRef:
         return _reader_ucs_get(self)
-    elif ReaderRef in ReaderCallbackRef:
-        return _reader_callback_get(self)
+    elif ReaderRef is ReaderCallbackRef:
+        return _reader_Callback_get(self)
 
 
 cdef int32_t _reader_good(ReaderRef self) except -1:
     if ReaderRef in ReaderUCSRef:
         return _reader_ucs_good(self)
-    elif ReaderRef in ReaderCallbackRef:
-        return _reader_callback_good(self)
+    elif ReaderRef is ReaderCallbackRef:
+        return _reader_Callback_good(self)

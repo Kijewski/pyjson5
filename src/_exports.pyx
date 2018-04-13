@@ -4,7 +4,7 @@ TO_JSON = None
 
 def decode(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data.
+    Decodes JSON5 serialized data from a ``unicode`` object.
 
     Parameters
     ----------
@@ -40,21 +40,21 @@ def decode(object data, object maxdepth=None, object some=False):
 
 def decode_latin1(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data.
+    Decodes JSON5 serialized data from a ``bytes`` object.
 
     Parameters
     ----------
     data : bytes
         JSON5 serialized data, encoded as Latin-1 or ASCII.
     maxdepth : Optional[int] = None
-        see ``decode(...)`` 
+        see ``decode(...)``
     some : boolean = False
-        see ``decode(...)`` 
+        see ``decode(...)``
 
     Returns
     -------
     object
-        see ``decode(...)`` 
+        see ``decode(...)``
     '''
     return decode_buffer(data, maxdepth, bool(some), 1)
 
@@ -62,7 +62,8 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
 def decode_buffer(object obj, object maxdepth=None, object some=False,
                   object wordlength=None):
     '''
-    Decodes JSON5 serialized data.
+    Decodes JSON5 serialized data from an object that supports the buffer
+    protocol, e.g. bytearray.
 
     Parameters
     ----------
@@ -71,9 +72,9 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
         The argument must support Python's buffer protocol, i.e.
         ``memoryview(...)`` must work. The buffer must be contigious.
     maxdepth : Optional[int] = None
-        see ``decode(...)`` 
+        see ``decode(...)``
     some : boolean = False
-        see ``decode(...)`` 
+        see ``decode(...)``
     wordlength : Optional[int] = None
         Must be 1, 2, 4 to denote UCS1, USC2 or USC4 data.
         Surrogates are not supported. Decode the data to an ``str`` if need be.
@@ -82,7 +83,7 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     Returns
     -------
     object
-        see ``decode(...)`` 
+        see ``decode(...)``
     '''
     cdef Py_buffer view
 
@@ -99,9 +100,9 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
 
 
 def decode_callback(object cb, object maxdepth=None, object some=False,
-                    object *args):
+                    object args=None):
     '''
-    Decodes JSON5 serialized data.
+    Decodes JSON5 serialized data by invoking a callback.
 
     Parameters
     ----------
@@ -117,23 +118,67 @@ def decode_callback(object cb, object maxdepth=None, object some=False,
             ``< 0`` denotes exhausted input.
             ``>= 0`` is the ordinal value of the next character.
     maxdepth : Optional[int] = None
-        see ``decode(...)`` 
+        see ``decode(...)``
     some : boolean = False
-        see ``decode(...)`` 
-    *args : Tuple[...]
+        see ``decode(...)``
+    args : Optional[Sequence[Any]]
         Arguments to call ``cb`` with.
 
     Returns
     -------
     object
-        see ``decode(...)`` 
+        see ``decode(...)``
     '''
-    '''TODO''' # TODO
+    if not callable(cb):
+        raise TypeError(f'type(cb)=={type(cb)!r} is not callable')
+
+    if maxdepth is None:
+        maxdepth = DEFAULT_MAX_NESTING_LEVEL
+
+    if args:
+        args = tuple(args)
+    else:
+        args = ()
+
+    return _decode_callback(cb, args, maxdepth, bool(some))
+
+
+def decode_io(object fp, object maxdepth=None, object some=True):
+    '''
+    Decodes JSON5 serialized data from a file-like object.
+
+    Parameters
+    ----------
+    fp : IOBase
+        A file-like object to parse from.
+    maxdepth : Optional[int] = None
+        see ``decode(...)``
+    some : boolean = False
+        see ``decode(...)``
+
+    Returns
+    -------
+    object
+        see ``decode(...)``
+    '''
+    if not isinstance(fp, IOBase):
+        raise TypeError(f'type(fp)=={type(fp)!r} is not IOBase compatible')
+    elif not fp.readable():
+        raise TypeError(f'fp is not readable')
+    elif fp.closed:
+        raise TypeError(f'fp is closed')
+
+    if maxdepth is None:
+        maxdepth = DEFAULT_MAX_NESTING_LEVEL
+
+    return _decode_callback(fp.read, (1,), maxdepth, bool(some))
+
 
 
 def loads(s, *, encoding='UTF-8', **kw):
     '''
-    Decodes JSON5 serialized data.
+    Decodes JSON5 serialized data from a string.
+
     Use ``decode(...)`` instead!
 
     Parameters
@@ -149,16 +194,37 @@ def loads(s, *, encoding='UTF-8', **kw):
     Returns
     -------
     object
-        see ``decode(...)`` 
+        see ``decode(...)``
     '''
     if not isinstance(s, unicode):
         s = unicode(s, encoding, 'strict')
     return decode(s)
 
 
+def load(fp, **kw):
+    '''
+    Decodes JSON5 serialized data from a file-like object.
+
+    Use ``decode(...)`` instead!
+
+    Parameters
+    ----------
+    fp : IOBase
+        A file-like object to parse from.
+    **kw
+        Silently ignored.
+
+    Returns
+    -------
+    object
+        see ``decode(...)``
+    '''
+    return decode_io(fp, None, False)
+
+
 def encode(object data):
     '''
-    Serializes a Python object to a JSON5 compatible string.
+    Serializes a Python object to a JSON5 compatible unicode string.
 
     Parameters
     ----------
@@ -167,7 +233,7 @@ def encode(object data):
 
     Returns
     -------
-    unicode
+    str
         Unless ``float('inf')`` or ``float('nan')`` is encountered, the result
         will be valid JSON data (as of RFC8259).
 
@@ -227,7 +293,7 @@ def encode(object data):
 
 def encode_bytes(object data):
     '''
-    Serializes a Python object to a JSON5 compatible string.
+    Serializes a Python object to a JSON5 compatible bytes string.
 
     Parameters
     ----------
@@ -282,7 +348,7 @@ def encode_bytes(object data):
 
 def encode_callback(object data, object cb, object supply_bytes=False):
     '''
-    Serializes a Python object to a JSON5 compatible string.
+    Serializes a Python object into a callback function.
 
     The callback function ``cb`` gets called with single characters and strings
     until the input ``data`` is fully serialized.
@@ -318,7 +384,7 @@ def encode_callback(object data, object cb, object supply_bytes=False):
 
 def encode_io(object data, object fp, object supply_bytes=True):
     '''
-    Serializes a Python object to a JSON5 compatible string.
+    Serializes a Python object into a file-object.
 
     The return value of ``fp.write(...)`` is not checked.
     If ``fp`` is unbuffered, then the result will be garbage!
@@ -362,7 +428,7 @@ def encode_noop(object data):
     Test if the input is serializable.
 
     Most likely you want to serialize ``data`` directly, and catch exceptions
-    instead of using this function.
+    instead of using this function!
 
     Parameters
     ----------
@@ -390,7 +456,8 @@ def encode_noop(object data):
 
 def dumps(obj, **kw):
     '''
-    Serializes a Python object to a JSON5 compatible string.
+    Serializes a Python object to a JSON5 compatible unicode string.
+
     Use ``encode(obj)`` instead!
 
     Parameters
@@ -409,7 +476,7 @@ def dumps(obj, **kw):
 
 
 __all__ = (
-    'decode', 'decode_latin1', 'decode_buffer', 'decode_callback',
+    'decode', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
     'encode', 'encode_bytes', 'encode_callback', 'encode_io', 'encode_noop',
     'loads', 'load', 'dumps', 'dump',
 )

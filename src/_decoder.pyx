@@ -463,14 +463,13 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
     )
 
 
-cdef dict _decode_object(ReaderRef reader):
+cdef boolean _decode_object(ReaderRef reader, dict result) except False:
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
     cdef boolean done
     cdef object key
     cdef object value
-    cdef dict result = {}
 
     start = _reader_tell(reader)
 
@@ -478,7 +477,7 @@ cdef dict _decode_object(ReaderRef reader):
     if expect(c0 >= 0, True):
         c1 = cast_to_uint32(c0)
         if c1 == b'}':
-            return result
+            return True
 
         while True:
             if c1 in b'"\'':
@@ -504,7 +503,12 @@ cdef dict _decode_object(ReaderRef reader):
             if expect(c0 < 0, False):
                 break
 
-            value = _decode_recursive(reader, &c0)
+            try:
+                value = _decode_recursive(reader, &c0)
+            except _DecoderException as ex:
+                result[key] = ex.result
+                raise
+
             if expect(c0 < 0, False):
                 break
 
@@ -514,20 +518,20 @@ cdef dict _decode_object(ReaderRef reader):
                 reader, start, <unsigned char>b'}', b'object', &c0,
             )
             if done:
-                return result
+                return True
 
             c1 = cast_to_uint32(c0)
 
     _raise_unclosed(b'object', start)
+    return False
 
 
-cdef list _decode_array(ReaderRef reader):
+cdef boolean _decode_array(ReaderRef reader, list result) except False:
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
     cdef boolean done
     cdef object value
-    cdef list result = []
 
     start = _reader_tell(reader)
 
@@ -535,10 +539,15 @@ cdef list _decode_array(ReaderRef reader):
     if expect(c0 >= 0, True):
         c1 = cast_to_uint32(c0)
         if c1 == b']':
-            return result
+            return True
 
         while True:
-            value = _decode_recursive(reader, &c0)
+            try:
+                value = _decode_recursive(reader, &c0)
+            except _DecoderException as ex:
+                result.append(ex.result)
+                raise
+
             if expect(c0 < 0, False):
                 break
 
@@ -548,7 +557,7 @@ cdef list _decode_array(ReaderRef reader):
                 reader, start, <unsigned char>b']', b'array', &c0,
             )
             if done:
-                return result
+                return True
 
     _raise_unclosed(b'array', start)
 
@@ -614,10 +623,17 @@ cdef object _decode_recursive_enter(ReaderRef reader, int32_t *c_in_out):
 
     _reader_enter(reader)
     try:
-        if c0 == b'{':
-            result = _decode_object(reader)
+        if c1 == b'{':
+            result = {}
+            _decode_object(reader, result)
         else:
-            result = _decode_array(reader)
+            result = []
+            _decode_array(reader, result)
+    except RecursionError:
+        _raise_nesting(_reader_tell(reader), result)
+    except _DecoderException as ex:
+        ex.result = result
+        raise ex
     finally:
         _reader_leave(reader)
 
@@ -658,7 +674,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
     return decoder(reader, c_in_out)
 
 
-cdef object _decode_all(ReaderRef reader, boolean some):
+cdef object _decode_all_sub(ReaderRef reader, boolean some):
     cdef Py_ssize_t start
     cdef int32_t c0
     cdef uint32_t c1
@@ -670,21 +686,34 @@ cdef object _decode_all(ReaderRef reader, boolean some):
         _raise_no_data(start)
 
     result = _decode_recursive(reader, &c0)
-    if c0 < 0:
-        pass
-    elif not some:
-        start = _reader_tell(reader)
-        c1 = cast_to_uint32(c0)
-        c0 = _skip_to_data_sub(reader, c1)
-        if expect(c0 >= 0, False):
+    try:
+        if c0 < 0:
+            pass
+        elif not some:
+            start = _reader_tell(reader)
             c1 = cast_to_uint32(c0)
-            _raise_extra_data(c1, result, start)
-    elif expect(not _is_ws_zs(c0), False):
-        start = _reader_tell(reader)
-        c1 = cast_to_uint32(c0)
-        _raise_unframed_data(c1, result, start)
+            c0 = _skip_to_data_sub(reader, c1)
+            if expect(c0 >= 0, False):
+                c1 = cast_to_uint32(c0)
+                _raise_extra_data(c1, start)
+        elif expect(not _is_ws_zs(c0), False):
+            start = _reader_tell(reader)
+            c1 = cast_to_uint32(c0)
+            _raise_unframed_data(c1, start)
+    except _DecoderException as ex:
+        ex.result = result
+        raise ex
 
     return result
+
+
+cdef object _decode_all(ReaderRef reader, boolean some):
+    cdef Exception ex
+    try:
+        return _decode_all_sub(reader, some)
+    except _DecoderException as e:
+        ex = e.cls(e.msg, e.result, e.extra)
+    raise ex
 
 
 cdef object _decode_ucs1(const void *string, Py_ssize_t length,
@@ -751,3 +780,14 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
         _raise_illegal_wordlength(wordlength)
 
     return decoder(view.buf, length, maxdepth, some)
+
+
+cdef object _decode_callback(object cb, object args, Py_ssize_t maxdepth,
+                             boolean some):
+    cdef ReaderCallback reader = ReaderCallback(
+        ReaderCallbackBase(0, maxdepth),
+        <PyObject*> cb,
+        <PyObject*> args,
+        -1,
+    )
+    return _decode_all(reader, some)

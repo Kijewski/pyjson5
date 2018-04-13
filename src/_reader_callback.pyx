@@ -1,26 +1,31 @@
-cdef struct ReaderCallback:
-    Py_object *callback
-    Py_object *args
+cdef struct ReaderCallbackBase:
     Py_ssize_t position
     Py_ssize_t maxdepth
+    
+
+cdef struct ReaderCallback:
+    ReaderCallbackBase base
+    PyObject *callback
+    PyObject *args
     int32_t lookahead
 
+ctypedef ReaderCallback &ReaderCallbackRef
 
-cdef inline uint32_t _reader_Callback_get(ReaderCallback self):
+
+cdef inline uint32_t _reader_Callback_get(ReaderCallbackRef self):
     cdef int32_t c = self.lookahead
 
     self.lookahead = -1
-    self.position += 1
+    self.base.position += 1
 
     return cast_to_uint32(c)
 
 
-cdef inline Py_ssize_t _reader_Callback_tell(ReaderCallback self):
-    return self.base.position
+cdef int32_t _reader_Callback_good(ReaderCallbackRef self) except -1:
+    cdef Py_ssize_t c = -1
 
-
-cdef int32_t _reader_Callback_good(ReaderCallback self) except -1:
-    cdef Py_ssize_t c
+    if self.lookahead >= 0:
+        return True
 
     cdef object value = CallObject(self.callback, self.args)
     if (value is None) or (value is False):
@@ -33,12 +38,12 @@ cdef int32_t _reader_Callback_good(ReaderCallback self) except -1:
             return False
         c = ord(value)
     else:
-        raise TypeError(f'type(value)=={type(value)!r} not in (int, str, bytes)')
+        _raise_not_ord(value, self.base.position)
 
     if c < 0:
         return False
     elif c > 0x10ffff:
-        raise ValueError(f'Ordinal value=={c!r} is invalid.')
+        _raise_not_ord(value, self.base.position)
 
     self.lookahead = c
 

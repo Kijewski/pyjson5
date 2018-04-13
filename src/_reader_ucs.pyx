@@ -50,7 +50,3 @@ cdef inline uint32_t _reader_ucs_get(ReaderUCSRef self):
     self.base.position += 1
 
     return cast_to_uint32(c)
-
-
-cdef inline Py_ssize_t _reader_ucs_tell(ReaderUCSRef self):
-    return self.base.position
