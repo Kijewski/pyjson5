@@ -352,3 +352,39 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     encoder(writer, data, enc_type)
 
     return True
+
+
+cdef boolean _encode_callback_bytes(object data, object cb) except False:
+    cdef WriterCallback writer = WriterCallback(
+        Writer(
+            _WriterNoop_reserve,
+            _WriterCbBytes_append_c,
+            _WriterCbBytes_append_s,
+        ),
+        <PyObject*> cb,
+    )
+
+    if not callable(cb):
+        raise TypeError(f'type(cb)=={type(cb)!r} is callable')
+
+    _encode(writer.base, data)
+
+    return True
+
+
+cdef boolean _encode_callback_str(object data, object cb) except False:
+    cdef WriterCallback writer = WriterCallback(
+        Writer(
+            _WriterNoop_reserve,
+            _WriterCbStr_append_c,
+            _WriterCbStr_append_s,
+        ),
+        <PyObject*> cb,
+    )
+
+    if not callable(cb):
+        raise TypeError(f'type(cb)=={type(cb)!r} is callable')
+
+    _encode(writer.base, data)
+
+    return True

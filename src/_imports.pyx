@@ -56,7 +56,7 @@ cdef extern from '<utility>' namespace 'std' nogil:
     void swap[T](T&, T&)
 
 
-cdef extern from 'native.hpp' namespace 'JSON5EncoderCpp' nogil:
+cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     int32_t cast_to_int32(...)
     uint32_t cast_to_uint32(...)
 
@@ -104,6 +104,7 @@ cdef extern from 'Python.h':
     char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
 
     object CallFunction 'PyObject_CallFunction'(PyObject *cb, const char *format, ...)
+    object CallObject 'PyObject_CallObject'(PyObject *cb, PyObject *aegs)
 
     ctypedef signed long Py_hash
     ctypedef signed short wchar_t
@@ -150,9 +151,10 @@ cdef extern from * nogil:
     boolean expect '__builtin_expect'(boolean actual, boolean expected)
 
 
-cdef type Decimal, Mapping
+cdef type Decimal, Mapping, IOBase
 cdef object saferepr
 
 from collections.abc import Mapping
 from decimal import Decimal
+from io import IOBase
 from pprint import saferepr
