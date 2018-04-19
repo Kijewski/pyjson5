@@ -4,7 +4,7 @@ cdef object CONST_NEG_NAN = float('-NaN')
 cdef object CONST_NEG_INF = float('-Infinity')
 
 cdef object DATETIME_CLASSES = date, time, datetime
-cdef object ORD_CLASSES = unicode, bytes, bytearray
+cdef object ORD_CLASSES = (unicode, bytes, bytearray)
 
 cdef object UCS1_COMPATIBLE_CODECS = frozenset((
     # ASCII
