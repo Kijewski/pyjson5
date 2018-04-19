@@ -70,6 +70,10 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
         Py_ssize_t find_unescaped_range(const char *start, Py_ssize_t length)
     EscapeDct ESCAPE_DCT
 
+    enum:
+        VERSION_LENGTH
+    const char VERSION[]
+
 
 cdef extern from 'Python.h':
     ctypedef signed char Py_UCS1

@@ -133,5 +133,11 @@ struct EscapeDct {
 
 const EscapeDct ESCAPE_DCT;
 
+const char VERSION[] =
+#   include "./VERSION"
+;
+
+static constexpr std::size_t VERSION_LENGTH = sizeof(VERSION) - 1;
+
 }
 }

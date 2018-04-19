@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 from os import environ
-from Cython.Distutils import build_ext
+from Cython.Distutils import Extension, build_ext
 from distutils.core import setup
-from distutils.extension import Extension
+from os.path import dirname, join, abspath
 
 
 extra_compile_args = [
@@ -11,9 +11,17 @@ extra_compile_args = [
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]
 
+root = abspath(dirname(__file__))
+
+
+def get_version():
+    with open(join(root, 'src', 'VERSION'), 'rt') as f:
+        return eval(f.read().strip())
+
+
 setup(
     name='pyjson5',
-    version='0.3.0',
+    version='0.3.1',
     description='JSON5 serializer and parser written in Cython.',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',

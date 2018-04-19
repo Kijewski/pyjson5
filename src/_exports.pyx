@@ -1,5 +1,6 @@
 DEFAULT_MAX_NESTING_LEVEL = 32
 TO_JSON = None
+__version__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, VERSION, VERSION_LENGTH)
 
 
 def decode(object data, object maxdepth=None, object some=False):
