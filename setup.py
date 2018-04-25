@@ -21,7 +21,7 @@ def get_version():
 
 setup(
     name='pyjson5',
-    version='0.3.3',
+    version=get_version(),
     description='JSON5 serializer and parser written in Cython.',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',
