@@ -134,7 +134,7 @@ struct EscapeDct {
 const EscapeDct ESCAPE_DCT;
 
 const char VERSION[] =
-#   include "./VERSION"
+#   include "../setup.py"
 ;
 
 static constexpr std::size_t VERSION_LENGTH = sizeof(VERSION) - 1;

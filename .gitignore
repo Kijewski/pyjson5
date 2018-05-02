@@ -3,6 +3,8 @@
 env/
 build/
 cython_debug/
+dist/
+*.egg-info/
 
 *.c
 *.cpp
