@@ -1,0 +1,6 @@
+include pyjson5.pyx
+include pyjson5.cpp
+include Makefile
+include requires.txt
+recursive-include src **
+recursive-include docs **
