@@ -1,4 +1,3 @@
-
 cdef enum:
     NO_EXTRA_DATA = 0x0011_0000
 
@@ -61,7 +60,8 @@ cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
             break
         elif expect(seen_slash, False):
             _raise_stray_character('slash', _reader_tell(reader))
-        elif not _reader_good(reader):
+
+        if not _reader_good(reader):
             c1 = -1
             break
 

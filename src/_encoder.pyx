@@ -104,7 +104,12 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
     cdef Py_ssize_t index, length
 
     cdef WriterReallocatable sub_writer = WriterReallocatable(
-        Writer(_WriterReallocatable_reserve, _WriterReallocatable_append_c, _WriterReallocatable_append_s),
+        Writer(
+            _WriterReallocatable_reserve,
+            _WriterReallocatable_append_c,
+            _WriterReallocatable_append_s,
+            writer.options,
+        ),
         0, 0, NULL,
     )
     try:
@@ -240,52 +245,59 @@ cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) e
 
 cdef boolean _encode_numeric(WriterRef writer, object data, EncType enc_type) except False:
     cdef object formatter_string
-    cdef object formatted_data
     cdef const char *string
     cdef Py_ssize_t length
     cdef int classification
 
     if enc_type == ENC_TYPE_LONG:
-        formatter_string = '%d'
+        formatter_string = (<Options> writer.options).intformat
     elif enc_type == ENC_TYPE_DECIMAL:
-        formatter_string = '%s'
+        formatter_string = (<Options> writer.options).decimalformat
     else:
         value = PyFloat_AsDouble(data)
         classification = fpclassify(value)
-        if classification != FP_NORMAL:
-            if classification == FP_NAN:
-                string = b'NaN'
-                length = 3
-            elif classification in (FP_SUBNORMAL, FP_ZERO):
-                string = b'0'
-                length = 1
-            elif value > 0.0:
-                string = b'Infinity'
-                length = 8
-            else:
-                string = b'-Infinity'
-                length = 9
+        if classification == FP_NORMAL:
+            formatter_string = (<Options> writer.options).floatformat
+        elif classification in (FP_SUBNORMAL, FP_ZERO):
+            string = b'0'
+            length = 1
 
             writer.append_s(writer, string, length)
             return True
         else:
-            formatter_string = '%.6e'
+            if classification == FP_NAN:
+                formatter_string = (<Options> writer.options).nan
+            elif value > 0.0:
+                formatter_string = (<Options> writer.options).posinfinity
+            else:
+                formatter_string = (<Options> writer.options).neginfinity
 
-    formatted_data = (formatter_string % data)
-    string = PyUnicode_AsUTF8AndSize(formatted_data, &length)
+            if formatter_string is None:
+                _raise_unstringifiable(data)
+
+            string = <const char*> PyUnicode_1BYTE_DATA(formatter_string)
+            length = PyUnicode_GET_LENGTH(formatter_string)
+
+            writer.append_s(writer, string, length)
+            return True
+
+    if formatter_string is None:
+        _raise_unstringifiable(data)
+
+    formatter_string = (formatter_string % data)
+    string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
     writer.append_s(writer, string, length)
-
     return True
 
 
 cdef boolean _encode_recursive(WriterRef writer, object data, EncType enc_type) except False:
-    cdef object to_json_callback
-    cdef object to_json = TO_JSON
+    cdef object to_json
     cdef boolean (*encoder)(WriterRef writer, object data) except False
 
     Py_EnterRecursiveCall(' while encoding nested JSON5 object')
     try:
-        if to_json:
+        to_json = (<Options> writer.options).tojson
+        if to_json is not None:
             to_json = getattr(data, to_json, None)
             if to_json is not None:
                 if callable(to_json):
@@ -324,7 +336,7 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     elif PyFloat_Check(data):
         enc_type = ENC_TYPE_FLOAT
     elif obj_has_iter(data):
-        if isinstance(data, Mapping):
+        if isinstance(data, (<Options> writer.options).mappingtypes):
             enc_type = ENC_TYPE_MAPPING
         else:
             enc_type = ENC_TYPE_SEQUENCE
@@ -354,12 +366,13 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     return True
 
 
-cdef boolean _encode_callback_bytes(object data, object cb) except False:
+cdef boolean _encode_callback_bytes(object data, object cb, object options) except False:
     cdef WriterCallback writer = WriterCallback(
         Writer(
             _WriterNoop_reserve,
             _WriterCbBytes_append_c,
             _WriterCbBytes_append_s,
+            <PyObject*> options,
         ),
         <PyObject*> cb,
     )
@@ -372,12 +385,13 @@ cdef boolean _encode_callback_bytes(object data, object cb) except False:
     return True
 
 
-cdef boolean _encode_callback_str(object data, object cb) except False:
+cdef boolean _encode_callback_str(object data, object cb, object options) except False:
     cdef WriterCallback writer = WriterCallback(
         Writer(
             _WriterNoop_reserve,
             _WriterCbStr_append_c,
             _WriterCbStr_append_s,
+            <PyObject*> options,
         ),
         <PyObject*> cb,
     )

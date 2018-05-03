@@ -8,4 +8,5 @@ cdef class Json5Exception(Exception):
 
     @property
     def message(self):
+        '''Human readable error description'''
         return self.args[0]

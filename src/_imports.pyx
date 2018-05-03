@@ -12,6 +12,7 @@ from cpython.float cimport PyFloat_Check, PyFloat_AsDouble
 from cpython.int cimport PyInt_Check
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject
+from cpython.type cimport PyType_Check
 from cpython.unicode cimport PyUnicode_Check
 from libcpp cimport bool as boolean
 from libcpp.vector cimport vector as std_vector
@@ -107,8 +108,10 @@ cdef extern from 'Python.h':
     object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
     char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
 
+    object PyDict_SetDefault(object p, object key, object value)
+
     object CallFunction 'PyObject_CallFunction'(PyObject *cb, const char *format, ...)
-    object CallObject 'PyObject_CallObject'(PyObject *cb, PyObject *aegs)
+    object CallObject 'PyObject_CallObject'(PyObject *cb, PyObject *args)
 
     ctypedef signed long Py_hash
     ctypedef signed short wchar_t

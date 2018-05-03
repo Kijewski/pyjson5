@@ -23,6 +23,8 @@ include 'src/_writers.pyx'
 include 'src/_writer_reallocatable.pyx'
 include 'src/_writer_callback.pyx'
 include 'src/_writer_noop.pyx'
+include 'src/_encoder_options.pyx'
 include 'src/_encoder.pyx'
 
 include 'src/_exports.pyx'
+include 'src/_legacy.pyx'

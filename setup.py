@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
-from os import environ
-from Cython.Distutils import Extension, build_ext
-from distutils.core import setup
+from setuptools import setup, Extension
 from os.path import dirname, join, abspath
+
+
+def get_version():
+    root = abspath(dirname(__file__))
+    with open(join(root, 'src', 'VERSION'), 'rt') as f:
+        return eval(f.read().strip())
 
 
 extra_compile_args = [
@@ -11,32 +15,42 @@ extra_compile_args = [
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]
 
-root = abspath(dirname(__file__))
-
-
-def get_version():
-    with open(join(root, 'src', 'VERSION'), 'rt') as f:
-        return eval(f.read().strip())
-
+name = 'pyjson5'
 
 setup(
-    name='pyjson5',
+    name=name,
     version=get_version(),
-    description='JSON5 serializer and parser written in Cython.',
+    description='JSON5 serializer and parser for Python 3 written in Cython.',
     author='René Kijewski',
     author_email='kijewski@library.vetmed.fu-berlin.de',
+    maintainer='René Kijewski',
+    maintainer_email='kijewski@library.vetmed.fu-berlin.de',
     url='https://bib.vetmed.fu-berlin.de/',
-    python_requires='>= 3.3',
-    ext_modules=[
-        Extension(
-            'pyjson5',
-            sources=['pyjson5.pyx'],
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_compile_args,
-            language='c++',
-        ),
+    python_requires='~= 3.4',
+    zip_safe=False,
+    ext_modules=[Extension(
+        name,
+        sources=[name + '.cpp'],
+        include_dirs=['src'],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_compile_args,
+        language='c++',
+    )],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Cython',
+        'Programming Language :: JavaScript',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: Text Processing :: General',
     ],
-    cmdclass={
-        'build_ext': build_ext,
-    },
 )

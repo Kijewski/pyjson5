@@ -1,29 +1,44 @@
 DEFAULT_MAX_NESTING_LEVEL = 32
-TO_JSON = None
+'''
+Maximum nesting level of data to decode if no ``maxdepth`` argument is specified.
+'''
+
 __version__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, VERSION, VERSION_LENGTH)
+'''
+Current library version.
+'''
 
 
 def decode(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data from a ``unicode`` object.
+    Decodes JSON5 serialized data from an ``str`` object.
+
+    .. code:: python
+
+        decode('["Hello", "world!"]') == ['Hello', 'world!']
 
     Parameters
     ----------
     data : unicode
         JSON5 serialized data
-    maxdepth : Optional[int] = None
+    maxdepth : Optional[int]
         Maximum nesting level before are the parsing is aborted.
 
-        If ``None`` is supplied, then the value of the global variable
+        * If ``None`` is supplied, then the value of the global variable \
         ``DEFAULT_MAX_NESTING_LEVEL`` is used instead.
-
-        If the value is null, then only literals are accepted, e.g. ``false``,
+        * If the value is ``0``, then only literals are accepted, e.g. ``false``, \
         ``47.11``, or ``"string"``.
-
-        If the value is negative, then the any nesting level is allowed until
+        * If the value is negative, then the any nesting level is allowed until \
         Python's recursion limit is hit.
-    some : boolean = False
+    some : bool
         Allow trailing junk.
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
@@ -43,19 +58,30 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
     '''
     Decodes JSON5 serialized data from a ``bytes`` object.
 
+    .. code:: python
+
+        decode_buffer(b'["Hello", "world!"]') == ['Hello', 'world!']
+
     Parameters
     ----------
     data : bytes
         JSON5 serialized data, encoded as Latin-1 or ASCII.
-    maxdepth : Optional[int] = None
-        see ``decode(...)``
-    some : boolean = False
-        see ``decode(...)``
+    maxdepth : Optional[int]
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
     object
-        see ``decode(...)``
+        see `decode(...) <pyjson5.decode_>`_
     '''
     return decode_buffer(data, maxdepth, bool(some), 1)
 
@@ -66,25 +92,40 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     Decodes JSON5 serialized data from an object that supports the buffer
     protocol, e.g. bytearray.
 
+    .. code:: python
+
+        obj = memoryview(b'["Hello", "world!"]')
+
+        decode_buffer(obj) == ['Hello', 'world!']
+
     Parameters
     ----------
     data : object
         JSON5 serialized data.
         The argument must support Python's buffer protocol, i.e.
         ``memoryview(...)`` must work. The buffer must be contigious.
-    maxdepth : Optional[int] = None
-        see ``decode(...)``
-    some : boolean = False
-        see ``decode(...)``
-    wordlength : Optional[int] = None
+    maxdepth : Optional[int]
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+    wordlength : Optional[int]
         Must be 1, 2, 4 to denote UCS1, USC2 or USC4 data.
         Surrogates are not supported. Decode the data to an ``str`` if need be.
-        If ``None`` is supplied, then the buffers ``itemsize`` is used.
+        If ``None`` is supplied, then the buffer's ``itemsize`` is used.
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
+    ValueError
+        The value of ``wordlength`` was invalid.
 
     Returns
     -------
     object
-        see ``decode(...)``
+        see `decode(...) <pyjson5.decode_>`_
     '''
     cdef Py_buffer view
 
@@ -105,25 +146,39 @@ def decode_callback(object cb, object maxdepth=None, object some=False,
     '''
     Decodes JSON5 serialized data by invoking a callback.
 
+    .. code:: python
+
+        cb = iter('["Hello","world!"]').__next__
+
+        decode_callback(cb) == ['Hello', 'world!']
+
     Parameters
     ----------
-    cb : Callable[Tuple[...], Union[bytes|str|int|None]]
+    cb : Callable[Any, Union[str|bytes|bytearray|int|None]]
         A function to get values from.
-        The functions is called like ``cb(*args)``.
+        The functions is called like ``cb(*args)``, and it returns:
 
-        Returns:
-         * str, bytes, bytearray:
-            ``len(...) == 0`` denotes exhausted input.
+        * **str, bytes, bytearray:** \
+            ``len(...) == 0`` denotes exhausted input. \
             ``len(...) == 1`` is the next character.
-         * int:
-            ``< 0`` denotes exhausted input.
-            ``>= 0`` is the ordinal value of the next character.
-    maxdepth : Optional[int] = None
-        see ``decode(...)``
-    some : boolean = False
-        see ``decode(...)``
-    args : Optional[Sequence[Any]]
+        * **int:** \
+            ``< 0`` denotes exhausted input. \
+           ``>= 0`` is the ordinal value of the next character.
+        * **None:** \
+            input exhausted
+    maxdepth : Optional[int]
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+    args : Optional[Iterable[Any]]
         Arguments to call ``cb`` with.
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
@@ -148,14 +203,36 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     '''
     Decodes JSON5 serialized data from a file-like object.
 
+    .. code:: python
+
+        fp = io.StringIO("""
+            ['Hello', /* TODO look into specs whom to greet */]
+            'Wolrd' // FIXME: look for typos
+        """)
+
+        decode_io(fp) == ['Hello']
+        decode_io(fp) == 'Wolrd'
+
+        fp.seek(0)
+
+        decode_io(fp, some=False)
+        # raises Json5ExtraData('Extra data U+0027 near 56', ['Hello'], "'")
+
     Parameters
     ----------
     fp : IOBase
         A file-like object to parse from.
     maxdepth : Optional[int] = None
-        see ``decode(...)``
-    some : boolean = False
-        see ``decode(...)``
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
@@ -175,62 +252,30 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     return _decode_callback(fp.read, (1,), maxdepth, bool(some))
 
 
-
-def loads(s, *, encoding='UTF-8', **kw):
-    '''
-    Decodes JSON5 serialized data from a string.
-
-    Use ``decode(...)`` instead!
-
-    Parameters
-    ----------
-    s : object
-        Unless the argument is an ``str``, it gets decoded according to the
-        parameter ``encoding``.
-    encoding : str = 'UTF-8'
-        Codec to use if ``s`` is not an ``str``.
-    **kw
-        Silently ignored.
-
-    Returns
-    -------
-    object
-        see ``decode(...)``
-    '''
-    if not isinstance(s, unicode):
-        s = unicode(s, encoding, 'strict')
-    return decode(s)
-
-
-def load(fp, **kw):
-    '''
-    Decodes JSON5 serialized data from a file-like object.
-
-    Use ``decode(...)`` instead!
-
-    Parameters
-    ----------
-    fp : IOBase
-        A file-like object to parse from.
-    **kw
-        Silently ignored.
-
-    Returns
-    -------
-    object
-        see ``decode(...)``
-    '''
-    return decode_io(fp, None, False)
-
-
-def encode(object data):
+def encode(object data, *, options=None, **options_kw):
     '''
     Serializes a Python object to a JSON5 compatible unicode string.
+
+    .. code:: python
+
+        encode(['Hello', 'world!']) == '["Hello","world!"]'
 
     Parameters
     ----------
     data : object
         Python object to serialize.
+    options : Optional[Options]
+        Extra options for the encoder.
+        If ``options`` **and** ``options_kw`` are specified, then ``options.update(**options_kw)`` is used.
+    options_kw
+        See Option's arguments.
+
+    Raises
+    ------
+    Json5EncoderException
+        An exception occured while encoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
@@ -242,8 +287,8 @@ def encode(object data):
         are encoded.
 
         The result safe to use in an HTML template, e.g.
-        ``<a onclick='alert({{ encode(url) }})'>show message</a>`.
-        Apostrophes ``"'"`` are encoded as ``r"\u0027"``, less-than,
+        ``<a onclick='alert({{ encode(url) }})'>show message</a>``.
+        Apostrophes ``"'"`` are encoded as ``"\\u0027"``, less-than,
         greater-than, and ampersand likewise.
     '''
     cdef void *temp = NULL
@@ -252,11 +297,13 @@ def encode(object data):
         <Py_ssize_t> <void*> &(<AsciiObject*> NULL).data[0]
     )
     cdef Py_ssize_t length
+    cdef object opts = _to_options(options, options_kw)
     cdef WriterReallocatable writer = WriterReallocatable(
         Writer(
             _WriterReallocatable_reserve,
             _WriterReallocatable_append_c,
             _WriterReallocatable_append_s,
+            <PyObject*> opts,
         ),
         start, 0, NULL,
     )
@@ -292,19 +339,34 @@ def encode(object data):
             ObjectFree(writer.obj)
 
 
-def encode_bytes(object data):
+def encode_bytes(object data, *, options=None, **options_kw):
     '''
     Serializes a Python object to a JSON5 compatible bytes string.
+
+    .. code:: python
+
+        encode_bytes(['Hello', 'world!']) == b'["Hello","world!"]'
 
     Parameters
     ----------
     data : object
-        see ``encode(data)``
+        see `encode(...) <pyjson5.encode_>`_
+    options : Optional[Options]
+        see `encode(...) <pyjson5.encode_>`_
+    options_kw
+        see `encode(...) <pyjson5.encode_>`_
+
+    Raises
+    ------
+    Json5EncoderException
+        An exception occured while encoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
     bytes
-        see ``encode(data)``
+        see `encode(...) <pyjson5.encode_>`_
     '''
     cdef void *temp = NULL
     cdef object result
@@ -312,11 +374,13 @@ def encode_bytes(object data):
         <Py_ssize_t> <void*> &(<PyBytesObject*> NULL).ob_sval[0]
     )
     cdef Py_ssize_t length
+    cdef object opts = _to_options(options, options_kw)
     cdef WriterReallocatable writer = WriterReallocatable(
         Writer(
             _WriterReallocatable_reserve,
             _WriterReallocatable_append_c,
             _WriterReallocatable_append_s,
+            <PyObject*> opts,
         ),
         start, 0, NULL,
     )
@@ -347,43 +411,71 @@ def encode_bytes(object data):
             ObjectFree(writer.obj)
 
 
-def encode_callback(object data, object cb, object supply_bytes=False):
+def encode_callback(object data, object cb, object supply_bytes=False, *,
+                    options=None, **options_kw):
     '''
     Serializes a Python object into a callback function.
 
     The callback function ``cb`` gets called with single characters and strings
     until the input ``data`` is fully serialized.
 
+    .. code:: python
+
+        encode_callback(['Hello', 'world!'], print)
+        #prints:
+        # [
+        # "
+        # Hello
+        # "
+        # ,
+        # "
+        # world!
+        # "
+        " ]
+
     Parameters
     ----------
     data : object
-        see ``encode(data)``
-    cb : Callable[Any, None]
+        see `encode(...) <pyjson5.encode_>`_
+    cb : Callable[[Union[bytes|str]], None]
         A callback function.
         Depending on the truthyness of ``supply_bytes`` either ``bytes`` or
         ``str`` is supplied.
-    supply_bytes : boolean = True
+    supply_bytes : bool
         Call ``cb(...)`` with a ``bytes`` argument if true,
         otherwise ``str``.
+    options : Optional[Options]
+        see `encode(...) <pyjson5.encode_>`_
+    options_kw
+        see `encode(...) <pyjson5.encode_>`_
+
+    Raises
+    ------
+    Json5EncoderException
+        An exception occured while encoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
-    Callable[Any, None]
+    Callable[[Union[bytes|str]], None]
         The supplied argument ``cb``.
     '''
-    cdef boolean (*encoder)(object obj, object cb) except False
+    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef Options opts = _to_options(options, options_kw)
 
     if supply_bytes:
         encoder = _encode_callback_bytes
     else:
         encoder = _encode_callback_str
 
-    encoder(data, cb)
+    encoder(data, cb, options=opts)
 
     return cb
 
 
-def encode_io(object data, object fp, object supply_bytes=True):
+def encode_io(object data, object fp, object supply_bytes=True, *,
+              options=None, **options_kw):
     '''
     Serializes a Python object into a file-object.
 
@@ -393,19 +485,31 @@ def encode_io(object data, object fp, object supply_bytes=True):
     Parameters
     ----------
     data : object
-        see ``encode(data)``
+        see `encode(...) <pyjson5.encode_>`_
     fp : IOBase
         A file-like object to serialize into.
-    supply_bytes : boolean = True
+    supply_bytes : bool
         Call ``fp.write(...)`` with a ``bytes`` argument if true,
         otherwise ``str``.
+    options : Optional[Options]
+        see `encode(...) <pyjson5.encode_>`_
+    options_kw
+        see `encode(...) <pyjson5.encode_>`_
+
+    Raises
+    ------
+    Json5EncoderException
+        An exception occured while encoding.
+    TypeError
+        An argument had a wrong type.
 
     Returns
     -------
     IOBase
         The supplied argument ``fp``.
     '''
-    cdef boolean (*encoder)(object obj, object cb) except False
+    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef object opts = _to_options(options, options_kw)
 
     if not isinstance(fp, IOBase):
         raise TypeError(f'type(fp)=={type(fp)!r} is not IOBase compatible')
@@ -419,32 +523,43 @@ def encode_io(object data, object fp, object supply_bytes=True):
     else:
         encoder = _encode_callback_str
 
-    encoder(data, fp.write)
+    encoder(data, fp.write, options=opts)
 
     return fp
 
 
-def encode_noop(object data):
+def encode_noop(object data, *, options=None, **options_kw):
     '''
     Test if the input is serializable.
 
     Most likely you want to serialize ``data`` directly, and catch exceptions
     instead of using this function!
 
+    .. code:: python
+
+        encode_noop({47: 11}) == True
+        encode_noop({47: object()}) == False
+
     Parameters
     ----------
     data : object
-        see ``encode(data)``
+        see `encode(...) <pyjson5.encode_>`_
+    options : Optional[Options]
+        see `encode(...) <pyjson5.encode_>`_
+    options_kw
+        see `encode(...) <pyjson5.encode_>`_
 
     Returns
     -------
     bool
         ``True`` iff ``data`` is serializable.
     '''
+    cdef object opts = _to_options(options, options_kw)
     cdef Writer writer = Writer(
         _WriterNoop_reserve,
         _WriterNoop_append_c,
         _WriterNoop_append_s,
+        <PyObject*> opts,
     )
 
     try:
@@ -455,39 +570,30 @@ def encode_noop(object data):
     return True
 
 
-def dumps(obj, **kw):
-    '''
-    Serializes a Python object to a JSON5 compatible unicode string.
-
-    Use ``encode(obj)`` instead!
-
-    Parameters
-    ----------
-    obj : object
-        Python object to serialize.
-    **kw
-        Silently ignored.
-
-    Returns
-    -------
-    unicode
-        see ``encode(data)``
-    '''
-    return encode(obj)
-
-
 __all__ = (
+    # DECODE
     'decode', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
-    'encode', 'encode_bytes', 'encode_callback', 'encode_io', 'encode_noop',
+    # ENCODE
+    'encode', 'encode_bytes', 'encode_callback', 'encode_io', 'encode_noop', 'Options',
+    # LEGACY
     'loads', 'load', 'dumps', 'dump',
+    # EXCEPTIONS
+    'Json5Exception',
+    'Json5EncoderException', 'Json5UnstringifiableType',
+    'Json5DecoderException', 'Json5NestingTooDeep', 'Json5EOF', 'Json5IllegalCharacter', 'Json5ExtraData', 'Json5IllegalType',
 )
 
 __doc__ = '''\
+PyJSON5
+-------
+
 A JSON5 serializer and parser library for Python 3 written in Cython.
 
 The serializer returns ASCII data that can safely be used in an HTML template.
 Apostrophes, ampersands, greater-than, and less-then signs are encoded as
 unicode escaped sequences. E.g. this snippet is safe for any and all input:
+
+.. code:: python
 
     "<a onclick='alert(" + encode(data) + ")'>show message</a>"
 
