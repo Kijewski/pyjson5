@@ -21,8 +21,9 @@ run.cgi
 *.tmp
 *.old
 *.bak
-*.orig
 *.pid
 
 .*
 !.git*
+
+*.orig
