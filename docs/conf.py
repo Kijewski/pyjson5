@@ -37,6 +37,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.inheritance_diagram',
     'sphinx_autodoc_typehints',
+    'sphinx.ext.autosectionlabel',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -196,43 +197,3 @@ inheritance_edge_attrs = {
     'penwidth': 1.2,
     'arrowsize': 0.8,
 }
-
-
-###################################################################################################
-
-
-from sphinx.ext.autosummary import Autosummary
-from sphinx.ext.autosummary import get_documenter
-from sphinx.util.inspect import safe_getattr
-
-
-class AutoAutoSummary(Autosummary):
-    option_spec = {}
-
-    required_arguments = 1
-
-    @staticmethod
-    def get_members(obj):
-        for name in dir(obj):
-            try:
-                documenter = get_documenter(safe_getattr(obj, name), obj)
-            except AttributeError:
-                continue
-
-            if documenter.objtype in ('function',):
-                yield name
-
-    def run(self):
-        module = str(self.arguments[0])
-        try:
-            m = __import__(module, globals(), locals(), [])
-            self.content = sorted(
-                ('~%s.%s' % (module, member) for member in self.get_members(m)),
-                key=str.lower,
-            )
-        finally:
-            return super().run()
-
-
-def setup(app):
-    app.add_directive('autoautosummary', AutoAutoSummary)

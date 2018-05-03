@@ -1,6 +1,6 @@
 '''\
 PyJSON5
--------
+=======
 
 A `JSON5 <https://spec.json5.org/>`_ serializer and parser library for Python 3 written in Cython.
 
