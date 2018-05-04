@@ -38,6 +38,7 @@ Table of Contents
     encoder.rst
     decoder.rst
     exceptions.rst
+    performance.rst
 
 
 Quick Summary

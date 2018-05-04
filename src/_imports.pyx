@@ -8,8 +8,10 @@ from cpython.bytes cimport (
     PyBytes_AsStringAndSize, PyBytes_FromStringAndSize, PyBytes_Check,
 )
 from cpython.datetime cimport datetime, date, time
+from cpython.dict cimport PyDict_SetItem
 from cpython.float cimport PyFloat_Check, PyFloat_AsDouble
 from cpython.int cimport PyInt_Check
+from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject
 from cpython.type cimport PyType_Check
@@ -57,6 +59,12 @@ cdef extern from '<utility>' namespace 'std' nogil:
     void swap[T](T&, T&)
 
 
+cdef extern from 'Python.h':
+    ctypedef signed char Py_UCS1
+    ctypedef signed short Py_UCS2
+    ctypedef signed long Py_UCS4
+
+
 cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     int32_t cast_to_int32(...)
     uint32_t cast_to_uint32(...)
@@ -65,10 +73,12 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     boolean obj_has_iter(object obj)
 
     ctypedef char EscapeDctItem[8]
-    struct EscapeDct:
-        EscapeDctItem items[0x10000]
+    cppclass EscapeDct:
+        EscapeDctItem items[0x100]
         boolean is_escaped(uint32_t c)
-        Py_ssize_t find_unescaped_range(const char *start, Py_ssize_t length)
+        Py_ssize_t find_unescaped_range(const Py_UCS1 *start, Py_ssize_t length)
+        Py_ssize_t find_unescaped_range(const Py_UCS2 *start, Py_ssize_t length)
+        Py_ssize_t find_unescaped_range(const Py_UCS4 *start, Py_ssize_t length)
     EscapeDct ESCAPE_DCT
 
     enum:
@@ -79,12 +89,10 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
         LONGDESCRIPTION_LENGTH
     const char LONGDESCRIPTION[]
 
+    const char HEX[]
+
 
 cdef extern from 'Python.h':
-    ctypedef signed char Py_UCS1
-    ctypedef signed short Py_UCS2
-    ctypedef signed long Py_UCS4
-
     enum:
         PyUnicode_WCHAR_KIND
         PyUnicode_1BYTE_KIND

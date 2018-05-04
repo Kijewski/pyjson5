@@ -14,62 +14,83 @@ cdef enum EncType:
 
 
 cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t length) except False:
-    cdef char buf[16]
+    cdef char buf[32]
     cdef uint32_t c
     cdef uint32_t s1, s2
-    cdef Py_ssize_t index
     cdef const char *escaped_string
     cdef Py_ssize_t escaped_length
-    cdef size_t unescaped_length
+    cdef size_t unescaped_length, index
+    cdef Py_ssize_t sublength
 
     if length > 0:
         writer.reserve(writer, 2 + length)
         writer.append_c(writer, <char> b'"')
-        if UCSString is UCS1String:
-            while True:
-                unescaped_length = ESCAPE_DCT.find_unescaped_range(<const char*> data, length)
-                if unescaped_length > 0:
+        while True:
+            if UCSString is UCS1String:
+                sublength = length
+            else:
+                sublength = min(length, <Py_ssize_t> sizeof(buf))
+
+            unescaped_length = ESCAPE_DCT.find_unescaped_range(data, sublength)
+            if unescaped_length > 0:
+                if UCSString is UCS1String:
                     writer.append_s(writer, <const char*> data, unescaped_length)
+                else:
+                    for index in range(unescaped_length):
+                        buf[index] = <const char> data[index]
+                    writer.append_s(writer, buf, unescaped_length)
 
-                    data += unescaped_length
-                    length -= unescaped_length
-                    if length <= 0:
-                        break
+                data += unescaped_length
+                length -= unescaped_length
+                if length <= 0:
+                    break
 
-                c = data[0]
+                if UCSString is not UCS1String:
+                    continue
+
+            c = data[0]
+            if (UCSString is UCS1String) or (c < 0x100):
                 escaped_string = &ESCAPE_DCT.items[c][0]
                 escaped_length = ESCAPE_DCT.items[c][7]
                 writer.append_s(writer, escaped_string, escaped_length)
+            elif (UCSString is UCS2String) or (c <= 0xffff):
+                buf[0] = '\\';
+                buf[1] = 'u';
+                buf[2] = HEX[(c >> (4*3)) & 0xf];
+                buf[3] = HEX[(c >> (4*2)) & 0xf];
+                buf[4] = HEX[(c >> (4*1)) & 0xf];
+                buf[5] = HEX[(c >> (4*0)) & 0xf];
+                buf[6] = 0;
 
-                data += 1
-                length -= 1
-                if length <= 0:
-                    break
-        else:
-            for index in range(length):
-                c = data[index]
-                if UCSString is UCS2String:
-                    if not ESCAPE_DCT.is_escaped(c):
-                        writer.append_c(writer, <char> <unsigned char> c)
-                    else:
-                        escaped_string = &ESCAPE_DCT.items[c][0]
-                        escaped_length = ESCAPE_DCT.items[c][7]
-                        writer.append_s(writer, escaped_string, escaped_length)
-                elif UCSString is UCS4String:
-                    if not ESCAPE_DCT.is_escaped(c):
-                        writer.append_c(writer, <char> <unsigned char> c)
-                    elif c < 0x10000:
-                        escaped_string = &ESCAPE_DCT.items[c][0]
-                        escaped_length = ESCAPE_DCT.items[c][7]
-                        writer.append_s(writer, escaped_string, escaped_length)
-                    else:
-                        # surrogate pair
-                        c -= 0x10000
-                        s1 = 0xd800 | ((c >> 10) & 0x3ff)
-                        s2 = 0xdc00 | (c & 0x3ff)
+                writer.append_s(writer, buf, 6);
+            else:
+                # surrogate pair
+                c -= 0x10000
+                s1 = 0xd800 | ((c >> 10) & 0x3ff)
+                s2 = 0xdc00 | (c & 0x3ff)
 
-                        snprintf(buf, sizeof(buf), b'\\u%04x\\u%04x', s1, s2)
-                        writer.append_s(writer, buf, 2 * 6)
+                buf[0x0] = '\\';
+                buf[0x1] = 'u';
+                buf[0x2] = HEX[(s1 >> (4*3)) & 0xf];
+                buf[0x3] = HEX[(s1 >> (4*2)) & 0xf];
+                buf[0x4] = HEX[(s1 >> (4*1)) & 0xf];
+                buf[0x5] = HEX[(s1 >> (4*0)) & 0xf];
+
+                buf[0x6] = '\\';
+                buf[0x7] = 'u';
+                buf[0x8] = HEX[(s2 >> (4*3)) & 0xf];
+                buf[0x9] = HEX[(s2 >> (4*2)) & 0xf];
+                buf[0xa] = HEX[(s2 >> (4*1)) & 0xf];
+                buf[0xb] = HEX[(s2 >> (4*0)) & 0xf];
+
+                buf[0xc] = 0;
+
+                writer.append_s(writer, buf, 12);
+
+            data += 1
+            length -= 1
+            if length <= 0:
+                break
         writer.append_c(writer, <char> b'"')
     else:
         writer.append_s(writer, b'""', 2)

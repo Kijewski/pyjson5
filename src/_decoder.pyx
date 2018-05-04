@@ -511,13 +511,13 @@ cdef boolean _decode_object(ReaderRef reader, dict result) except False:
             try:
                 value = _decode_recursive(reader, &c0)
             except _DecoderException as ex:
-                result[key] = (<_DecoderException> ex).result
+                PyDict_SetItem(result, key, (<_DecoderException> ex).result)
                 raise
 
             if expect(c0 < 0, False):
                 break
 
-            result[key] = value
+            PyDict_SetItem(result, key, value)
 
             done = _skip_comma(
                 reader, start, <unsigned char>b'}', b'object', &c0,
@@ -550,13 +550,13 @@ cdef boolean _decode_array(ReaderRef reader, list result) except False:
             try:
                 value = _decode_recursive(reader, &c0)
             except _DecoderException as ex:
-                result.append((<_DecoderException> ex).result)
+                PyList_Append(result, (<_DecoderException> ex).result)
                 raise
 
             if expect(c0 < 0, False):
                 break
 
-            result.append(value)
+            PyList_Append(result, value)
 
             done = _skip_comma(
                 reader, start, <unsigned char>b']', b'array', &c0,

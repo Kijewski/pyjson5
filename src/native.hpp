@@ -58,15 +58,16 @@ bool obj_has_iter(const PyObject *obj) {
     return (i != nullptr) && (i != &_PyObject_NextNotImplemented);
 }
 
+constexpr char HEX[] = "0123456789abcdef";
+
 struct EscapeDct {
     using Item = std::array<char, 8>;  // 7 are needed, 1 length
-    static constexpr std::size_t length = 0x10000;
+    static constexpr std::size_t length = 0x100;
 
     Item items[length];
     unsigned __int128 is_escaped_array;
 
     static constexpr Item unicode_item(size_t index) {
-        constexpr char HEX[] = "0123456789abcdef";
         return {{
             '\\',
             'u',
@@ -87,14 +88,30 @@ struct EscapeDct {
         return {{ (char) (unsigned char) chr, 0, 0, 0, 0, 0, 0, 1 }};
     }
 
-    inline bool is_escaped(uint32_t c) const {
+    inline bool is_escaped(std::uint32_t c) const {
         return (c >= 0x0080) || (is_escaped_array & (
             static_cast<unsigned __int128>(1) <<
             static_cast<std::uint8_t>(c)
         ));
     }
 
-    inline std::size_t find_unescaped_range(const char *start, Py_ssize_t length) const {
+    inline std::size_t find_unescaped_range(const Py_UCS1 *start, Py_ssize_t length) const {
+        Py_ssize_t index = 0;
+        while ((index < length) && !is_escaped(start[index])) {
+            ++index;
+        }
+        return index;
+    }
+
+    inline std::size_t find_unescaped_range(const Py_UCS2 *start, Py_ssize_t length) const {
+        Py_ssize_t index = 0;
+        while ((index < length) && !is_escaped(start[index])) {
+            ++index;
+        }
+        return index;
+    }
+
+    inline std::size_t find_unescaped_range(const Py_UCS4 *start, Py_ssize_t length) const {
         Py_ssize_t index = 0;
         while ((index < length) && !is_escaped(start[index])) {
             ++index;
@@ -122,12 +139,12 @@ struct EscapeDct {
                     );
             }
         }
-        items[(uint8_t) '\\'] = escaped_item('\\');
-        items[(uint8_t) '\b'] = escaped_item('b');
-        items[(uint8_t) '\f'] = escaped_item('f');
-        items[(uint8_t) '\n'] = escaped_item('n');
-        items[(uint8_t) '\r'] = escaped_item('r');
-        items[(uint8_t) '\t'] = escaped_item('t');
+        items[(std::uint8_t) '\\'] = escaped_item('\\');
+        items[(std::uint8_t) '\b'] = escaped_item('b');
+        items[(std::uint8_t) '\f'] = escaped_item('f');
+        items[(std::uint8_t) '\n'] = escaped_item('n');
+        items[(std::uint8_t) '\r'] = escaped_item('r');
+        items[(std::uint8_t) '\t'] = escaped_item('t');
     }
 };
 
