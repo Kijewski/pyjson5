@@ -156,7 +156,7 @@ const char VERSION[] =
 static constexpr std::size_t VERSION_LENGTH = sizeof(VERSION) - 1;
 
 const char LONGDESCRIPTION[] =
-#   include "./VERSION"
+#   include "./DESCRIPTION"
 ;
 static constexpr std::size_t LONGDESCRIPTION_LENGTH = sizeof(LONGDESCRIPTION) - 1;
 

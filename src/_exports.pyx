@@ -583,23 +583,4 @@ __all__ = (
     'Json5DecoderException', 'Json5NestingTooDeep', 'Json5EOF', 'Json5IllegalCharacter', 'Json5ExtraData', 'Json5IllegalType',
 )
 
-__doc__ = '''\
-PyJSON5
--------
-
-A JSON5 serializer and parser library for Python 3 written in Cython.
-
-The serializer returns ASCII data that can safely be used in an HTML template.
-Apostrophes, ampersands, greater-than, and less-then signs are encoded as
-unicode escaped sequences. E.g. this snippet is safe for any and all input:
-
-.. code:: python
-
-    "<a onclick='alert(" + encode(data) + ")'>show message</a>"
-
-Unless the input contains infinite or NaN values, the result will be valid
-JSON data.
-
-All valid JSON5 1.0.0 and JSON data can be read, unless the nesting level is
-absurdly high.
-'''
+__doc__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, LONGDESCRIPTION, LONGDESCRIPTION_LENGTH)
