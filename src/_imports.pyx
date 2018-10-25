@@ -118,7 +118,7 @@ cdef extern from 'Python.h':
     Py_UCS4 Py_UNICODE_JOIN_SURROGATES(Py_UCS4 high, Py_UCS4 low) nogil
 
     object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
-    char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
+    const char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
 
     object PyDict_SetDefault(object p, object key, object value)
 
