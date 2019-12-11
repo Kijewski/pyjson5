@@ -54,8 +54,8 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
                 escaped_length = ESCAPE_DCT.items[c][7]
                 writer.append_s(writer, escaped_string, escaped_length)
             elif (UCSString is UCS2String) or (c <= 0xffff):
-                buf[0] = '\\';
-                buf[1] = 'u';
+                buf[0] = b'\\';
+                buf[1] = b'u';
                 buf[2] = HEX[(c >> (4*3)) & 0xf];
                 buf[3] = HEX[(c >> (4*2)) & 0xf];
                 buf[4] = HEX[(c >> (4*1)) & 0xf];
@@ -69,15 +69,15 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
                 s1 = 0xd800 | ((c >> 10) & 0x3ff)
                 s2 = 0xdc00 | (c & 0x3ff)
 
-                buf[0x0] = '\\';
-                buf[0x1] = 'u';
+                buf[0x0] = b'\\';
+                buf[0x1] = b'u';
                 buf[0x2] = HEX[(s1 >> (4*3)) & 0xf];
                 buf[0x3] = HEX[(s1 >> (4*2)) & 0xf];
                 buf[0x4] = HEX[(s1 >> (4*1)) & 0xf];
                 buf[0x5] = HEX[(s1 >> (4*0)) & 0xf];
 
-                buf[0x6] = '\\';
-                buf[0x7] = 'u';
+                buf[0x6] = b'\\';
+                buf[0x7] = b'u';
                 buf[0x8] = HEX[(s2 >> (4*3)) & 0xf];
                 buf[0x9] = HEX[(s2 >> (4*2)) & 0xf];
                 buf[0xa] = HEX[(s2 >> (4*1)) & 0xf];

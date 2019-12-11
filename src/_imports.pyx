@@ -92,6 +92,10 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     const char HEX[]
 
 
+cdef extern from 'src/_unicode_cat_of.hpp' namespace 'JSON5EncoderCpp' nogil:
+    unsigned unicode_cat_of(uint32_t codepoint)
+
+
 cdef extern from 'Python.h':
     enum:
         PyUnicode_WCHAR_KIND

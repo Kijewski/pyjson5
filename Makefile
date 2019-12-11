@@ -1,9 +1,18 @@
 all: sdist bdist_wheel docs
 
+.DELETE_ON_ERROR:
+
 .PHONY: all sdist bdist_wheel clean docs
 
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py \
-         src/native.hpp src/VERSION
+         src/native.hpp src/VERSION src/_unicode_cat_of.hpp
+
+DerivedGeneralCategory.txt:
+	wget -O $@ https://www.unicode.org/Public/12.1.0/ucd/extracted/DerivedGeneralCategory.txt
+	sha512sum -c $@.sha
+
+src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
+	python make_unicode_categories.py $< $@
 
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx)
 	python -m cython -o $@ $<

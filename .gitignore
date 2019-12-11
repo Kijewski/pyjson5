@@ -27,3 +27,5 @@ run.cgi
 !.git*
 
 *.orig
+
+DerivedGeneralCategory.txt

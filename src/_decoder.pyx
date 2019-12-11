@@ -117,6 +117,26 @@ cdef int32_t _get_hex_character(ReaderRef reader, Py_ssize_t length) except -1:
 
 
 # >=  0: character to append
+cdef int32_t _get_escaped_unicode_maybe_surrogate(ReaderRef reader, Py_ssize_t start) except -1:
+    cdef uint32_t c0
+    cdef uint32_t c1
+
+    c0 = cast_to_uint32(_get_hex_character(reader, 4))
+    if expect(Py_UNICODE_IS_LOW_SURROGATE(c0), False):
+        _raise_expected_s('high surrogate before low surrogate', start, c0)
+    elif not Py_UNICODE_IS_HIGH_SURROGATE(c0):
+        return c0
+
+    _accept_string(reader, b'\\u')
+
+    c1 = cast_to_uint32(_get_hex_character(reader, 4))
+    if expect(not Py_UNICODE_IS_LOW_SURROGATE(c1), False):
+        _raise_expected_s('low surrogate', start, c1)
+
+    return Py_UNICODE_JOIN_SURROGATES(c0, c1)
+
+
+# >=  0: character to append
 #    -1: skip
 # <  -1: -(next character + 1)
 cdef int32_t _get_escape_sequence(ReaderRef reader,
@@ -145,19 +165,7 @@ cdef int32_t _get_escape_sequence(ReaderRef reader,
     elif c0 == b'x':
         return _get_hex_character(reader, 2)
     elif c0 == b'u':
-        c0 = cast_to_uint32(_get_hex_character(reader, 4))
-        if expect(Py_UNICODE_IS_LOW_SURROGATE(c0), False):
-            _raise_expected_s('high surrogate before low surrogate', start, c0)
-        elif not Py_UNICODE_IS_HIGH_SURROGATE(c0):
-            return c0
-
-        _accept_string(reader, b'\\u')
-
-        c1 = cast_to_uint32(_get_hex_character(reader, 4))
-        if expect(not Py_UNICODE_IS_LOW_SURROGATE(c1), False):
-            _raise_expected_s('low surrogate', start, c1)
-
-        return Py_UNICODE_JOIN_SURROGATES(c0, c1)
+        return _get_escaped_unicode_maybe_surrogate(reader, start)
     elif c0 == b'U':
         return _get_hex_character(reader, 8)
     elif expect(b'1' <= c0 <= b'9', False):
@@ -353,7 +361,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
             _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
-        if c0 == 'I':
+        if c0 == b'I':
             _accept_string(reader, b'nfinity')
             c_in_out[0] = NO_EXTRA_DATA
             return CONST_POS_INF
@@ -369,7 +377,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
             _raise_unclosed(b'number', start)
 
         c0 = _reader_get(reader)
-        if c0 == 'I':
+        if c0 == b'I':
             _accept_string(reader, b'nfinity')
             c_in_out[0] = NO_EXTRA_DATA
             return CONST_NEG_INF
@@ -451,6 +459,19 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
         _raise_expected_s('IdentifierStart', _reader_tell(reader), c1)
 
     while True:
+        if expect(c1 == b'\\', False):
+            if not _reader_good(reader):
+                _raise_unclosed('IdentifierName', start)
+                break
+
+            c1 = _reader_get(reader)
+            if c1 == b'u':
+                c1 = cast_to_uint32(_get_escaped_unicode_maybe_surrogate(reader, _reader_tell(reader)))
+            elif c1 == b'U':
+                c1 = cast_to_uint32(_get_hex_character(reader, 8))
+            else:
+                _raise_expected_s('UnicodeEscapeSequence', _reader_tell(reader), c1)
+
         buf.push_back(c1)
 
         if not _reader_good(reader):
