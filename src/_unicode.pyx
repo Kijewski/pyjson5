@@ -9,7 +9,7 @@ cdef boolean _is_line_terminator(uint32_t c) nogil:
 
 cdef boolean _is_ws_zs(uint32_t c) nogil:
     # https://spec.json5.org/#white-space
-    return (unicode_cat_of(c) == 1) or (c == NO_EXTRA_DATA)
+    return unicode_cat_of(c) == 1
 
 cdef boolean _is_identifier_start(uint32_t c) nogil:
     # https://www.ecma-international.org/ecma-262/5.1/#sec-7.6

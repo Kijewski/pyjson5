@@ -187,7 +187,7 @@ cdef int32_t _get_escape_sequence(ReaderRef reader,
 cdef object _decode_string_sub(ReaderRef reader, uint32_t delim,
                                Py_ssize_t start, uint32_t c0):
     cdef int32_t c1
-    cdef std_vector[uint32_t] buf
+    cdef StackHeapString[uint32_t] buf
 
     while True:
         if c0 == delim:
@@ -240,7 +240,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     return result
 
 
-cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
+cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] &buf,
                                         int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
@@ -308,7 +308,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, std_vector[char] &buf,
         return 0
 
 
-cdef object _decode_number_any(ReaderRef reader, std_vector[char] &buf,
+cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
                                int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
@@ -350,7 +350,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
     cdef Py_ssize_t start
-    cdef std_vector[char] buf
+    cdef StackHeapString[char] buf
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
@@ -369,8 +369,6 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
             _accept_string(reader, b'aN')
             c_in_out[0] = NO_EXTRA_DATA
             return CONST_POS_NAN
-
-        buf.reserve(16)
     elif c0 == b'-':
         start = _reader_tell(reader)
         if expect(not _reader_good(reader), False):
@@ -386,10 +384,7 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
             c_in_out[0] = NO_EXTRA_DATA
             return CONST_NEG_NAN
 
-        buf.reserve(16)
         buf.push_back(b'-')
-    else:
-        buf.reserve(16)
 
     if c0 == b'0':
         return _decode_number_leading_zero(reader, buf, c_in_out)
@@ -449,7 +444,7 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
-    cdef std_vector[uint32_t] buf
+    cdef StackHeapString[uint32_t] buf
 
     start = _reader_tell(reader)
 

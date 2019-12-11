@@ -399,7 +399,7 @@ cdef boolean _encode_callback_bytes(object data, object cb, object options) exce
     )
 
     if not callable(cb):
-        raise TypeError(f'type(cb)=={type(cb)!r} is callable')
+        raise TypeError(f'type(cb)=={type(cb)!r} is not callable')
 
     _encode(writer.base, data)
 
@@ -418,7 +418,7 @@ cdef boolean _encode_callback_str(object data, object cb, object options) except
     )
 
     if not callable(cb):
-        raise TypeError(f'type(cb)=={type(cb)!r} is callable')
+        raise TypeError(f'type(cb)=={type(cb)!r} is not callable')
 
     _encode(writer.base, data)
 

@@ -11,9 +11,10 @@ The library is a bit slower than the shipped ``json`` module for *pure* JSON dat
 If you know that your input does not use JSON5 extension, then this library is probably not what you need.
 
 * Dataset: https://github.com/zemirco/sf-city-lots-json
-* CPU: Core i7-3770 @ 3.40GHz
-* :func:`pyjson5.decode`: **4.58** s ± 68.6 ms per loop *(lower is better)*
-* :func:`json.loads`: **3.27** s ± 27.7 ms per loop
+* Version: Python 3.7.5 (default, Oct 27 2019, 15:43:29)
+* CPU: AMD Ryzen 7 2700 @ 3.7GHz
+* :func:`pyjson5.decode`: **3.45** s ± 15.2 ms per loop per loop per loop *(lower is better)*
+* :func:`json.loads`: **2.64** s ± 12.7 ms ms per loop
 * The decoder works correcty: ``json.loads(content) == pyjson5.loads(content)``
 
 
@@ -25,10 +26,9 @@ The serialized data is XML-safe, i.e. there are no cheverons ``<>``, ampersands 
 The output is always ASCII regardless if you call :func:`pyjson5.encode` or :func:`pyjson5.encode_bytes`.
 
 * Dataset: https://github.com/zemirco/sf-city-lots-json
-* CPU: Core i7-3770 @ 3.40GHz
-* :func:`pyjson5.encode`: **8.54** s ± 29.3 ms per loop *(lower is better)*
-* :func:`json.dumps`: **4.68** s ± 20.4 ms per loop
-* :func:`json.dumps` + :func:`xml.sax.saxutils.escape`: **5.02** s ± 141 ms per loop
+* Version: Python 3.7.5 (default, Oct 27 2019, 15:43:29)
+* CPU: AMD Ryzen 7 2700 @ 3.7GHz
+* :func:`pyjson5.encode`: **3.42** s ± 11.8 ms per loop *(lower is better)*
+* :func:`json.dumps`: **3.77** s ± 14.4 ms per loop
+* :func:`json.dumps` + :func:`xml.sax.saxutils.escape`: **4.02** s ± 51.6 ms per loop
 * The encoder works correcty: ``obj == json.loads(pyjson5.encode(obj, floatformat='%.16e'))``
-
-Unless you need the advanced settings in :class:`pyjson5.Options`, most most likely don't benefit from using this library as an encoder.

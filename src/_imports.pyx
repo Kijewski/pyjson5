@@ -17,7 +17,6 @@ from cpython.object cimport PyObject
 from cpython.type cimport PyType_Check
 from cpython.unicode cimport PyUnicode_Check
 from libcpp cimport bool as boolean
-from libcpp.vector cimport vector as std_vector
 
 
 cdef extern from '<cstddef>' namespace 'std' nogil:
@@ -94,6 +93,13 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
 
 cdef extern from 'src/_unicode_cat_of.hpp' namespace 'JSON5EncoderCpp' nogil:
     unsigned unicode_cat_of(uint32_t codepoint)
+
+
+cdef extern from 'src/_stack_heap_string.hpp' namespace 'JSON5EncoderCpp' nogil:
+    cdef cppclass StackHeapString [T]:
+        const T *data()
+        Py_ssize_t size()
+        boolean push_back(T codepoint) except False
 
 
 cdef extern from 'Python.h':
