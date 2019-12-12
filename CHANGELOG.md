@@ -3,6 +3,7 @@
 * Allow ``\uXXXX`` sequences in identifier names
 * Update to Unicode 12.1.0
 * Optimized decoder for a little better speed
+* Setup basic CI environment
 
 ### 0.4.6
 
