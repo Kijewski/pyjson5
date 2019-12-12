@@ -178,6 +178,7 @@ ctypedef struct AsciiObject:
 
 cdef extern from * nogil:
     boolean expect '__builtin_expect'(boolean actual, boolean expected)
+    void __builtin_unreachable()
 
 
 cdef type Decimal, Mapping, IOBase

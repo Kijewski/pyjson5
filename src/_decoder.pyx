@@ -782,7 +782,7 @@ cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
     elif kind == PyUnicode_4BYTE_KIND:
         return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, maxdepth, some)
     else:
-        pass  # impossible
+        __builtin_unreachable()
 
 
 cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
@@ -801,6 +801,7 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
         length = view.len // 4
     else:
         _raise_illegal_wordlength(wordlength)
+        __builtin_unreachable()
 
     return decoder(view.buf, length, maxdepth, some)
 
