@@ -241,10 +241,9 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
 
 
 cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] &buf,
-                                        int32_t *c_in_out):
+                                        int32_t *c_in_out, Py_ssize_t start):
     cdef uint32_t c0
     cdef int32_t c1
-    cdef object pybuf
 
     if not _reader_good(reader):
         c_in_out[0] = -1
@@ -265,9 +264,14 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
                 break
 
         c_in_out[0] = c1
-        pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
-        return int(pybuf, 16)
+
+        buf.push_back(b'\0')
+        try:
+            return PyLong_FromString(buf.data(), NULL, 16)
+        except Exception as ex:
+            _raise_unclosed('NumericLiteral', start)
     elif c0 == b'.':
+        buf.push_back(b'0')
         buf.push_back(b'.')
 
         while True:
@@ -283,8 +287,12 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
                 break
 
         c_in_out[0] = c1
-        pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
-        return float(pybuf)
+
+        buf.push_back(b'\0')
+        try:
+            return PyOS_string_to_double(buf.data(), NULL, NULL)
+        except Exception as ex:
+            _raise_unclosed('NumericLiteral', start)
     elif _is_e(c0):
         while True:
             if not _reader_good(reader):
@@ -309,11 +317,10 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
 
 
 cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
-                               int32_t *c_in_out):
+                               int32_t *c_in_out, Py_ssize_t start):
     cdef uint32_t c0
     cdef int32_t c1
     cdef boolean is_float
-    cdef object pybuf
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
@@ -339,24 +346,26 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
 
     c_in_out[0] = c1
 
-    pybuf = PyBytes_FromStringAndSize(buf.data(), buf.size())
-    if is_float:
-        return float(pybuf)
-    else:
-        return int(pybuf, 10)
+    buf.push_back(b'\0')
+    try:
+        if is_float:
+            return PyOS_string_to_double(buf.data(), NULL, NULL)
+        else:
+            return PyLong_FromString(buf.data(), NULL, 10)
+    except Exception as ex:
+        _raise_unclosed('NumericLiteral', start)
 
 
 cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
     cdef uint32_t c0
     cdef int32_t c1
-    cdef Py_ssize_t start
+    cdef Py_ssize_t start = _reader_tell(reader)
     cdef StackHeapString[char] buf
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
 
     if c0 == b'+':
-        start = _reader_tell(reader)
         if expect(not _reader_good(reader), False):
             _raise_unclosed(b'number', start)
 
@@ -370,7 +379,6 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
             c_in_out[0] = NO_EXTRA_DATA
             return CONST_POS_NAN
     elif c0 == b'-':
-        start = _reader_tell(reader)
         if expect(not _reader_good(reader), False):
             _raise_unclosed(b'number', start)
 
@@ -387,11 +395,11 @@ cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
         buf.push_back(b'-')
 
     if c0 == b'0':
-        return _decode_number_leading_zero(reader, buf, c_in_out)
+        return _decode_number_leading_zero(reader, buf, c_in_out, start)
     else:
         c1 = cast_to_int32(c0)
         c_in_out[0] = c1
-        return _decode_number_any(reader, buf, c_in_out)
+        return _decode_number_any(reader, buf, c_in_out, start)
 
 
 #  1: done

@@ -170,6 +170,9 @@ cdef extern from 'Python.h':
     object ObjectInit 'PyObject_INIT'(PyObject *obj, type cls)
     PyVarObject *ObjectInitVar 'PyObject_InitVar'(PyVarObject *obj, type cls, Py_ssize_t size)
 
+    double PyOS_string_to_double(const char *s, char **endp, PyObject *overflow_exception) except? -1.0
+    object PyLong_FromString(const char *str, char **pend, int base)
+
 
 ctypedef struct AsciiObject:
     PyASCIIObject base

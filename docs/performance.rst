@@ -13,7 +13,7 @@ If you know that your input does not use JSON5 extension, then this library is p
 * Dataset: https://github.com/zemirco/sf-city-lots-json
 * Version: Python 3.7.5 (default, Oct 27 2019, 15:43:29)
 * CPU: AMD Ryzen 7 2700 @ 3.7GHz
-* :func:`pyjson5.decode`: **3.45** s ± 15.2 ms per loop per loop per loop *(lower is better)*
+* :func:`pyjson5.decode`: **3.29 s** ± 8.66 ms per loop per loop per loop *(lower is better)*
 * :func:`json.loads`: **2.64** s ± 12.7 ms ms per loop
 * The decoder works correcty: ``json.loads(content) == pyjson5.loads(content)``
 
