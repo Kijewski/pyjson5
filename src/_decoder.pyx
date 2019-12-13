@@ -190,13 +190,16 @@ cdef object _decode_string_sub(ReaderRef reader, uint32_t delim,
     cdef StackHeapString[uint32_t] buf
 
     while True:
-        if c0 == delim:
+        if expect(c0 == delim, False):
             break
 
         if expect(not _reader_good(reader), False):
             _raise_unclosed(b'string', start)
 
-        if c0 != b'\\':
+        if expect(c0 != b'\\', True):
+            if expect(c0 in (0xA, 0xD), False):
+                _raise_unclosed(b'string', start)
+
             buf.push_back(c0)
             c0 = _reader_get(reader)
             continue
