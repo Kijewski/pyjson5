@@ -27,7 +27,7 @@ setup(
     maintainer='René Kijewski',
     maintainer_email='pypi.org@k6i.de',
     url='https://github.com/Kijewski/pyjson5',
-    python_requires='~= 3.4',
+    python_requires='~= 3.5',
     zip_safe=False,
     ext_modules=[Extension(
         name,
@@ -40,7 +40,7 @@ setup(
     platforms=['any'],
     license='Apache 2.0',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: Apache Software License',
@@ -48,7 +48,6 @@ setup(
         'Programming Language :: Cython',
         'Programming Language :: JavaScript',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
