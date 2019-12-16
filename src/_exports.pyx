@@ -1,3 +1,5 @@
+global DEFAULT_MAX_NESTING_LEVEL, __version__, __all__
+
 DEFAULT_MAX_NESTING_LEVEL = 32
 '''
 Maximum nesting level of data to decode if no ``maxdepth`` argument is specified.
@@ -291,7 +293,7 @@ def encode(object data, *, options=None, **options_kw):
         Apostrophes ``"'"`` are encoded as ``"\\u0027"``, less-than,
         greater-than, and ampersand likewise.
     '''
-    cdef void *temp = NULL
+    cdef void *temp
     cdef object result
     cdef Py_ssize_t start = (
         <Py_ssize_t> <void*> &(<AsciiObject*> NULL).data[0]
@@ -368,7 +370,7 @@ def encode_bytes(object data, *, options=None, **options_kw):
     bytes
         see `encode(...) <pyjson5.encode_>`_
     '''
-    cdef void *temp = NULL
+    cdef void *temp
     cdef object result
     cdef Py_ssize_t start = (
         <Py_ssize_t> <void*> &(<PyBytesObject*> NULL).ob_sval[0]

@@ -15,9 +15,6 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
     cdef boolean seen_asterisk = False
     cdef Py_ssize_t comment_start = _reader_tell(reader)
 
-    comment_start = _reader_tell(reader)
-
-    seen_asterisk = False
     while True:
         if expect(not _reader_good(reader), False):
             break
@@ -38,7 +35,7 @@ cdef boolean _skip_multiline_comment(ReaderRef reader) except False:
 # -1: exhausted
 # -2: exception
 cdef int32_t _skip_to_data_sub(ReaderRef reader, uint32_t c0) except -2:
-    cdef int32_t c1
+    cdef int32_t c1 = 0  # silence warning
     cdef boolean seen_slash
 
     seen_slash = False
@@ -142,7 +139,6 @@ cdef int32_t _get_escaped_unicode_maybe_surrogate(ReaderRef reader, Py_ssize_t s
 cdef int32_t _get_escape_sequence(ReaderRef reader,
                                   Py_ssize_t start) except 0x7ffffff:
     cdef uint32_t c0
-    cdef uint32_t c1
 
     c0 = _reader_get(reader)
     if expect(not _reader_good(reader), False):
@@ -246,7 +242,7 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
 cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] &buf,
                                         int32_t *c_in_out, Py_ssize_t start):
     cdef uint32_t c0
-    cdef int32_t c1
+    cdef int32_t c1 = 0  # silence warning
 
     if not _reader_good(reader):
         c_in_out[0] = -1
@@ -271,7 +267,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
         buf.push_back(b'\0')
         try:
             return PyLong_FromString(buf.data(), NULL, 16)
-        except Exception as ex:
+        except Exception:
             _raise_unclosed('NumericLiteral', start)
     elif c0 == b'.':
         buf.push_back(b'0')
@@ -294,7 +290,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
         buf.push_back(b'\0')
         try:
             return PyOS_string_to_double(buf.data(), NULL, NULL)
-        except Exception as ex:
+        except Exception:
             _raise_unclosed('NumericLiteral', start)
     elif _is_e(c0):
         while True:
@@ -355,7 +351,7 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
             return PyOS_string_to_double(buf.data(), NULL, NULL)
         else:
             return PyLong_FromString(buf.data(), NULL, 10)
-    except Exception as ex:
+    except Exception:
         _raise_unclosed('NumericLiteral', start)
 
 
@@ -495,13 +491,14 @@ cdef unicode _decode_identifier_name(ReaderRef reader, int32_t *c_in_out):
     )
 
 
-cdef boolean _decode_object(ReaderRef reader, dict result) except False:
+cdef boolean _decode_object(ReaderRef reader, object result) except False:
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
     cdef boolean done
     cdef object key
     cdef object value
+    cdef object ex
 
     start = _reader_tell(reader)
 
@@ -558,12 +555,13 @@ cdef boolean _decode_object(ReaderRef reader, dict result) except False:
     return False
 
 
-cdef boolean _decode_array(ReaderRef reader, list result) except False:
+cdef boolean _decode_array(ReaderRef reader, object result) except False:
     cdef int32_t c0
     cdef uint32_t c1
     cdef Py_ssize_t start
     cdef boolean done
     cdef object value
+    cdef object ex
 
     start = _reader_tell(reader)
 
@@ -646,26 +644,30 @@ cdef object _decode_literal(ReaderRef reader, int32_t *c_in_out):
 
 
 cdef object _decode_recursive_enter(ReaderRef reader, int32_t *c_in_out):
+    cdef boolean (*fn)(ReaderRef reader, object result) except False
     cdef object result
     cdef int32_t c0
     cdef uint32_t c1
+    cdef object ex
 
     c0 = c_in_out[0]
     c1 = cast_to_uint32(c0)
 
+    if c1 == b'{':
+        result = {}
+        fn = _decode_object
+    else:
+        result = []
+        fn = _decode_array
+
     _reader_enter(reader)
     try:
-        if c1 == b'{':
-            result = {}
-            _decode_object(reader, result)
-        else:
-            result = []
-            _decode_array(reader, result)
+        fn(reader, result)
     except RecursionError:
         _raise_nesting(_reader_tell(reader), result)
     except _DecoderException as ex:
         (<_DecoderException> ex).result = result
-        raise ex
+        raise
     finally:
         _reader_leave(reader)
 
@@ -711,6 +713,7 @@ cdef object _decode_all_sub(ReaderRef reader, boolean some):
     cdef int32_t c0
     cdef uint32_t c1
     cdef object result
+    cdef object ex
 
     start = _reader_tell(reader)
     c0 = _skip_to_data(reader)
@@ -734,20 +737,21 @@ cdef object _decode_all_sub(ReaderRef reader, boolean some):
             _raise_unframed_data(c1, start)
     except _DecoderException as ex:
         (<_DecoderException> ex).result = result
-        raise ex
+        raise
 
     return result
 
 
 cdef object _decode_all(ReaderRef reader, boolean some):
-    cdef Exception ex_result
-    cdef _DecoderException ex
+    cdef object ex
     try:
         return _decode_all_sub(reader, some)
-    except _DecoderException as e:
-        ex = <_DecoderException> e
-        ex_result = ex.cls(ex.msg, ex.result, ex.extra)
-    raise ex_result
+    except _DecoderException as ex:
+        raise (<_DecoderException> ex).cls(
+            (<_DecoderException> ex).msg,
+            (<_DecoderException> ex).result,
+            (<_DecoderException> ex).extra,
+        )
 
 
 cdef object _decode_ucs1(const void *string, Py_ssize_t length,
@@ -799,7 +803,7 @@ cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
 cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
                            Py_ssize_t maxdepth, boolean some):
     cdef object (*decoder)(const void*, Py_ssize_t, Py_ssize_t, boolean)
-    cdef Py_ssize_t length
+    cdef Py_ssize_t length = 0
 
     if wordlength == 1:
         decoder = _decode_ucs1
@@ -813,6 +817,8 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
     else:
         _raise_illegal_wordlength(wordlength)
         __builtin_unreachable()
+        length = 0
+        decoder = NULL
 
     return decoder(view.buf, length, maxdepth, some)
 

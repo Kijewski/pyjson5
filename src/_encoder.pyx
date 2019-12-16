@@ -145,6 +145,8 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
 cdef boolean _append_ascii(WriterRef writer, object data) except False:
     cdef Py_buffer view
     cdef const char *buf
+    cdef Py_ssize_t index
+    cdef unsigned char c
 
     if PyUnicode_Check(data):
         PyUnicode_READY(data)
@@ -156,7 +158,7 @@ cdef boolean _append_ascii(WriterRef writer, object data) except False:
         try:
             buf = <const char*> view.buf
             for index in range(view.len):
-                c = buf[index]
+                c = <unsigned char> buf[index]
                 if c & ~0x7f:
                     raise TypeError('Expected ASCII data')
 
@@ -274,7 +276,7 @@ cdef boolean _encode_bytes(WriterRef writer, object data) except False:
 
 
 cdef boolean _encode_datetime(WriterRef writer, object data) except False:
-    cdef Py_ssize_t length
+    cdef Py_ssize_t length = 0  # silence warning
     cdef object stringified = data.isoformat()
     cdef const char *string = PyUnicode_AsUTF8AndSize(stringified, &length)
 
@@ -288,7 +290,7 @@ cdef boolean _encode_datetime(WriterRef writer, object data) except False:
 
 cdef boolean _encode_format_string(WriterRef writer, object data, object formatter_string) except False:
     cdef const char *string
-    cdef Py_ssize_t length
+    cdef Py_ssize_t length = 0  # silence warning
 
     if expect(formatter_string is None, False):
         _raise_unstringifiable(data)

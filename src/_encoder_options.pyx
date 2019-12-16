@@ -121,7 +121,6 @@ cdef class Options:
     ``()`` if ``False`` was specified.
     '''
 
-
     def __reduce__(self):
         '''
         Pickling is not supported (yet).
@@ -135,8 +134,8 @@ cdef class Options:
         raise NotImplementedError
 
     def __repr__(self):
-        repr_options = _options_from_ascii(self)
-        repr_cls = (
+        cdef object repr_options = _options_from_ascii(self)
+        cdef object repr_cls = (
             ''
             if self.mappingtypes == DEFAULT_MAPPINGTYPES else
             repr(DEFAULT_MAPPINGTYPES)

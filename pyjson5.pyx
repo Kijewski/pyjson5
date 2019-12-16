@@ -1,5 +1,5 @@
 # distutils: language = c++
-# cython: embedsignature = True, language_level = 3
+# cython: embedsignature = True, language_level = 3, warn.undeclared = True, warn.unreachable = True, warn.maybe_uninitialized = True
 
 include 'src/_imports.pyx'
 include 'src/_constants.pyx'
