@@ -15,7 +15,7 @@ from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject
 from cpython.type cimport PyType_Check
-from cpython.unicode cimport PyUnicode_Check
+from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject
 from libcpp cimport bool as boolean
 
 

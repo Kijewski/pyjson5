@@ -85,7 +85,7 @@ cdef class Options:
     mappingtypes : Iterable[type]|False|None
         * **Iterable[type]:** Classes the should be encoded to objects. \
                               Must be iterable over their keys, and implement ``__getitem__``.
-        * **False:** There are no objects. Any object will be encoded as list of key-value tuples.
+        * **False:** There are no objects. Any object will be encoded as list of keys as in list(obj).
         * **None:** Use default: ``[collections.abc.Mapping]``.
     '''
     cdef readonly unicode tojson

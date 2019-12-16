@@ -1,18 +1,3 @@
-cdef enum EncType:
-    ENC_TYPE_EXCEPTION
-    ENC_TYPE_UNKNOWN
-    ENC_TYPE_NONE
-    ENC_TYPE_UNICODE
-    ENC_TYPE_BOOL
-    ENC_TYPE_BYTES
-    ENC_TYPE_LONG
-    ENC_TYPE_DECIMAL
-    ENC_TYPE_FLOAT
-    ENC_TYPE_DATETIME
-    ENC_TYPE_MAPPING
-    ENC_TYPE_SEQUENCE
-
-
 cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t length) except False:
     cdef char buf[32]
     cdef uint32_t c
@@ -98,7 +83,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
     return True
 
 
-cdef boolean _encode_unicode(WriterRef writer, object data, EncType enc_type) except False:
+cdef boolean _encode_unicode(WriterRef writer, object data) except False:
     cdef Py_ssize_t length
     cdef int kind
 
@@ -182,19 +167,58 @@ cdef boolean _append_ascii(WriterRef writer, object data) except False:
     return True
 
 
+cdef int _encode_tojson(WriterRef writer, object data) except -1:
+    cdef object value
+
+    if (<Options> writer.options).tojson is None:
+        return 0
+
+    value = getattr(data, (<Options> writer.options).tojson, None)
+    if value is None:
+        return 0
+
+    if callable(value):
+        Py_EnterRecursiveCall(' while encoding nested JSON5 object')
+        try:
+            value = value()
+        finally:
+            Py_LeaveRecursiveCall()
+
+    _append_ascii(writer, value)
+    return 1
+
+
+
+cdef boolean _encode_unknown(WriterRef writer, object data) except False:
+    if _encode_tojson(writer, data):
+        pass
+    elif data == None:
+        writer.append_s(writer, b'none', 4)
+    else:
+        _raise_unstringifiable(data)
+    return True
+
+
 cdef boolean _encode_sequence(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object value
 
-    writer.append_c(writer, <char> b'[')
-    first = True
-    for value in data:
-        if not first:
-            writer.append_c(writer, <char> b',')
-        else:
-            first = False
-        _encode(writer, value)
-    writer.append_c(writer, <char> b']')
+    if _encode_tojson(writer, data):
+        return True
+
+    Py_EnterRecursiveCall(' while encoding nested JSON5 object')
+    try:
+        writer.append_c(writer, <char> b'[')
+        first = True
+        for value in data:
+            if not first:
+                writer.append_c(writer, <char> b',')
+            else:
+                first = False
+            _encode(writer, value)
+        writer.append_c(writer, <char> b']')
+    finally:
+        Py_LeaveRecursiveCall()
 
     return True
 
@@ -203,58 +227,56 @@ cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object key, value
 
-    writer.append_c(writer, <char> b'{')
-    first = True
-    for key in data:
-        if not first:
-            writer.append_c(writer, <char> b',')
-        else:
-            first = False
-        value = data[key]
+    if _encode_tojson(writer, data):
+        return True
 
-        if PyUnicode_Check(key):
-            _encode_unicode(writer, key, ENC_TYPE_UNICODE)
-        else:
-            _encode_nested_key(writer, key)
+    Py_EnterRecursiveCall(' while encoding nested JSON5 object')
+    try:
+        writer.append_c(writer, <char> b'{')
+        first = True
+        for key in data:
+            if not first:
+                writer.append_c(writer, <char> b',')
+            else:
+                first = False
+            value = data[key]
 
-        writer.append_c(writer, <char> b':')
-        _encode(writer, value)
-    writer.append_c(writer, <char> b'}')
+            if PyUnicode_Check(key):
+                _encode_unicode(writer, key)
+            else:
+                _encode_nested_key(writer, key)
+
+            writer.append_c(writer, <char> b':')
+            _encode(writer, value)
+        writer.append_c(writer, <char> b'}')
+    finally:
+        Py_LeaveRecursiveCall()
 
     return True
 
 
-cdef boolean _encode_constant(WriterRef writer, object data, EncType enc_type) except False:
-    cdef const char *string
-    cdef Py_ssize_t length
-    
-    if data is True:
-        string = b'true'
-        length = 4
-    elif data is False:
-        string = b'false'
-        length = 5
+cdef boolean _encode_none(WriterRef writer, object data) except False:
+    writer.append_s(writer, b'null', 4)
+    return True
+
+
+cdef boolean _encode_bool(WriterRef writer, object data) except False:
+    if data:
+        writer.append_s(writer, 'true', 4)
     else:
-        string = b'null'
-        length = 4
-
-    writer.append_s(writer, string, length)
+        writer.append_s(writer, 'false', 5)
     return True
 
 
-cdef boolean _encode_bytes(WriterRef writer, object data, EncType enc_type) except False:
-    cdef unicode_data = data.decode('UTF-8', 'replace')
-    _encode_unicode(writer, unicode_data, ENC_TYPE_UNICODE)
+cdef boolean _encode_bytes(WriterRef writer, object data) except False:
+    _encode_unicode(writer, PyUnicode_FromEncodedObject(data, 'UTF-8', 'strict'))
     return True
 
 
-cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) except False:
-    cdef const char *string
+cdef boolean _encode_datetime(WriterRef writer, object data) except False:
     cdef Py_ssize_t length
-    cdef object stringified
-
-    stringified = data.isoformat()
-    string = PyUnicode_AsUTF8AndSize(stringified, &length)
+    cdef object stringified = data.isoformat()
+    cdef const char *string = PyUnicode_AsUTF8AndSize(stringified, &length)
 
     writer.reserve(writer, 2 + length)
     writer.append_c(writer, <char> b'"')
@@ -264,127 +286,92 @@ cdef boolean _encode_datetime(WriterRef writer, object data, EncType enc_type) e
     return True
 
 
-cdef boolean _encode_numeric(WriterRef writer, object data, EncType enc_type) except False:
-    cdef object formatter_string
+cdef boolean _encode_format_string(WriterRef writer, object data, object formatter_string) except False:
     cdef const char *string
     cdef Py_ssize_t length
-    cdef int classification
 
-    if enc_type == ENC_TYPE_LONG:
-        formatter_string = (<Options> writer.options).intformat
-    elif enc_type == ENC_TYPE_DECIMAL:
-        formatter_string = (<Options> writer.options).decimalformat
-    else:
-        value = PyFloat_AsDouble(data)
-        classification = fpclassify(value)
-        if classification == FP_NORMAL:
-            formatter_string = (<Options> writer.options).floatformat
-        elif classification in (FP_SUBNORMAL, FP_ZERO):
-            string = b'0'
-            length = 1
-
-            writer.append_s(writer, string, length)
-            return True
-        else:
-            if classification == FP_NAN:
-                formatter_string = (<Options> writer.options).nan
-            elif value > 0.0:
-                formatter_string = (<Options> writer.options).posinfinity
-            else:
-                formatter_string = (<Options> writer.options).neginfinity
-
-            if formatter_string is None:
-                _raise_unstringifiable(data)
-
-            string = <const char*> PyUnicode_1BYTE_DATA(formatter_string)
-            length = PyUnicode_GET_LENGTH(formatter_string)
-
-            writer.append_s(writer, string, length)
-            return True
-
-    if formatter_string is None:
+    if expect(formatter_string is None, False):
         _raise_unstringifiable(data)
 
-    formatter_string = (formatter_string % data)
-    string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
+    formatter_string = formatter_string % data
+    if PyUnicode_IS_ASCII(formatter_string):
+        string = <const char*> PyUnicode_1BYTE_DATA(formatter_string)
+        length = PyUnicode_GET_LENGTH(formatter_string)
+    else:
+        string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
+
     writer.append_s(writer, string, length)
     return True
 
 
-cdef boolean _encode_recursive(WriterRef writer, object data, EncType enc_type) except False:
-    cdef object to_json
-    cdef boolean (*encoder)(WriterRef writer, object data) except False
+cdef boolean _encode_float(WriterRef writer, object data) except False:
+    cdef object formatter_string
+    cdef double value = PyFloat_AsDouble(data)
+    cdef int classification = fpclassify(value)
 
-    Py_EnterRecursiveCall(' while encoding nested JSON5 object')
-    try:
-        to_json = (<Options> writer.options).tojson
-        if to_json is not None:
-            to_json = getattr(data, to_json, None)
-            if to_json is not None:
-                if callable(to_json):
-                    to_json = to_json()
-                _append_ascii(writer, to_json)
-                return True
+    if classification == FP_NORMAL:
+        return _encode_format_string(writer, data, (<Options> writer.options).floatformat)
 
-        if enc_type == ENC_TYPE_SEQUENCE:
-            encoder = _encode_sequence
-        elif enc_type == ENC_TYPE_MAPPING:
-            encoder = _encode_mapping
-        else:
-            _raise_unstringifiable(data)
-            encoder = NULL
-
-        encoder(writer, data)
+    if classification in (FP_SUBNORMAL, FP_ZERO):
+        writer.append_c(writer, b'0')
         return True
-    finally:
-        Py_LeaveRecursiveCall()
+
+    if classification == FP_NAN:
+        formatter_string = (<Options> writer.options).nan
+    else:
+        # classification == FP_INFINITE
+        if value > 0.0:
+            formatter_string = (<Options> writer.options).posinfinity
+        else:
+            formatter_string = (<Options> writer.options).neginfinity
+
+    if formatter_string is None:
+        _raise_unstringifiable(data)
+
+    writer.append_s(
+        writer,
+        <const char*> PyUnicode_1BYTE_DATA(formatter_string),
+        PyUnicode_GET_LENGTH(formatter_string),
+    )
+    return True
+
+
+cdef boolean _encode_long(WriterRef writer, object data) except False:
+    return _encode_format_string(writer, data, (<Options> writer.options).intformat)
+
+
+cdef boolean _encode_decimal(WriterRef writer, object data) except False:
+    return _encode_format_string(writer, data, (<Options> writer.options).decimalformat)
 
 
 cdef boolean _encode(WriterRef writer, object data) except False:
-    cdef boolean (*encoder)(WriterRef, object, EncType) except False
-    cdef EncType enc_type
+    cdef boolean (*encoder)(WriterRef, object) except False
 
     if data is None:
-        enc_type = ENC_TYPE_NONE
+        encoder = _encode_none
     elif PyUnicode_Check(data):
-        enc_type = ENC_TYPE_UNICODE
+        encoder = _encode_unicode
     elif PyBool_Check(data):
-        enc_type = ENC_TYPE_BOOL
+        encoder = _encode_bool
     elif PyBytes_Check(data):
-        enc_type = ENC_TYPE_BYTES
+        encoder = _encode_bytes
     elif PyLong_Check(data):
-        enc_type = ENC_TYPE_LONG
+        encoder = _encode_long
     elif PyFloat_Check(data):
-        enc_type = ENC_TYPE_FLOAT
+        encoder = _encode_float
     elif obj_has_iter(data):
         if isinstance(data, (<Options> writer.options).mappingtypes):
-            enc_type = ENC_TYPE_MAPPING
+            encoder = _encode_mapping
         else:
-            enc_type = ENC_TYPE_SEQUENCE
+            encoder = _encode_sequence
     elif isinstance(data, Decimal):
-        enc_type = ENC_TYPE_DECIMAL
+        encoder = _encode_decimal
     elif isinstance(data, DATETIME_CLASSES):
-        enc_type = ENC_TYPE_DATETIME
-    elif data == None:
-        enc_type = ENC_TYPE_NONE
-    else:
-        enc_type = ENC_TYPE_UNKNOWN
-
-    encoder = _encode_recursive
-    if enc_type in (ENC_TYPE_NONE, ENC_TYPE_BOOL):
-        encoder = _encode_constant
-    elif enc_type == ENC_TYPE_UNICODE:
-        encoder = _encode_unicode
-    elif enc_type == ENC_TYPE_BYTES:
-        encoder = _encode_bytes
-    elif enc_type in (ENC_TYPE_LONG, ENC_TYPE_DECIMAL, ENC_TYPE_FLOAT):
-        encoder = _encode_numeric
-    elif enc_type == ENC_TYPE_DATETIME:
         encoder = _encode_datetime
+    else:
+        encoder = _encode_unknown
 
-    encoder(writer, data, enc_type)
-
-    return True
+    return encoder(writer, data)
 
 
 cdef boolean _encode_callback_bytes(object data, object cb, object options) except False:
