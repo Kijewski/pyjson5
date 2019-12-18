@@ -1,10 +1,49 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
+from collections.abc import Mapping, Sequence
+from itertools import zip_longest
+from json import loads
 from logging import basicConfig, DEBUG, getLogger
+from math import isnan
 from pathlib import Path
 
 from pyjson5 import decode, encode
+
+
+def eq_with_nans(left, right):
+    if left == right:
+        return True
+    elif isnan(left):
+        return isnan(right)
+    elif isnan(right):
+        return False
+
+    if not isinstance(left, Sequence) or not isinstance(right, Sequence):
+        return False
+    elif len(left) != len(right):
+        return False
+
+    left_mapping = isinstance(left, Mapping)
+    right_mapping = isinstance(right, Mapping)
+    if left_mapping != right_mapping:
+        return False
+
+    sentinel = object()
+    if left_mapping:
+        for k, left_value in left.items():
+            right_value = right.pop(k, sentinel)
+            if not eq_with_nans(left_value, right_value):
+                return False
+        if right:
+            # extraneous keys
+            return False
+    else:
+        for l, r in zip_longest(left, right, fillvalue=sentinel):
+            if not eq_with_nans(l, r):
+                return False
+
+    return True
 
 
 argparser = ArgumentParser(description='Run JSON5 parser tests')
@@ -29,6 +68,15 @@ if __name__ == '__main__':
     except Exception:
         logger.error('Could not parse content: %s', args.input)
         raise SystemExit(1)
+
+    try:
+        json_obj = loads(data)
+    except Exception:
+        pass
+    else:
+        if not eq_with_nans(obj, json_obj):
+            logger.error('JSON and PyJSON5 did not read the same data: %s, %r != %r', args.input, obj, json_obj)
+            raise SystemExit(2)
 
     try:
         data = encode(obj)
