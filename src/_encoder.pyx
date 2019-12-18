@@ -9,7 +9,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
 
     if length > 0:
         writer.reserve(writer, 2 + length)
-        writer.append_c(writer, <char> b'"')
+        writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
         while True:
             if UCSString is UCS1String:
                 sublength = length
@@ -76,7 +76,7 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
             length -= 1
             if length <= 0:
                 break
-        writer.append_c(writer, <char> b'"')
+        writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
     else:
         writer.append_s(writer, b'""', 2)
 
@@ -125,7 +125,7 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
         string = <char*> sub_writer.obj
 
         writer.reserve(writer, 2 + length)
-        writer.append_c(writer, <char> b'"')
+        writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
         for index in range(length):
             c = string[index]
             if c not in b'\\"':
@@ -134,7 +134,7 @@ cdef boolean _encode_nested_key(WriterRef writer, object data) except False:
                 writer.append_s(writer, b'\\\\', 2)
             else:
                 writer.append_s(writer, b'\\u0022', 6)
-        writer.append_c(writer, <char> b'"')
+        writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
     finally:
         if sub_writer.obj is not NULL:
             ObjectFree(sub_writer.obj)
@@ -281,9 +281,9 @@ cdef boolean _encode_datetime(WriterRef writer, object data) except False:
     cdef const char *string = PyUnicode_AsUTF8AndSize(stringified, &length)
 
     writer.reserve(writer, 2 + length)
-    writer.append_c(writer, <char> b'"')
+    writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
     writer.append_s(writer, string, length)
-    writer.append_c(writer, <char> b'"')
+    writer.append_c(writer, <char> PyUnicode_1BYTE_DATA((<Options> writer.options).quotationmark)[0])
 
     return True
 

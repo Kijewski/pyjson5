@@ -15,7 +15,7 @@ src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
 	python make_unicode_categories.py $< $@
 
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx)
-	python -m cython -o $@ $<
+	python -m cython -f -o $@ $<
 
 sdist: pyjson5.cpp ${FILES}
 	rm -f -- dist/pyjson5-*.tar.gz

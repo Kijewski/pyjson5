@@ -286,7 +286,7 @@ def encode(object data, *, options=None, **options_kw):
         will be valid JSON data (as of RFC8259).
 
         The result is always ASCII. All characters outside of the ASCII range
-        are encoded.
+        are escaped.
 
         The result safe to use in an HTML template, e.g.
         ``<a onclick='alert({{ encode(url) }})'>show message</a>``.

@@ -6,6 +6,7 @@ cdef object DEFAULT_INTFORMAT = '%d'
 cdef object DEFAULT_FLOATFORMAT = '%.6e'
 cdef object DEFAULT_DECIMALFORMAT = '%s'
 cdef object DEFAULT_MAPPINGTYPES = (Mapping,)
+cdef object DEFAULT_QUOTATIONMARK = '"'
 
 
 cdef object _options_ascii(object datum, boolean expect_ascii=True):
@@ -34,12 +35,13 @@ cdef object _option_from_ascii(object name, object value, object default):
 
 cdef _options_from_ascii(Options self):
     return ', '.join(filter(bool, (
+        _option_from_ascii('quotationmark', self.quotationmark, DEFAULT_QUOTATIONMARK),
         _option_from_ascii('tojson', self.tojson, None),
         _option_from_ascii('posinfinity', self.posinfinity, DEFAULT_POSINFINITY),
         _option_from_ascii('neginfinity', self.neginfinity, DEFAULT_NEGINFINITY),
         _option_from_ascii('intformat', self.intformat, DEFAULT_INTFORMAT),
-        _option_from_ascii('floatformat', self.floatformat, DEFAULT_DECIMALFORMAT),
-        _option_from_ascii('decimalformat', self.decimalformat, DEFAULT_FLOATFORMAT),
+        _option_from_ascii('floatformat', self.floatformat, DEFAULT_FLOATFORMAT),
+        _option_from_ascii('decimalformat', self.decimalformat, DEFAULT_DECIMALFORMAT),
         _option_from_ascii('nan', self.nan, DEFAULT_NAN),
     )))
 
@@ -54,6 +56,9 @@ cdef class Options:
 
     Parameters
     ----------
+    quotationmark : str|None
+        * **str**: One character string that is used to surround strings.
+        * **None**: Use default: ``'"'``.
     tojson : str|False|None
         * **str:** A special method to call on objects to return a custom JSON encoded string. Must return ASCII data!
         * **False:** No such member exists. (Default.)
@@ -87,6 +92,9 @@ cdef class Options:
                               Must be iterable over their keys, and implement ``__getitem__``.
         * **False:** There are no objects. Any object will be encoded as list of keys as in list(obj).
         * **None:** Use default: ``[collections.abc.Mapping]``.
+    '''
+    cdef readonly unicode quotationmark
+    '''The creation argument ``quotationmark``.
     '''
     cdef readonly unicode tojson
     '''The creation argument ``tojson``.
@@ -150,11 +158,15 @@ cdef class Options:
         return self.__repr__()
 
     def __cinit__(self, *,
+                  quotationmark=None,
                   tojson=None, posinfinity=None, neginfinity=None, nan=None,
                   decimalformat=None, intformat=None, floatformat=None,
                   mappingtypes=None):
         cdef object cls
+        cdef object ex
 
+        if quotationmark is None:
+            quotationmark = DEFAULT_QUOTATIONMARK
         if tojson is None:
             tojson = DEFAULT_TOJSON
         if posinfinity is None:
@@ -172,6 +184,7 @@ cdef class Options:
         if mappingtypes is None:
             mappingtypes = DEFAULT_MAPPINGTYPES
 
+        self.quotationmark = _options_ascii(quotationmark)
         self.tojson = _options_ascii(tojson, False)
         self.posinfinity = _options_ascii(posinfinity)
         self.neginfinity = _options_ascii(neginfinity)
@@ -179,6 +192,27 @@ cdef class Options:
         self.floatformat = _options_ascii(floatformat)
         self.decimalformat = _options_ascii(decimalformat)
         self.nan = _options_ascii(nan)
+
+        if self.quotationmark is None or PyUnicode_GET_LENGTH(self.quotationmark) != 1:
+            raise TypeError('quotationmark must be one ASCII character.')
+
+        if intformat is not None:
+            try:
+                intformat % TEST_INT
+            except Exception as ex:
+                raise ValueError('intformat is not a valid format string') from ex
+
+        if floatformat is not None:
+            try:
+                floatformat % TEST_FLOAT
+            except Exception as ex:
+                raise ValueError('floatformat is not a valid format string') from ex
+
+        if decimalformat is not None:
+            try:
+                decimalformat % TEST_DECIMAL
+            except Exception as ex:
+                raise ValueError('decimalformat is not a valid format string') from ex
 
         if mappingtypes is False:
             self.mappingtypes = ()
@@ -208,6 +242,7 @@ cdef object _to_options(Options arg, dict kw):
     elif not kw:
         return arg
 
+    PyDict_SetDefault(kw, 'quotationmark', (<Options> arg).quotationmark)
     PyDict_SetDefault(kw, 'tojson', (<Options> arg).tojson)
     PyDict_SetDefault(kw, 'posinfinity', (<Options> arg).posinfinity)
     PyDict_SetDefault(kw, 'neginfinity', (<Options> arg).neginfinity)

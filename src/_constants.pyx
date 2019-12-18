@@ -13,3 +13,7 @@ cdef object UCS1_COMPATIBLE_CODECS = frozenset((
     'latin_1', 'latin-1', 'iso-8859-1', 'iso8859-1',
     8859, '8859', 'cp819', 'latin', 'latin1', 'l1',
 ))
+
+cdef object TEST_DECIMAL = Decimal('47.11')
+cdef object TEST_FLOAT = 47.11
+cdef object TEST_INT = 4711
