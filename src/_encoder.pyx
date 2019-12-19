@@ -289,14 +289,10 @@ cdef boolean _encode_format_string(WriterRef writer, object data, object formatt
     if expect(formatter_string is None, False):
         _raise_unstringifiable(data)
 
-    formatter_string = formatter_string % data
-    if PyUnicode_IS_ASCII(formatter_string):
-        string = <const char*> PyUnicode_1BYTE_DATA(formatter_string)
-        length = PyUnicode_GET_LENGTH(formatter_string)
-    else:
-        string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
-
+    formatter_string = PyUnicode_Format(formatter_string, data)
+    string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
     writer.append_s(writer, string, length)
+
     return True
 
 

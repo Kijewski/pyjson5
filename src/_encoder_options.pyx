@@ -24,6 +24,14 @@ cdef object _options_ascii(object datum, boolean expect_ascii=True):
     return datum
 
 
+cdef object _options_reduce_arg(object key, object value, object default):
+    if value != default:
+        if value is not None:
+            return key, value
+        else:
+            return key, False
+
+
 cdef object _option_from_ascii(object name, object value, object default):
     if value == default:
         return
@@ -47,6 +55,8 @@ cdef _options_from_ascii(Options self):
 
 
 @final
+@no_gc
+@freelist(8)
 @auto_pickle(False)
 cdef class Options:
     '''
@@ -130,16 +140,17 @@ cdef class Options:
     '''
 
     def __reduce__(self):
-        '''
-        Pickling is not supported (yet).
-        '''
-        raise NotImplementedError
-
-    def __reduce_ex__(self, protocol):
-        '''
-        Pickling is not supported (yet).
-        '''
-        raise NotImplementedError
+        cdef object args = tuple(filter(bool, (
+            _options_reduce_arg('quotationmark', self.quotationmark, DEFAULT_QUOTATIONMARK),
+            _options_reduce_arg('tojson', self.tojson, None),
+            _options_reduce_arg('posinfinity', self.posinfinity, DEFAULT_POSINFINITY),
+            _options_reduce_arg('neginfinity', self.neginfinity, DEFAULT_NEGINFINITY),
+            _options_reduce_arg('intformat', self.intformat, DEFAULT_INTFORMAT),
+            _options_reduce_arg('floatformat', self.floatformat, DEFAULT_FLOATFORMAT),
+            _options_reduce_arg('decimalformat', self.decimalformat, DEFAULT_DECIMALFORMAT),
+            _options_reduce_arg('nan', self.nan, DEFAULT_NAN),
+        )))
+        return (_UnpickleOptions if args else Options), args
 
     def __repr__(self):
         cdef object repr_options = _options_from_ascii(self)
@@ -198,19 +209,19 @@ cdef class Options:
 
         if intformat is not None:
             try:
-                intformat % TEST_INT
+                PyUnicode_Format(intformat, TEST_INT)
             except Exception as ex:
                 raise ValueError('intformat is not a valid format string') from ex
 
         if floatformat is not None:
             try:
-                floatformat % TEST_FLOAT
+                PyUnicode_Format(floatformat, TEST_FLOAT)
             except Exception as ex:
                 raise ValueError('floatformat is not a valid format string') from ex
 
         if decimalformat is not None:
             try:
-                decimalformat % TEST_DECIMAL
+                PyUnicode_Format(decimalformat, TEST_DECIMAL)
             except Exception as ex:
                 raise ValueError('decimalformat is not a valid format string') from ex
 
@@ -223,14 +234,24 @@ cdef class Options:
                     raise TypeError('mappingtypes must be a sequence of types '
                                     'or False')
 
-    def update(self, **kw):
+    def update(self, *args, **kw):
         '''
         Creates a new Options instance by modifying some members.
         '''
-        return _to_options(self, kw)
+        if kw:
+            return _to_options(self, kw)
+        else:
+            return self
 
 
 cdef Options DEFAULT_OPTIONS_OBJECT = Options()
+
+
+def _UnpickleOptions(*args):
+    if args:
+        return _to_options(None, dict(args))
+    else:
+        return DEFAULT_OPTIONS_OBJECT
 
 
 cdef object _to_options(Options arg, dict kw):

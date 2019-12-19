@@ -2,12 +2,14 @@ cdef enum:
     NO_EXTRA_DATA = 0x0011_0000
 
 
-cdef void _skip_single_line(ReaderRef reader):
+cdef boolean _skip_single_line(ReaderRef reader) except False:
     cdef uint32_t c0
     while _reader_good(reader):
         c0 = _reader_get(reader)
         if _is_line_terminator(c0):
             break
+
+    return True
 
 
 cdef boolean _skip_multiline_comment(ReaderRef reader) except False:

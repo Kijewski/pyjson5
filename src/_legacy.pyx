@@ -24,7 +24,7 @@ def loads(s, *, encoding='UTF-8', **kw):
         see ``decode(...)``
     '''
     if not isinstance(s, unicode):
-        s = unicode(s, encoding, 'strict')
+        s = PyUnicode_FromEncodedObject(s, encoding, 'strict')
     return decode(s)
 
 

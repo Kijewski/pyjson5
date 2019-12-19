@@ -1,4 +1,4 @@
-from cython import final, no_gc, auto_pickle
+from cython import final, no_gc, auto_pickle, freelist
 from cpython cimport dict, int, list, long, tuple, type
 from cpython.bool cimport PyBool_Check
 from cpython.buffer cimport (
@@ -15,7 +15,7 @@ from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject
 from cpython.type cimport PyType_Check
-from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject
+from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject, PyUnicode_Format
 from libcpp cimport bool as boolean
 
 
