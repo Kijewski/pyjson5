@@ -28,11 +28,10 @@ def generate(f):
             if c < 128:
                 unescaped |= 1 << c
 
-        t = [
+        t = [str(len(s))] + [
             f"'{c}'" if c != '\\' else f"'\\\\'"
             for c in s
-        ] + ['0'] * 7
-        t[7] = f'{len(s)}'
+        ] + ['0'] * 6
         print('    {' + ', '.join(t[:8]) + '},', file=f)
     print('};', file=f)
 

@@ -57,7 +57,7 @@ bool obj_has_iter(const PyObject *obj) {
 constexpr char HEX[] = "0123456789abcdef";
 
 struct EscapeDct {
-    using Item = std::array<char, 8>;  // 7 are needed, 1 length
+    using Item = std::array<char, 8>;  // length, unto 6 characters, terminator (actually not needed)
     static constexpr std::size_t length = 0x100;
     using Items = Item[length];
 

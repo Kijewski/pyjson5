@@ -35,8 +35,8 @@ cdef boolean _encode_unicode_impl(WriterRef writer, UCSString data, Py_ssize_t l
 
             c = data[0]
             if (UCSString is UCS1String) or (c < 0x100):
-                escaped_string = &ESCAPE_DCT.items[c][0]
-                escaped_length = ESCAPE_DCT.items[c][7]
+                escaped_length = ESCAPE_DCT.items[c][0]
+                escaped_string = &ESCAPE_DCT.items[c][1]
                 writer.append_s(writer, escaped_string, escaped_length)
             elif (UCSString is UCS2String) or (c <= 0xffff):
                 buf[0] = b'\\';
