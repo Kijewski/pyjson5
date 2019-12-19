@@ -205,9 +205,6 @@ cdef boolean _encode_sequence(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object value
 
-    if _encode_tojson(writer, data):
-        return True
-
     Py_EnterRecursiveCall(' while encoding nested JSON5 object')
     try:
         writer.append_c(writer, <char> b'[')
@@ -228,9 +225,6 @@ cdef boolean _encode_sequence(WriterRef writer, object data) except False:
 cdef boolean _encode_mapping(WriterRef writer, object data) except False:
     cdef boolean first
     cdef object key, value
-
-    if _encode_tojson(writer, data):
-        return True
 
     Py_EnterRecursiveCall(' while encoding nested JSON5 object')
     try:
@@ -339,11 +333,23 @@ cdef boolean _encode_float(WriterRef writer, object data) except False:
 
 
 cdef boolean _encode_long(WriterRef writer, object data) except False:
-    return _encode_format_string(writer, data, (<Options> writer.options).intformat)
+    _encode_format_string(writer, data, (<Options> writer.options).intformat)
+    return True
 
 
 cdef boolean _encode_decimal(WriterRef writer, object data) except False:
-    return _encode_format_string(writer, data, (<Options> writer.options).decimalformat)
+    _encode_format_string(writer, data, (<Options> writer.options).decimalformat)
+    return True
+
+
+cdef boolean _encode_iterable(WriterRef writer, object data) except False:
+    if _encode_tojson(writer, data):
+        pass
+    elif isinstance(data, (<Options> writer.options).mappingtypes):
+        _encode_mapping(writer, data)
+    else:
+        _encode_sequence(writer, data)
+    return True
 
 
 cdef boolean _encode(WriterRef writer, object data) except False:
@@ -362,10 +368,7 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     elif PyFloat_Check(data):
         encoder = _encode_float
     elif obj_has_iter(data):
-        if isinstance(data, (<Options> writer.options).mappingtypes):
-            encoder = _encode_mapping
-        else:
-            encoder = _encode_sequence
+        encoder = _encode_iterable
     elif isinstance(data, Decimal):
         encoder = _encode_decimal
     elif isinstance(data, DATETIME_CLASSES):
@@ -373,7 +376,9 @@ cdef boolean _encode(WriterRef writer, object data) except False:
     else:
         encoder = _encode_unknown
 
-    return encoder(writer, data)
+    encoder(writer, data)
+
+    return True
 
 
 cdef boolean _encode_callback_bytes(object data, object cb, object options) except False:

@@ -102,6 +102,15 @@ cdef extern from 'src/_stack_heap_string.hpp' namespace 'JSON5EncoderCpp' nogil:
         boolean push_back(T codepoint) except False
 
 
+cdef extern from 'src/_decoder_recursive_select.hpp' namespace 'JSON5EncoderCpp' nogil:
+    cdef enum DrsKind:
+        DRS_fail,
+        DRS_null, DRS_true, DRS_false, DRS_inf, DRS_nan,
+        DRS_string, DRS_number, DRS_recursive
+
+    DrsKind drs_lookup[128]
+
+
 cdef extern from 'Python.h':
     enum:
         PyUnicode_WCHAR_KIND

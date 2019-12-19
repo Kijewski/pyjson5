@@ -614,33 +614,39 @@ cdef boolean _accept_string(ReaderRef reader, const char *string) except False:
     return True
 
 
-cdef object _decode_literal(ReaderRef reader, int32_t *c_in_out):
-    cdef const char *tail
-    cdef object result
-    cdef uint32_t c0
-    cdef int32_t c1
-
-    c0 = cast_to_uint32(c_in_out[0])
-    if c0 == b'n':
-        tail = b'ull'
-        result = None
-    elif c0 == b't':
-        tail = b'rue'
-        result = True
-    elif c0 == b'f':
-        tail = b'alse'
-        result = False
-    elif c0 == b'I':
-        tail = b'nfinity'
-        result = CONST_POS_INF
-    else:  # elif c0 == b'N':
-        tail = b'aN'
-        result = CONST_POS_NAN
-
-    _accept_string(reader, tail)
-
+cdef object _decode_null(ReaderRef reader, int32_t *c_in_out):
+    #                       n
+    _accept_string(reader, b'ull')
     c_in_out[0] = NO_EXTRA_DATA
-    return result
+    return None
+
+
+cdef object _decode_true(ReaderRef reader, int32_t *c_in_out):
+    #                       t
+    _accept_string(reader, b'rue')
+    c_in_out[0] = NO_EXTRA_DATA
+    return True
+
+
+cdef object _decode_false(ReaderRef reader, int32_t *c_in_out):
+    #                      f
+    _accept_string(reader, b'alse')
+    c_in_out[0] = NO_EXTRA_DATA
+    return False
+
+
+cdef object _decode_inf(ReaderRef reader, int32_t *c_in_out):
+    #                       I
+    _accept_string(reader, b'nfinity')
+    c_in_out[0] = NO_EXTRA_DATA
+    return CONST_POS_INF
+
+
+cdef object _decode_nan(ReaderRef reader, int32_t *c_in_out):
+    #                       N
+    _accept_string(reader, b'aN')
+    c_in_out[0] = NO_EXTRA_DATA
+    return CONST_POS_NAN
 
 
 cdef object _decode_recursive_enter(ReaderRef reader, int32_t *c_in_out):
@@ -688,22 +694,40 @@ cdef object _decoder_unknown(ReaderRef reader, int32_t *c_in_out):
 
 
 cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
-    cdef object (*decoder)(ReaderRef, int32_t*)
     cdef int32_t c0
     cdef uint32_t c1
+    cdef Py_ssize_t start
+    cdef DrsKind kind
+    cdef object (*decoder)(ReaderRef, int32_t*)
 
     c0 = c_in_out[0]
     c1 = cast_to_uint32(c0)
+    if c1 >= 128:
+        start = _reader_tell(reader)
+        _raise_expected_s('JSON5Value', start, c1)
 
-    decoder = _decoder_unknown
-    if c1 in b'ntfIN':
-        decoder = _decode_literal
-    elif c1 in b'\'"':
+    kind = drs_lookup[c1]
+    if kind == DRS_fail:
+        decoder = _decoder_unknown
+    elif kind == DRS_null:
+        decoder = _decode_null
+    elif kind == DRS_true:
+        decoder = _decode_true
+    elif kind == DRS_false:
+        decoder = _decode_false
+    elif kind == DRS_inf:
+        decoder = _decode_inf
+    elif kind == DRS_nan:
+        decoder = _decode_nan
+    elif kind == DRS_string:
         decoder = _decode_string
-    elif c1 in b'+-.0123456789':
+    elif kind == DRS_number:
         decoder = _decode_number
-    elif c1 in b'{[':
+    elif kind == DRS_recursive:
         decoder = _decode_recursive_enter
+    else:
+        __builtin_unreachable()
+        decoder = _decoder_unknown
 
     return decoder(reader, c_in_out)
 

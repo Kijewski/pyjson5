@@ -4,8 +4,12 @@ all: sdist bdist_wheel docs
 
 .PHONY: all sdist bdist_wheel clean docs
 
-FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py \
-         src/native.hpp src/VERSION src/_unicode_cat_of.hpp
+INCLUDES := \
+    src/VERSION src/DESCRIPTION \
+    src/_decoder_recursive_select.hpp src/_unicode_cat_of.hpp \
+    src/_escape_dct.hpp src/_stack_heap_string.hpp src/native.hpp
+
+FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
 DerivedGeneralCategory.txt:
 	wget -O $@ https://www.unicode.org/Public/12.1.0/ucd/extracted/DerivedGeneralCategory.txt
@@ -14,7 +18,7 @@ DerivedGeneralCategory.txt:
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
 	python make_unicode_categories.py $< $@
 
-pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx)
+pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
 	python -m cython -f -o $@ $<
 
 sdist: pyjson5.cpp ${FILES}
