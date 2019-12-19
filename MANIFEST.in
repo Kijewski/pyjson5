@@ -1,6 +1,5 @@
 include LICENSE
-include make_escape_dct.py
-include make_unicode_categories.py
+include make_*.py
 include Makefile
 include pyjson5.cpp
 include pyjson5.pyx

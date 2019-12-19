@@ -18,6 +18,12 @@ DerivedGeneralCategory.txt:
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
 	python make_unicode_categories.py $< $@
 
+src/_decoder_recursive_select.py.hpp: make_decoder_recursive_select.py
+	python $< $@
+
+src/_escape_dct.hpp: make_escape_dct.py
+	python $< $@
+
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
 	python -m cython -f -o $@ $<
 

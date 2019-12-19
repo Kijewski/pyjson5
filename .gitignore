@@ -28,4 +28,5 @@ run.cgi
 
 *.orig
 
-DerivedGeneralCategory.txt
+/DerivedGeneralCategory.txt
+/citylots.json
