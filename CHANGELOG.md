@@ -2,12 +2,14 @@
 
 * Allow ``\uXXXX`` sequences in identifier names
 * Update to Unicode 12.1.0
-* Optimized decoder for a little better speed
+* Optimized encoder and decoder for a little better speed
 * Setup basic CI environment
 * Parse \uXXXX in literal keys
 * Understand "0."
 * Add CI tests
 * Reject unescaped newlines in strings per spec
+* Allow overriding default quotation mark
+* Make Options objects pickle-able
 * Bump major version number
 
 ### 0.4.6
