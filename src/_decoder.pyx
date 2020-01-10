@@ -728,7 +728,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
     elif kind == DRS_recursive:
         decoder = _decode_recursive_enter
     else:
-        __builtin_unreachable()
+        unreachable()
         decoder = _decoder_unknown
 
     return decoder(reader, c_in_out)
@@ -823,7 +823,7 @@ cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
     elif kind == PyUnicode_4BYTE_KIND:
         return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, maxdepth, some)
     else:
-        __builtin_unreachable()
+        unreachable()
 
 
 cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
@@ -842,7 +842,7 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
         length = view.len // 4
     else:
         _raise_illegal_wordlength(wordlength)
-        __builtin_unreachable()
+        unreachable()
         length = 0
         decoder = NULL
 

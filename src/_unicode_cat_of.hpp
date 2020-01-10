@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "./native.hpp"
+
 namespace JSON5EncoderCpp {
 inline namespace {
 
@@ -4127,7 +4129,7 @@ static unsigned unicode_cat_of(std::uint32_t codepoint) {
     };
 
     std::uint16_t plane_idx = std::uint16_t(codepoint / 0x10000);
-    if (__builtin_expect(plane_idx > 16, false)) return 1;
+    if (JSON5Encoder_expect(plane_idx > 16, false)) return 1;
     std::uint16_t datum_idx = std::uint16_t(codepoint & 0xffff);
     const std::uint8_t *plane = planes[plane_idx];
     return (plane[datum_idx / 4] >> (2 * (datum_idx % 4))) % 4;

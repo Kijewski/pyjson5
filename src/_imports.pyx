@@ -188,9 +188,9 @@ ctypedef struct AsciiObject:
     char data[1]
 
 
-cdef extern from * nogil:
-    boolean expect '__builtin_expect'(boolean actual, boolean expected)
-    void __builtin_unreachable()
+cdef extern from 'src/native.hpp' nogil:
+    boolean expect 'JSON5Encoder_expect'(boolean actual, boolean expected)
+    void unreachable 'JSON5Encoder_unreachable'()
 
 
 cdef type Decimal, Mapping, IOBase

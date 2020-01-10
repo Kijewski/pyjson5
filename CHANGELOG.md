@@ -1,3 +1,8 @@
+### 1.4.8
+
+* Compile on Windows and OSX
+* Fix various typos
+
 ### 1.4.7
 
 * Allow ``\uXXXX`` sequences in identifier names

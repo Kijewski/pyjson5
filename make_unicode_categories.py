@@ -67,6 +67,8 @@ def main(input_file, output_file):
     print(file=output_file)
     print('#include <cstdint>', file=output_file)
     print(file=output_file)
+    print('#include "./native.hpp"', file=output_file)
+    print(file=output_file)
     print('namespace JSON5EncoderCpp {', file=output_file)
     print('inline namespace {', file=output_file)
     print(file=output_file)
@@ -99,7 +101,7 @@ def main(input_file, output_file):
     print(file=output_file)
 
     print('    std::uint16_t plane_idx = std::uint16_t(codepoint / 0x10000);', file=output_file)
-    print('    if (__builtin_expect(plane_idx > 16, false)) return 1;', file=output_file)
+    print('    if (JSON5Encoder_expect(plane_idx > 16, false)) return 1;', file=output_file)
     print('    std::uint16_t datum_idx = std::uint16_t(codepoint & 0xffff);', file=output_file)
     print('    const std::uint8_t *plane = planes[plane_idx];', file=output_file)
     print('    return (plane[datum_idx / 4] >> (2 * (datum_idx % 4))) % 4;', file=output_file)

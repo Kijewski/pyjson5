@@ -13,7 +13,7 @@ FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
 DerivedGeneralCategory.txt:
 	wget -O $@ https://www.unicode.org/Public/12.1.0/ucd/extracted/DerivedGeneralCategory.txt
-	sha512sum -c $@.sha
+	shasum -a 512 -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
 	python make_unicode_categories.py $< $@

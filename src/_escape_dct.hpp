@@ -256,7 +256,7 @@ const EscapeDct::Items EscapeDct::items = {
     {6, '\\', 'u', '0', '0', 'f', 'e', 0},
     {6, '\\', 'u', '0', '0', 'f', 'f', 0},
 };
-const unsigned __int128 EscapeDct::is_escaped_array = (
-    ((unsigned __int128) 0x8000000010000000 << 64) |
-    ((unsigned __int128) 0x500000c4ffffffff)
-);
+const std::uint64_t EscapeDct::is_escaped_array[2] = {
+    0x500000c4ffffffff,
+    0x8000000010000000,
+};

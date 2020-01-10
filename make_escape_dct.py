@@ -36,17 +36,17 @@ def generate(f):
     print('};', file=f)
 
     escaped = unescaped ^ ((1 << 128) - 1)
-    print('const unsigned __int128 EscapeDct::is_escaped_array = (', file=f)
-    print(f'    ((unsigned __int128) 0x{(escaped >> 64):016x} << 64) |', file=f)
-    print(f'    ((unsigned __int128) 0x{(escaped & ((1 << 64) - 1)):016x})', file=f)
-    print(');', file=f)
+    print('const std::uint64_t EscapeDct::is_escaped_array[2] = {', file=f)
+    print(f'    0x{(escaped & ((1 << 64) - 1)):016x},', file=f)
+    print(f'    0x{(escaped >> 64):016x},', file=f)
+    print('};', file=f)
 
 
 argparser = ArgumentParser(description='Generate src/_escape_dct.hpp')
-argparser.add_argument('input', nargs='?', type=Path, default=Path('src/_escape_dct.hpp'))
+argparser.add_argument('output', nargs='?', type=Path, default=Path('src/_escape_dct.hpp'))
 
 if __name__ == '__main__':
     basicConfig(level=DEBUG)
     args = argparser.parse_args()
-    with open(str(args.input.resolve()), 'wt') as out:
+    with open(str(args.output.resolve()), 'wt') as out:
         generate(out)

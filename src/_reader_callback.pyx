@@ -22,7 +22,7 @@ cdef inline uint32_t _reader_Callback_get(ReaderCallbackRef self):
 
 
 cdef int32_t _reader_Callback_good(ReaderCallbackRef self) except -1:
-    cdef Py_ssize_t c = -1
+    cdef int32_t c = -1
 
     if self.lookahead >= 0:
         return True
