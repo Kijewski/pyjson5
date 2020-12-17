@@ -11,7 +11,7 @@ def get_text(name):
 
 
 extra_compile_args = [
-    '-std=c++11', '-O2', '-fPIC', '-ggdb1', '-pipe',
+    '-std=c++11', '-O3', '-fPIC', '-ggdb1', '-pipe',
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]
 
