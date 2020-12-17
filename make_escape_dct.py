@@ -21,7 +21,9 @@ def generate(f):
             s = '\\r'
         elif c == ord('\t'):
             s = '\\t'
-        elif (c < 0x20) or (c >= 0x7f) or (chr(c) in '''"'&<>\\'''):
+        elif c == ord('"'):
+            s = '\\"'
+        elif (c < 0x20) or (c >= 0x7f) or (chr(c) in "'&<>\\"):
             s = f'\\u{c:04x}'
         else:
             s = f'{c:c}'
@@ -32,14 +34,13 @@ def generate(f):
             f"'{c}'" if c != '\\' else f"'\\\\'"
             for c in s
         ] + ['0'] * 6
-        print('    {' + ', '.join(t[:8]) + '},', file=f)
+        l = ', '.join(t[:8])
+        print(f'   {{ {l:35s} }},  /* 0x{c:02x} {chr(c)!r} */', file=f)
     print('};', file=f)
 
     escaped = unescaped ^ ((1 << 128) - 1)
-    print('const unsigned __int128 EscapeDct::is_escaped_array = (', file=f)
-    print(f'    ((unsigned __int128) 0x{(escaped >> 64):016x} << 64) |', file=f)
-    print(f'    ((unsigned __int128) 0x{(escaped & ((1 << 64) - 1)):016x})', file=f)
-    print(');', file=f)
+    print(f'const std::uint64_t EscapeDct::is_escaped_lo = UINT64_C(0x{(escaped & ((1 << 64) - 1)):016x});', file=f)
+    print(f'const std::uint64_t EscapeDct::is_escaped_hi = UINT64_C(0x{(escaped >> 64):016x});', file=f)
 
 
 argparser = ArgumentParser(description='Generate src/_escape_dct.hpp')

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JSON5EncoderCpp_native
+#define JSON5EncoderCpp_native
 
 #include <array>
 #include <cstdint>
@@ -57,18 +58,22 @@ bool obj_has_iter(const PyObject *obj) {
 constexpr char HEX[] = "0123456789abcdef";
 
 struct EscapeDct {
-    using Item = std::array<char, 8>;  // length, unto 6 characters, terminator (actually not needed)
+    using Item = std::array<char, 8>;  // length, upto 6 characters, terminator (actually not needed)
     static constexpr std::size_t length = 0x100;
     using Items = Item[length];
 
     static const Items items;
-    static const unsigned __int128 is_escaped_array;
+    static const std::uint64_t is_escaped_lo;
+    static const std::uint64_t is_escaped_hi;
 
     static inline bool is_escaped(std::uint32_t c) {
-        return (c >= 0x0080) || (is_escaped_array & (
-            static_cast<unsigned __int128>(1) <<
-            static_cast<std::uint8_t>(c)
-        ));
+        if (c < 0x40) {
+            return is_escaped_lo & (static_cast<std::uint64_t>(1) << c);
+        } else if (c < 0x80) {
+            return is_escaped_hi & (static_cast<std::uint64_t>(1) << (c - 0x40));
+        } else {
+            return true;
+        }
     }
 
     template <class S>
@@ -96,3 +101,5 @@ const char LONGDESCRIPTION[] =
 static constexpr std::size_t LONGDESCRIPTION_LENGTH = sizeof(LONGDESCRIPTION) - 1;
 
 }
+
+#endif
