@@ -1,10 +1,16 @@
+### 1.4.8
+
+* Update up Unicode 13.0.0
+* Don't use non-standard ``__uint128``
+* Add PyPy compatibility
+
 ### 1.4.7
 
 * Allow ``\uXXXX`` sequences in identifier names
 * Update to Unicode 12.1.0
 * Optimized encoder and decoder for a little better speed
 * Setup basic CI environment
-* Parse \uXXXX in literal keys
+* Parse ``\uXXXX`` in literal keys
 * Understand "0."
 * Add CI tests
 * Reject unescaped newlines in strings per spec
