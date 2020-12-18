@@ -31,7 +31,7 @@ public:
     }
 
     const T *data() const& {
-        if (__builtin_expect(m_heap == nullptr, true)) {
+        if (JSON5EncoderCpp_expect(m_heap == nullptr, true)) {
             return m_stack;
         } else {
             return m_heap;
@@ -43,7 +43,7 @@ public:
     }
 
     bool push_back(T c) {
-        if (__builtin_expect(m_left == 0, false)) {
+        if (JSON5EncoderCpp_expect(m_left == 0, false)) {
             if (m_heap == nullptr) {
                 void *new_ptr = PyMem_RawMalloc(sizeof(T) * StackHeapStringHeapSize);
                 if (new_ptr == nullptr) {
@@ -66,7 +66,7 @@ public:
             }
         }
 
-        if (__builtin_expect(m_heap == nullptr, true)) {
+        if (JSON5EncoderCpp_expect(m_heap == nullptr, true)) {
             m_stack[m_size] = c;
         } else {
             m_heap[m_size] = c;

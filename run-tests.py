@@ -2,8 +2,10 @@
 
 from argparse import ArgumentParser
 from logging import basicConfig, INFO, getLogger
+from os import name
 from pathlib import Path
 from subprocess import Popen
+from sys import executable
 
 from colorama import init, Fore
 from pyjson5 import decode_io
@@ -24,6 +26,15 @@ if __name__ == '__main__':
 
     init()
 
+    if name != 'nt':
+        code_severe = Fore.RED + '😱'
+        code_good = Fore.CYAN + '😄'
+        code_bad = Fore.YELLOW + '😠'
+    else:
+        code_severe = Fore.RED + 'SEVERE'
+        code_good = Fore.CYAN + 'GOOD'
+        code_bad = Fore.YELLOW + 'BAD'
+
     good = 0
     bad = 0
     severe = 0
@@ -40,23 +51,18 @@ if __name__ == '__main__':
         category = path.parent.name
         name = path.stem
         try:
-            p = Popen(('/usr/bin/env', 'python', 'transcode-to-json.py', str(path)))
+            p = Popen((executable, 'transcode-to-json.py', str(path)))
             outcome = p.wait(5)
         except Exception:
             logger.error('Error while testing: %s', path, exc_info=True)
-            errors += 1
+            severe += 1
             continue
 
         is_success = outcome == 0
         is_failure = outcome == 1
         is_severe = outcome not in (0, 1)
         is_good = is_success if expect_success else is_failure
-
-        code = (
-            Fore.RED + '😱' if is_severe else
-            Fore.CYAN + '😄' if is_good else
-            Fore.YELLOW + '😠'
-        )
+        code = code_severe if is_severe else code_good if is_good else code_bad
         print(
             '#', index, ' ', code, ' '
             'Category <', category, '> | '
@@ -76,11 +82,7 @@ if __name__ == '__main__':
 
     is_severe = severe > 0
     is_good = bad == 0
-    code = (
-        Fore.RED + '😱' if is_severe else
-        Fore.CYAN + '😄' if is_good else
-        Fore.YELLOW + '😠'
-    )
+    code = code_severe if is_severe else code_good if is_good else code_bad
     print()
     print(
         code, ' ',

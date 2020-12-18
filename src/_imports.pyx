@@ -95,6 +95,7 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
 
     void reset_hash[T](T *obj)
     AlwaysTrue exception_thrown() except True
+    void unreachable()
 
 cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp':
     int iter_next(object iterator, PyObject **value) except -1
@@ -193,9 +194,8 @@ ctypedef struct AsciiObject:
     char data[1]
 
 
-cdef extern from * nogil:
-    boolean expect '__builtin_expect'(boolean actual, boolean expected)
-    void __builtin_unreachable()
+cdef extern from 'src/native.hpp' nogil:
+    boolean expect 'JSON5EncoderCpp_expect'(boolean actual, boolean expected)
 
 
 cdef type datetime, date, time, Decimal, Mapping, IOBase

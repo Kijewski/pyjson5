@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from collections.abc import Mapping, Sequence
+from codecs import open as codecs_open
 from itertools import zip_longest
 from json import loads
 from logging import basicConfig, DEBUG, getLogger
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     args = argparser.parse_args()
     try:
         # open() does not work with Paths in Python 3.5
-        with open(str(args.input.resolve()), 'rt') as f:
+        with codecs_open(str(args.input.resolve()), 'r', 'UTF-8') as f:
             data = f.read()
     except Exception:
         logger.error('Could not even read file: %s', args.input, exc_info=True)
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     if args.output is not None:
         try:
             # open() does not work with Paths in Python 3.5
-            with open(str(args.output.resolve()), 'wt') as f:
+            with codecs_open(str(args.output.resolve()), 'w', 'UTF-8') as f:
                 f.write(data)
         except Exception:
             logger.error('Could open output file: %s', args.output, exc_info=True)

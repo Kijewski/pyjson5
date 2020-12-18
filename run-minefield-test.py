@@ -2,8 +2,10 @@
 
 from argparse import ArgumentParser
 from logging import basicConfig, INFO, getLogger
+from os import name
 from pathlib import Path
 from subprocess import Popen
+from sys import executable
 
 from colorama import init, Fore
 from pyjson5 import decode_io
@@ -26,6 +28,17 @@ if __name__ == '__main__':
 
     good = bad = severe = 0
 
+    if name != 'nt':
+        code_severe = Fore.RED + '😱'
+        code_good = Fore.CYAN + '😄'
+        code_bad = Fore.YELLOW + '😠'
+        code_ignored = Fore.BLUE + '🙅'
+    else:
+        code_severe = Fore.RED + 'SEVERE'
+        code_good = Fore.CYAN + 'GOOD'
+        code_bad = Fore.YELLOW + 'BAD'
+        code_ignored = Fore.BLUE + 'IGNORED'
+
     args = argparser.parse_args()
     index = 0
     for path in sorted(args.tests.glob('?_?*.json')):
@@ -46,7 +59,7 @@ if __name__ == '__main__':
 
         index += 1
         try:
-            p = Popen(('/usr/bin/env', 'python', 'transcode-to-json.py', str(path)))
+            p = Popen((executable, 'transcode-to-json.py', str(path)))
             outcome = p.wait(5)
         except Exception:
             logger.error('Error while testing: %s', path, exc_info=True)
@@ -54,20 +67,20 @@ if __name__ == '__main__':
             continue
 
         if outcome not in (0, 1):
-            code = Fore.RED + '😱'
+            code = code_severe
             severe += 1
         elif category == 'y':
             if outcome == 0:
-                code = Fore.CYAN + '😄'
+                code = code_good
                 good += 1
             else:
-                code = Fore.YELLOW + '😠'
+                code = code_bad
                 bad += 1
         else:
-            code = Fore.BLUE + '🙅'
+            code = code_ignored
 
         print(
-            '#', index, ' ', code, ' '
+            '#', index, ' ', code, ' | '
             'Category <', category, '> | '
             'Test <', name, '> | '
             'Actual <', 'pass' if outcome == 0 else 'FAIL', '>',
@@ -77,17 +90,13 @@ if __name__ == '__main__':
 
     is_severe = severe > 0
     is_good = bad == 0
-    code = (
-        Fore.RED + '😱' if is_severe else
-        Fore.CYAN + '😄' if is_good else
-        Fore.YELLOW + '😠'
-    )
+    code = code_severe if is_severe else code_good if is_good else code_bad
     print()
     print(
-        code, ' ',
-        good, ' × correct outcome | ',
-        bad, ' × wrong outcome | ',
-        severe, ' × severe errors',
+        code, ' | ',
+        good, ' correct outcomes | ',
+        bad, ' wrong outcomes | ',
+        severe, ' severe errors',
         Fore.RESET,
         sep=''
     )

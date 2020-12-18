@@ -4,6 +4,9 @@ all: sdist bdist_wheel docs
 
 .PHONY: all sdist bdist_wheel clean docs
 
+export PYTHONUTF8 := 1
+export PYTHONIOENCODING := UTF-8
+
 INCLUDES := \
     src/VERSION src/DESCRIPTION \
     src/_decoder_recursive_select.hpp src/_unicode_cat_of.hpp \
@@ -11,9 +14,9 @@ INCLUDES := \
 
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
-DerivedGeneralCategory.txt:
-	wget -O $@ https://www.unicode.org/Public/13.0.0/ucd/extracted/DerivedGeneralCategory.txt
-	sha512sum -c $@.sha
+DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
+	curl -s -o $@ https://www.unicode.org/Public/13.0.0/ucd/extracted/DerivedGeneralCategory.txt
+	python sha512sum.py -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
 	python make_unicode_categories.py $< $@

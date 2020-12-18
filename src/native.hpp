@@ -68,9 +68,9 @@ struct EscapeDct {
 
     static inline bool is_escaped(std::uint32_t c) {
         if (c < 0x40) {
-            return is_escaped_lo & (static_cast<std::uint64_t>(1) << c);
+            return (is_escaped_lo & (static_cast<std::uint64_t>(1) << c)) != 0;
         } else if (c < 0x80) {
-            return is_escaped_hi & (static_cast<std::uint64_t>(1) << (c - 0x40));
+            return (is_escaped_hi & (static_cast<std::uint64_t>(1) << (c - 0x40))) != 0;
         } else {
             return true;
         }
@@ -158,6 +158,16 @@ static inline AlwaysTrue exception_thrown() {
     return true;
 }
 
+// https://stackoverflow.com/a/65258501/416224
+#ifdef __GNUC__ // GCC 4.8+, Clang, Intel and other compilers compatible with GCC (-std=c++0x or above)
+    [[noreturn]] inline __attribute__((always_inline)) void unreachable() { __builtin_unreachable(); }
+#elif defined(_MSC_VER) // MSVC
+    [[noreturn]] __forceinline void unreachable() { __assume(false); }
+#else // ???
+    inline void unreachable() {}
+#endif
+
+
 #include "./_escape_dct.hpp"
 
 const EscapeDct ESCAPE_DCT;
@@ -171,6 +181,12 @@ const char LONGDESCRIPTION[] =
 #   include "./DESCRIPTION"
 ;
 static constexpr std::size_t LONGDESCRIPTION_LENGTH = sizeof(LONGDESCRIPTION) - 1;
+
+#ifdef __GNUC__
+#   define JSON5EncoderCpp_expect(cond, likely) __builtin_expect(!!(cond), !!(likely))
+#else
+#   define JSON5EncoderCpp_expect(cond, likely) !!(cond)
+#endif
 
 }
 
