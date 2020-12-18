@@ -62,7 +62,7 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
 
     .. code:: python
 
-        decode_buffer(b'["Hello", "world!"]') == ['Hello', 'world!']
+        decode_latin1(b'["Hello", "world!"]') == ['Hello', 'world!']
 
     Parameters
     ----------
@@ -88,6 +88,38 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
     return decode_buffer(data, maxdepth, bool(some), 1)
 
 
+def decode_utf8(object data, object maxdepth=None, object some=False):
+    '''
+    Decodes JSON5 serialized data from a ``bytes`` object.
+
+    .. code:: python
+
+        decode_utf8(b'["H\\xe2\\x82\\xacllo", "w\\xc3\\xb6rld!"]') == ['H€llo', 'wörld!']
+
+    Parameters
+    ----------
+    data : bytes
+        JSON5 serialized data, encoded as UTF-8 or ASCII.
+    maxdepth : Optional[int]
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
+
+    Returns
+    -------
+    object
+        see `decode(...) <pyjson5.decode_>`_
+    '''
+    return decode_buffer(data, maxdepth, bool(some), 0)
+
+
 def decode_buffer(object obj, object maxdepth=None, object some=False,
                   object wordlength=None):
     '''
@@ -111,7 +143,7 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     some : bool
         see `decode(...) <pyjson5.decode_>`_
     wordlength : Optional[int]
-        Must be 1, 2, 4 to denote UCS1, USC2 or USC4 data.
+        Must be 0, 1, 2, 4 to denote UTF-8, UCS1, USC2 or USC4 data, resp.
         Surrogates are not supported. Decode the data to an ``str`` if need be.
         If ``None`` is supplied, then the buffer's ``itemsize`` is used.
 
@@ -574,7 +606,7 @@ def encode_noop(object data, *, options=None, **options_kw):
 
 __all__ = (
     # DECODE
-    'decode', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
+    'decode', 'decode_utf8', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
     # ENCODE
     'encode', 'encode_bytes', 'encode_callback', 'encode_io', 'encode_noop', 'Options',
     # LEGACY

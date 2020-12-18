@@ -3,6 +3,7 @@
 * Update up Unicode 13.0.0
 * Don't use non-standard ``__uint128``
 * Add PyPy compatibility
+* Add ``decode_utf8(byte-like)``
 
 ### 1.4.7
 

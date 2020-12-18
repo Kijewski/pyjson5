@@ -24,10 +24,14 @@ cdef inline Py_ssize_t _reader_tell(ReaderRef self):
 
 
 cdef inline uint32_t _reader_get(ReaderRef self):
-    if ReaderRef in ReaderUCSRef:
-        return _reader_ucs_get(self)
+    cdef uint32_t c0
+    if ReaderRef is ReaderUTF8Ref:
+        c0 = _reader_utf8_get(self)
+    elif ReaderRef in ReaderUCSRef:
+        c0 = _reader_ucs_get(self)
     elif ReaderRef is ReaderCallbackRef:
-        return _reader_Callback_get(self)
+        c0 = _reader_Callback_get(self)
+    return c0
 
 
 cdef int32_t _reader_good(ReaderRef self) except -1:

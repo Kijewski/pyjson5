@@ -769,15 +769,16 @@ cdef object _decode_all_sub(ReaderRef reader, boolean some):
 
 
 cdef object _decode_all(ReaderRef reader, boolean some):
-    cdef object ex
+    cdef object ex, ex2
     try:
         return _decode_all_sub(reader, some)
     except _DecoderException as ex:
-        raise (<_DecoderException> ex).cls(
+        ex2 = (<_DecoderException> ex).cls(
             (<_DecoderException> ex).msg,
             (<_DecoderException> ex).result,
             (<_DecoderException> ex).extra,
         )
+    raise ex2
 
 
 cdef object _decode_ucs1(const void *string, Py_ssize_t length,
@@ -807,11 +808,26 @@ cdef object _decode_ucs4(const void *string, Py_ssize_t length,
     return _decode_all(reader, some)
 
 
+cdef object _decode_utf8(const void *string, Py_ssize_t length,
+                         Py_ssize_t maxdepth, boolean some):
+    cdef ReaderUTF8 reader = ReaderUTF8(
+        ReaderUCS(length, 0, maxdepth),
+        <const Py_UCS1*> string,
+    )
+    return _decode_all(reader, some)
+
+
 cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
     cdef Py_ssize_t length
     cdef int kind
+    cdef const char *s
 
     PyUnicode_READY(data)
+
+    if CYTHON_COMPILING_IN_PYPY:
+        length = 0
+        s = PyUnicode_AsUTF8AndSize(data, &length)
+        return _decode_utf8(s, length, maxdepth, some)
 
     length = PyUnicode_GET_LENGTH(data)
     kind = PyUnicode_KIND(data)
@@ -831,7 +847,10 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
     cdef object (*decoder)(const void*, Py_ssize_t, Py_ssize_t, boolean)
     cdef Py_ssize_t length = 0
 
-    if wordlength == 1:
+    if wordlength == 0:
+        decoder = _decode_utf8
+        length = view.len // 1
+    elif wordlength == 1:
         decoder = _decode_ucs1
         length = view.len // 1
     elif wordlength == 2:

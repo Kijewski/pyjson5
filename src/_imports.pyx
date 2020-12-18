@@ -198,6 +198,11 @@ cdef extern from 'src/native.hpp' nogil:
     boolean expect 'JSON5EncoderCpp_expect'(boolean actual, boolean expected)
 
 
+cdef extern from * nogil:
+    enum:
+        CYTHON_COMPILING_IN_PYPY
+
+
 cdef type datetime, date, time, Decimal, Mapping, IOBase
 cdef object saferepr
 
