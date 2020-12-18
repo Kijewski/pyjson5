@@ -311,7 +311,8 @@ def encode(object data, *, options=None, **options_kw):
     )
 
     try:
-        _encode(writer.base, data)
+        if expect(_encode(writer.base, data) < 0, False):
+            exception_thrown()
 
         length = writer.position - start
         if length <= 0:
@@ -327,7 +328,7 @@ def encode(object data, *, options=None, **options_kw):
         writer.obj = NULL
 
         (<PyASCIIObject*> result).length = length
-        (<PyASCIIObject*> result).hash = -1
+        reset_hash(<PyASCIIObject*> result)
         (<PyASCIIObject*> result).wstr = NULL
         (<PyASCIIObject*> result).state.interned = SSTATE_NOT_INTERNED
         (<PyASCIIObject*> result).state.kind = PyUnicode_1BYTE_KIND
@@ -388,7 +389,8 @@ def encode_bytes(object data, *, options=None, **options_kw):
     )
 
     try:
-        _encode(writer.base, data)
+        if expect(_encode(writer.base, data) < 0, False):
+            exception_thrown()
 
         length = writer.position - start
         if length <= 0:
@@ -405,7 +407,7 @@ def encode_bytes(object data, *, options=None, **options_kw):
         )
         writer.obj = NULL
 
-        (<PyBytesObject*> result).ob_shash = -1
+        reset_hash(<PyBytesObject*> result)
 
         return result
     finally:
@@ -463,7 +465,7 @@ def encode_callback(object data, object cb, object supply_bytes=False, *,
     Callable[[Union[bytes|str]], None]
         The supplied argument ``cb``.
     '''
-    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef int (*encoder)(object obj, object cb, object options) except -1
     cdef Options opts = _to_options(options, options_kw)
 
     if supply_bytes:
@@ -510,7 +512,7 @@ def encode_io(object data, object fp, object supply_bytes=True, *,
     IOBase
         The supplied argument ``fp``.
     '''
-    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef int (*encoder)(object obj, object cb, object options) except -1
     cdef object opts = _to_options(options, options_kw)
 
     if not isinstance(fp, IOBase):
@@ -564,10 +566,8 @@ def encode_noop(object data, *, options=None, **options_kw):
         <PyObject*> opts,
     )
 
-    try:
-        _encode(writer, data)
-    except Exception:
-        return False
+    if expect(_encode(writer, data) < 0, False):
+        exception_thrown()
 
     return True
 

@@ -98,8 +98,7 @@ cdef class Options:
         * **False:** Throw an exception if a ``Decimal`` is encountered.
         * **None:** Use default: ``"%s"``.
     mappingtypes : Iterable[type]|False|None
-        * **Iterable[type]:** Classes the should be encoded to objects. \
-                              Must be iterable over their keys, and implement ``__getitem__``.
+        * **Iterable[type]:** Classes that should be encoded to objects. Must be iterable over their keys, and implement ``__getitem__``.
         * **False:** There are no objects. Any object will be encoded as list of keys as in list(obj).
         * **None:** Use default: ``[collections.abc.Mapping]``.
     '''

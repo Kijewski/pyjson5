@@ -50,9 +50,9 @@ struct AlwaysTrue {
     inline operator bool () const { return true; }
 };
 
-bool obj_has_iter(const PyObject *obj) {
-    auto *i = Py_TYPE(obj)->tp_iter;
-    return (i != nullptr) && (i != &_PyObject_NextNotImplemented);
+static inline bool obj_has_iter(const PyObject *obj) {
+    const auto *cls = Py_TYPE(obj);
+    return cls->tp_iter != nullptr;
 }
 
 constexpr char HEX[] = "0123456789abcdef";
@@ -85,6 +85,78 @@ struct EscapeDct {
         return index;
     }
 };
+
+static inline bool unicode_is_lo_surrogate(std::uint32_t ch) {
+    return 0xDC00u <= ch && ch <= 0xDFFFu;
+}
+
+static inline bool unicode_is_hi_surrogate(std::uint32_t ch) {
+    return 0xD800u <= ch && ch <= 0xDBFFu;
+}
+
+static inline std::uint32_t unicode_join_surrogates(std::uint32_t hi, std::uint32_t lo) {
+    return (((hi & 0x03FFu) << 10) | (lo & 0x03FFu)) + 0x10000u;
+}
+
+template <typename T>
+struct has_ob_shash {
+    template <typename C> static std::uint8_t test(decltype(&C::ob_shash)) ;
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template <typename T>
+struct has_hash {
+    template <typename C> static std::uint8_t test(decltype(&C::hash)) ;
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template<class T, bool ob_shash = has_ob_shash<T>::value, bool hash = has_hash<T>::value>
+struct ResetHash_;
+
+template<class T>
+struct ResetHash_ <T, true, false> {
+    static inline void reset(T *obj) {
+        obj->ob_shash = -1;  // CPython: str
+    }
+};
+
+template<class T>
+struct ResetHash_ <T, false, true> {
+    static inline void reset(T *obj) {
+        obj->hash = -1;  // CPython: bytes
+    }
+};
+
+template<class T>
+struct ResetHash_ <T, false, false> {
+    static inline void reset(T *obj) {
+        (void) 0;  // PyPy
+    }
+};
+
+template <class T>
+static inline void reset_hash(T *obj) {
+    ResetHash_<T>::reset(obj);
+}
+
+static int iter_next(PyObject *iterator, PyObject **value) {
+    Py_XDECREF(*value);
+    PyObject *v = PyIter_Next(iterator);
+    *value = v;
+    if (v) {
+        return true;
+    } else if (!PyErr_Occurred()) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+static inline AlwaysTrue exception_thrown() {
+    return true;
+}
 
 #include "./_escape_dct.hpp"
 

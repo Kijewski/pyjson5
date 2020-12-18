@@ -121,18 +121,18 @@ cdef int32_t _get_escaped_unicode_maybe_surrogate(ReaderRef reader, Py_ssize_t s
     cdef uint32_t c1
 
     c0 = cast_to_uint32(_get_hex_character(reader, 4))
-    if expect(Py_UNICODE_IS_LOW_SURROGATE(c0), False):
+    if expect(unicode_is_lo_surrogate(c0), False):
         _raise_expected_s('high surrogate before low surrogate', start, c0)
-    elif not Py_UNICODE_IS_HIGH_SURROGATE(c0):
+    elif not unicode_is_hi_surrogate(c0):
         return c0
 
     _accept_string(reader, b'\\u')
 
     c1 = cast_to_uint32(_get_hex_character(reader, 4))
-    if expect(not Py_UNICODE_IS_LOW_SURROGATE(c1), False):
+    if expect(not unicode_is_lo_surrogate(c1), False):
         _raise_expected_s('low surrogate', start, c1)
 
-    return Py_UNICODE_JOIN_SURROGATES(c0, c1)
+    return unicode_join_surrogates(c0, c1)
 
 
 # >=  0: character to append
