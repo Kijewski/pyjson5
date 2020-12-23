@@ -7,13 +7,12 @@ from cpython.buffer cimport (
 from cpython.bytes cimport (
     PyBytes_AsStringAndSize, PyBytes_FromStringAndSize, PyBytes_Check,
 )
-from cpython.datetime cimport datetime, date, time
 from cpython.dict cimport PyDict_SetItem
 from cpython.float cimport PyFloat_Check, PyFloat_AsDouble
 from cpython.int cimport PyInt_Check
 from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
-from cpython.object cimport PyObject
+from cpython.object cimport PyObject, PyObject_GetIter
 from cpython.type cimport PyType_Check
 from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject, PyUnicode_Format
 from libcpp cimport bool as boolean
@@ -90,6 +89,17 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
 
     const char HEX[]
 
+    boolean unicode_is_lo_surrogate(uint32_t ch)
+    boolean unicode_is_hi_surrogate(uint32_t ch)
+    uint32_t unicode_join_surrogates(uint32_t hi, uint32_t lo)
+
+    void reset_hash[T](T *obj)
+    AlwaysTrue exception_thrown() except True
+    void unreachable()
+
+cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp':
+    int iter_next(object iterator, PyObject **value) except -1
+
 
 cdef extern from 'src/_unicode_cat_of.hpp' namespace 'JSON5EncoderCpp' nogil:
     unsigned unicode_cat_of(uint32_t codepoint)
@@ -131,10 +141,6 @@ cdef extern from 'Python.h':
 
     bint Py_UNICODE_ISALPHA(Py_UCS4 ch) nogil
     bint Py_UNICODE_ISDIGIT(Py_UCS4 ch) nogil
-    bint Py_UNICODE_IS_SURROGATE(Py_UCS4 ch) nogil
-    bint Py_UNICODE_IS_HIGH_SURROGATE(Py_UCS4 ch) nogil
-    bint Py_UNICODE_IS_LOW_SURROGATE(Py_UCS4 ch) nogil
-    Py_UCS4 Py_UNICODE_JOIN_SURROGATES(Py_UCS4 high, Py_UCS4 low) nogil
 
     object PyUnicode_FromKindAndData(int kind, const void *buf, Py_ssize_t size)
     const char *PyUnicode_AsUTF8AndSize(object o, Py_ssize_t *size) except NULL
@@ -188,15 +194,20 @@ ctypedef struct AsciiObject:
     char data[1]
 
 
+cdef extern from 'src/native.hpp' nogil:
+    boolean expect 'JSON5EncoderCpp_expect'(boolean actual, boolean expected)
+
+
 cdef extern from * nogil:
-    boolean expect '__builtin_expect'(boolean actual, boolean expected)
-    void __builtin_unreachable()
+    enum:
+        CYTHON_COMPILING_IN_PYPY
 
 
-cdef type Decimal, Mapping, IOBase
+cdef type datetime, date, time, Decimal, Mapping, IOBase
 cdef object saferepr
 
 from collections.abc import Mapping
+from datetime import datetime, date, time
 from decimal import Decimal
 from io import IOBase
 from pprint import saferepr

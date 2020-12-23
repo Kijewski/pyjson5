@@ -62,7 +62,7 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
 
     .. code:: python
 
-        decode_buffer(b'["Hello", "world!"]') == ['Hello', 'world!']
+        decode_latin1(b'["Hello", "world!"]') == ['Hello', 'world!']
 
     Parameters
     ----------
@@ -88,6 +88,38 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
     return decode_buffer(data, maxdepth, bool(some), 1)
 
 
+def decode_utf8(object data, object maxdepth=None, object some=False):
+    '''
+    Decodes JSON5 serialized data from a ``bytes`` object.
+
+    .. code:: python
+
+        decode_utf8(b'["H\\xe2\\x82\\xacllo", "w\\xc3\\xb6rld!"]') == ['H€llo', 'wörld!']
+
+    Parameters
+    ----------
+    data : bytes
+        JSON5 serialized data, encoded as UTF-8 or ASCII.
+    maxdepth : Optional[int]
+        see `decode(...) <pyjson5.decode_>`_
+    some : bool
+        see `decode(...) <pyjson5.decode_>`_
+
+    Raises
+    ------
+    Json5DecoderException
+        An exception occured while decoding.
+    TypeError
+        An argument had a wrong type.
+
+    Returns
+    -------
+    object
+        see `decode(...) <pyjson5.decode_>`_
+    '''
+    return decode_buffer(data, maxdepth, bool(some), 0)
+
+
 def decode_buffer(object obj, object maxdepth=None, object some=False,
                   object wordlength=None):
     '''
@@ -111,7 +143,7 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     some : bool
         see `decode(...) <pyjson5.decode_>`_
     wordlength : Optional[int]
-        Must be 1, 2, 4 to denote UCS1, USC2 or USC4 data.
+        Must be 0, 1, 2, 4 to denote UTF-8, UCS1, USC2 or USC4 data, resp.
         Surrogates are not supported. Decode the data to an ``str`` if need be.
         If ``None`` is supplied, then the buffer's ``itemsize`` is used.
 
@@ -311,7 +343,8 @@ def encode(object data, *, options=None, **options_kw):
     )
 
     try:
-        _encode(writer.base, data)
+        if expect(_encode(writer.base, data) < 0, False):
+            exception_thrown()
 
         length = writer.position - start
         if length <= 0:
@@ -327,7 +360,7 @@ def encode(object data, *, options=None, **options_kw):
         writer.obj = NULL
 
         (<PyASCIIObject*> result).length = length
-        (<PyASCIIObject*> result).hash = -1
+        reset_hash(<PyASCIIObject*> result)
         (<PyASCIIObject*> result).wstr = NULL
         (<PyASCIIObject*> result).state.interned = SSTATE_NOT_INTERNED
         (<PyASCIIObject*> result).state.kind = PyUnicode_1BYTE_KIND
@@ -388,7 +421,8 @@ def encode_bytes(object data, *, options=None, **options_kw):
     )
 
     try:
-        _encode(writer.base, data)
+        if expect(_encode(writer.base, data) < 0, False):
+            exception_thrown()
 
         length = writer.position - start
         if length <= 0:
@@ -405,7 +439,7 @@ def encode_bytes(object data, *, options=None, **options_kw):
         )
         writer.obj = NULL
 
-        (<PyBytesObject*> result).ob_shash = -1
+        reset_hash(<PyBytesObject*> result)
 
         return result
     finally:
@@ -463,7 +497,7 @@ def encode_callback(object data, object cb, object supply_bytes=False, *,
     Callable[[Union[bytes|str]], None]
         The supplied argument ``cb``.
     '''
-    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef int (*encoder)(object obj, object cb, object options) except -1
     cdef Options opts = _to_options(options, options_kw)
 
     if supply_bytes:
@@ -510,7 +544,7 @@ def encode_io(object data, object fp, object supply_bytes=True, *,
     IOBase
         The supplied argument ``fp``.
     '''
-    cdef boolean (*encoder)(object obj, object cb, object options) except False
+    cdef int (*encoder)(object obj, object cb, object options) except -1
     cdef object opts = _to_options(options, options_kw)
 
     if not isinstance(fp, IOBase):
@@ -564,17 +598,15 @@ def encode_noop(object data, *, options=None, **options_kw):
         <PyObject*> opts,
     )
 
-    try:
-        _encode(writer, data)
-    except Exception:
-        return False
+    if expect(_encode(writer, data) < 0, False):
+        exception_thrown()
 
     return True
 
 
 __all__ = (
     # DECODE
-    'decode', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
+    'decode', 'decode_utf8', 'decode_latin1', 'decode_buffer', 'decode_callback', 'decode_io',
     # ENCODE
     'encode', 'encode_bytes', 'encode_callback', 'encode_io', 'encode_noop', 'Options',
     # LEGACY

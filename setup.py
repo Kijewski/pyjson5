@@ -11,7 +11,7 @@ def get_text(name):
 
 
 extra_compile_args = [
-    '-std=c++11', '-O2', '-fPIC', '-ggdb1', '-pipe',
+    '-std=c++11', '-O3', '-fPIC', '-ggdb1', '-pipe',
     '-fomit-frame-pointer', '-fstack-protector-strong',
 ]
 
@@ -51,6 +51,8 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Text Processing :: General',

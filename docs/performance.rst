@@ -11,10 +11,10 @@ The library is a bit slower than the shipped ``json`` module for *pure* JSON dat
 If you know that your input does not use JSON5 extension, then this library is probably not what you need.
 
 * Dataset: https://github.com/zemirco/sf-city-lots-json
-* Version: Python 3.7.5 (default, Oct 27 2019, 15:43:29)
+* Version: 3.9.1 (default, Dec  8 2020, 07:51:42)
 * CPU: AMD Ryzen 7 2700 @ 3.7GHz
-* :func:`pyjson5.decode`: **3.18 s** ± 4.89 ms per loop per loop per loop *(lower is better)*
-* :func:`json.loads`: **2.64** s ± 12.7 ms ms per loop
+* :func:`pyjson5.decode`: **3.18** s ± 9.79 ms per loop *(lower is better)*
+* :func:`json.loads`: **2.66** s ± 9.78 ms per loop
 * The decoder works correcty: ``json.loads(content) == pyjson5.loads(content)``
 
 
@@ -26,9 +26,9 @@ The serialized data is XML-safe, i.e. there are no cheverons ``<>``, ampersands 
 The output is always ASCII regardless if you call :func:`pyjson5.encode` or :func:`pyjson5.encode_bytes`.
 
 * Dataset: https://github.com/zemirco/sf-city-lots-json
-* Version: Python 3.7.5 (default, Oct 27 2019, 15:43:29)
+* Version: 3.9.1 (default, Dec  8 2020, 07:51:42)
 * CPU: AMD Ryzen 7 2700 @ 3.7GHz
-* :func:`pyjson5.encode`: **3.42** s ± 11.8 ms per loop *(lower is better)*
-* :func:`json.dumps`: **3.77** s ± 14.4 ms per loop
-* :func:`json.dumps` + :func:`xml.sax.saxutils.escape`: **4.02** s ± 51.6 ms per loop
+* :func:`pyjson5.encode`: **3.21** s ± 25.1 per loop *(lower is better)*
+* :func:`json.dumps`: **3.82** s ± 20.4 ms per loop
+* :func:`json.dumps` + :func:`xml.sax.saxutils.escape`: **3.95** s ± 18.3 ms per loop
 * The encoder works correcty: ``obj == json.loads(pyjson5.encode(obj, floatformat='%.16e'))``

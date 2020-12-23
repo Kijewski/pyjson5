@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JSON5EncoderCpp_native
+#define JSON5EncoderCpp_native
 
 #include <array>
 #include <cstdint>
@@ -49,26 +50,30 @@ struct AlwaysTrue {
     inline operator bool () const { return true; }
 };
 
-bool obj_has_iter(const PyObject *obj) {
-    auto *i = Py_TYPE(obj)->tp_iter;
-    return (i != nullptr) && (i != &_PyObject_NextNotImplemented);
+static inline bool obj_has_iter(const PyObject *obj) {
+    const auto *cls = Py_TYPE(obj);
+    return cls->tp_iter != nullptr;
 }
 
 constexpr char HEX[] = "0123456789abcdef";
 
 struct EscapeDct {
-    using Item = std::array<char, 8>;  // length, unto 6 characters, terminator (actually not needed)
+    using Item = std::array<char, 8>;  // length, upto 6 characters, terminator (actually not needed)
     static constexpr std::size_t length = 0x100;
     using Items = Item[length];
 
     static const Items items;
-    static const unsigned __int128 is_escaped_array;
+    static const std::uint64_t is_escaped_lo;
+    static const std::uint64_t is_escaped_hi;
 
     static inline bool is_escaped(std::uint32_t c) {
-        return (c >= 0x0080) || (is_escaped_array & (
-            static_cast<unsigned __int128>(1) <<
-            static_cast<std::uint8_t>(c)
-        ));
+        if (c < 0x40) {
+            return (is_escaped_lo & (static_cast<std::uint64_t>(1) << c)) != 0;
+        } else if (c < 0x80) {
+            return (is_escaped_hi & (static_cast<std::uint64_t>(1) << (c - 0x40))) != 0;
+        } else {
+            return true;
+        }
     }
 
     template <class S>
@@ -80,6 +85,88 @@ struct EscapeDct {
         return index;
     }
 };
+
+static inline bool unicode_is_lo_surrogate(std::uint32_t ch) {
+    return 0xDC00u <= ch && ch <= 0xDFFFu;
+}
+
+static inline bool unicode_is_hi_surrogate(std::uint32_t ch) {
+    return 0xD800u <= ch && ch <= 0xDBFFu;
+}
+
+static inline std::uint32_t unicode_join_surrogates(std::uint32_t hi, std::uint32_t lo) {
+    return (((hi & 0x03FFu) << 10) | (lo & 0x03FFu)) + 0x10000u;
+}
+
+template <typename T>
+struct has_ob_shash {
+    template <typename C> static std::uint8_t test(decltype(&C::ob_shash)) ;
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template <typename T>
+struct has_hash {
+    template <typename C> static std::uint8_t test(decltype(&C::hash)) ;
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template<class T, bool ob_shash = has_ob_shash<T>::value, bool hash = has_hash<T>::value>
+struct ResetHash_;
+
+template<class T>
+struct ResetHash_ <T, true, false> {
+    static inline void reset(T *obj) {
+        obj->ob_shash = -1;  // CPython: str
+    }
+};
+
+template<class T>
+struct ResetHash_ <T, false, true> {
+    static inline void reset(T *obj) {
+        obj->hash = -1;  // CPython: bytes
+    }
+};
+
+template<class T>
+struct ResetHash_ <T, false, false> {
+    static inline void reset(T *obj) {
+        (void) 0;  // PyPy
+    }
+};
+
+template <class T>
+static inline void reset_hash(T *obj) {
+    ResetHash_<T>::reset(obj);
+}
+
+static int iter_next(PyObject *iterator, PyObject **value) {
+    Py_XDECREF(*value);
+    PyObject *v = PyIter_Next(iterator);
+    *value = v;
+    if (v) {
+        return true;
+    } else if (!PyErr_Occurred()) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+static inline AlwaysTrue exception_thrown() {
+    return true;
+}
+
+// https://stackoverflow.com/a/65258501/416224
+#ifdef __GNUC__ // GCC 4.8+, Clang, Intel and other compilers compatible with GCC (-std=c++0x or above)
+    [[noreturn]] inline __attribute__((always_inline)) void unreachable() { __builtin_unreachable(); }
+#elif defined(_MSC_VER) // MSVC
+    [[noreturn]] __forceinline void unreachable() { __assume(false); }
+#else // ???
+    inline void unreachable() {}
+#endif
+
 
 #include "./_escape_dct.hpp"
 
@@ -95,4 +182,12 @@ const char LONGDESCRIPTION[] =
 ;
 static constexpr std::size_t LONGDESCRIPTION_LENGTH = sizeof(LONGDESCRIPTION) - 1;
 
+#ifdef __GNUC__
+#   define JSON5EncoderCpp_expect(cond, likely) __builtin_expect(!!(cond), !!(likely))
+#else
+#   define JSON5EncoderCpp_expect(cond, likely) !!(cond)
+#endif
+
 }
+
+#endif

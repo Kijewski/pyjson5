@@ -121,18 +121,18 @@ cdef int32_t _get_escaped_unicode_maybe_surrogate(ReaderRef reader, Py_ssize_t s
     cdef uint32_t c1
 
     c0 = cast_to_uint32(_get_hex_character(reader, 4))
-    if expect(Py_UNICODE_IS_LOW_SURROGATE(c0), False):
+    if expect(unicode_is_lo_surrogate(c0), False):
         _raise_expected_s('high surrogate before low surrogate', start, c0)
-    elif not Py_UNICODE_IS_HIGH_SURROGATE(c0):
+    elif not unicode_is_hi_surrogate(c0):
         return c0
 
     _accept_string(reader, b'\\u')
 
     c1 = cast_to_uint32(_get_hex_character(reader, 4))
-    if expect(not Py_UNICODE_IS_LOW_SURROGATE(c1), False):
+    if expect(not unicode_is_lo_surrogate(c1), False):
         _raise_expected_s('low surrogate', start, c1)
 
-    return Py_UNICODE_JOIN_SURROGATES(c0, c1)
+    return unicode_join_surrogates(c0, c1)
 
 
 # >=  0: character to append
@@ -728,7 +728,7 @@ cdef object _decode_recursive(ReaderRef reader, int32_t *c_in_out):
     elif kind == DRS_recursive:
         decoder = _decode_recursive_enter
     else:
-        __builtin_unreachable()
+        unreachable()
         decoder = _decoder_unknown
 
     return decoder(reader, c_in_out)
@@ -769,15 +769,16 @@ cdef object _decode_all_sub(ReaderRef reader, boolean some):
 
 
 cdef object _decode_all(ReaderRef reader, boolean some):
-    cdef object ex
+    cdef object ex, ex2
     try:
         return _decode_all_sub(reader, some)
     except _DecoderException as ex:
-        raise (<_DecoderException> ex).cls(
+        ex2 = (<_DecoderException> ex).cls(
             (<_DecoderException> ex).msg,
             (<_DecoderException> ex).result,
             (<_DecoderException> ex).extra,
         )
+    raise ex2
 
 
 cdef object _decode_ucs1(const void *string, Py_ssize_t length,
@@ -807,11 +808,26 @@ cdef object _decode_ucs4(const void *string, Py_ssize_t length,
     return _decode_all(reader, some)
 
 
+cdef object _decode_utf8(const void *string, Py_ssize_t length,
+                         Py_ssize_t maxdepth, boolean some):
+    cdef ReaderUTF8 reader = ReaderUTF8(
+        ReaderUCS(length, 0, maxdepth),
+        <const Py_UCS1*> string,
+    )
+    return _decode_all(reader, some)
+
+
 cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
     cdef Py_ssize_t length
     cdef int kind
+    cdef const char *s
 
     PyUnicode_READY(data)
+
+    if CYTHON_COMPILING_IN_PYPY:
+        length = 0
+        s = PyUnicode_AsUTF8AndSize(data, &length)
+        return _decode_utf8(s, length, maxdepth, some)
 
     length = PyUnicode_GET_LENGTH(data)
     kind = PyUnicode_KIND(data)
@@ -823,7 +839,7 @@ cdef object _decode_unicode(object data, Py_ssize_t maxdepth, boolean some):
     elif kind == PyUnicode_4BYTE_KIND:
         return _decode_ucs4(PyUnicode_4BYTE_DATA(data), length, maxdepth, some)
     else:
-        __builtin_unreachable()
+        unreachable()
 
 
 cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
@@ -831,7 +847,10 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
     cdef object (*decoder)(const void*, Py_ssize_t, Py_ssize_t, boolean)
     cdef Py_ssize_t length = 0
 
-    if wordlength == 1:
+    if wordlength == 0:
+        decoder = _decode_utf8
+        length = view.len // 1
+    elif wordlength == 1:
         decoder = _decode_ucs1
         length = view.len // 1
     elif wordlength == 2:
@@ -842,7 +861,7 @@ cdef object _decode_buffer(Py_buffer &view, int32_t wordlength,
         length = view.len // 4
     else:
         _raise_illegal_wordlength(wordlength)
-        __builtin_unreachable()
+        unreachable()
         length = 0
         decoder = NULL
 

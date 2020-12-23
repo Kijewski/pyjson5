@@ -19,7 +19,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = u'PyJSON5'
-copyright = u'2018-2019, René Kijewski'
+copyright = u'2018-2020, René Kijewski'
 author = u'René Kijewski'
 
 with open('../src/VERSION', 'rt') as f:
@@ -65,7 +65,7 @@ autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.7', None),
+    'python': ('https://docs.python.org/3.9', None),
 }
 
 inheritance_graph_attrs = {

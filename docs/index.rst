@@ -1,7 +1,7 @@
 PyJSON5
 =======
 
-A JSON5 serializer and parser library for Python 3.4 and later.
+A JSON5 serializer and parser library for Python 3.5 and later.
 
 
 The serializer returns ASCII data that can safely be used in an HTML template.
@@ -67,9 +67,7 @@ Quick Summary
 Compatibility
 -------------
 
-At least CPython 3.4, and a C++14 compatible compiler (such as GCC 5.2+) is needed.
-
-Other interpreters such as Pypy and older CPython versions are not supported.
+At least CPython / PyPy 3.5, and a C++11 compatible compiler (such as GCC 5.2+) is needed.
 
 
 -------------------------------------------------------------------------------
