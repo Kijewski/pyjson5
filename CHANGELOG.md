@@ -1,3 +1,7 @@
+### 1.4.9
+
+* Faster floating-point number decoding using [fast_double_parser](https://github.com/lemire/fast_double_parser) by Daniel Lemire
+
 ### 1.4.8
 
 * Update up Unicode 13.0.0

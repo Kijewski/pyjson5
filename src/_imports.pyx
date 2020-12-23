@@ -8,7 +8,7 @@ from cpython.bytes cimport (
     PyBytes_AsStringAndSize, PyBytes_FromStringAndSize, PyBytes_Check,
 )
 from cpython.dict cimport PyDict_SetItem
-from cpython.float cimport PyFloat_Check, PyFloat_AsDouble
+from cpython.float cimport PyFloat_Check, PyFloat_AsDouble, PyFloat_FromDouble
 from cpython.int cimport PyInt_Check
 from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
@@ -97,8 +97,13 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     AlwaysTrue exception_thrown() except True
     void unreachable()
 
+
 cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp':
     int iter_next(object iterator, PyObject **value) except -1
+
+
+cdef extern from 'src/native.hpp' nogil:
+    boolean expect 'JSON5EncoderCpp_expect'(boolean actual, boolean expected)
 
 
 cdef extern from 'src/_unicode_cat_of.hpp' namespace 'JSON5EncoderCpp' nogil:
@@ -119,6 +124,10 @@ cdef extern from 'src/_decoder_recursive_select.hpp' namespace 'JSON5EncoderCpp'
         DRS_string, DRS_number, DRS_recursive
 
     DrsKind drs_lookup[128]
+
+
+cdef extern from 'third-party/fast_double_parser/include/fast_double_parser.h' namespace 'fast_double_parser' nogil:
+    const char *parse_number(const char *p, double *outDouble)
 
 
 cdef extern from 'Python.h':
@@ -185,17 +194,12 @@ cdef extern from 'Python.h':
     object ObjectInit 'PyObject_INIT'(PyObject *obj, type cls)
     PyVarObject *ObjectInitVar 'PyObject_InitVar'(PyVarObject *obj, type cls, Py_ssize_t size)
 
-    double PyOS_string_to_double(const char *s, char **endp, PyObject *overflow_exception) except? -1.0
     object PyLong_FromString(const char *str, char **pend, int base)
 
 
 ctypedef struct AsciiObject:
     PyASCIIObject base
     char data[1]
-
-
-cdef extern from 'src/native.hpp' nogil:
-    boolean expect 'JSON5EncoderCpp_expect'(boolean actual, boolean expected)
 
 
 cdef extern from * nogil:

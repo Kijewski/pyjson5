@@ -7,14 +7,13 @@ This library is written in Cython for a better performance than a pure-Python im
 Decoder Performance
 -------------------
 
-The library is a bit slower than the shipped ``json`` module for *pure* JSON data.
-If you know that your input does not use JSON5 extension, then this library is probably not what you need.
+The library has about the same speed as the shipped ``json`` module for *pure* JSON data.
 
 * Dataset: https://github.com/zemirco/sf-city-lots-json
-* Version: 3.9.1 (default, Dec  8 2020, 07:51:42)
+* Version: Python 3.9.1+ (default, Feb  5 2021, 13:46:56)
 * CPU: AMD Ryzen 7 2700 @ 3.7GHz
-* :func:`pyjson5.decode`: **3.18** s ± 9.79 ms per loop *(lower is better)*
-* :func:`json.loads`: **2.66** s ± 9.78 ms per loop
+* :func:`pyjson5.decode`: **2.08 s** ± 7.49 ms per loop *(lower is better)*
+* :func:`json.loads`: **2.71 s** ± 12.1 ms per loop
 * The decoder works correcty: ``json.loads(content) == pyjson5.loads(content)``
 
 

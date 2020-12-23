@@ -12,12 +12,13 @@ jobs:
           - macos-latest
           - windows-latest
         python: [
-          '3.5', '3.6', '3.7', '3.8', '3.9',
-          'pypy3',
+          '3.5',
+          # '3.6', '3.7', '3.8',  # it takes too much GitHub action time to run tests on all versions in between
+          '3.9',
         ]
-        exclude:
-          - os: macos-latest
-            python: pypy3
+        include:
+          - os: ubuntu-latest
+            python: pypy-3.6
         
     name: Python ${{ matrix.python }} on ${{ matrix.os }}
 
@@ -26,8 +27,14 @@ jobs:
         with:
           submodules: true
 
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          key: cache--${{ matrix.os }}--${{ matrix.python }}--${{ hashFiles('./requirements.txt') }}
+          path: ~/.cache/pip
+
       - name: Setup python
-        uses: actions/setup-python@v2.1.4  # https://github.com/actions/setup-python/issues/171
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
 

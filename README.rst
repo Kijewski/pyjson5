@@ -40,5 +40,4 @@ use the functions ``encode_*()`` and ``decode_*()`` instead.
 Compatibility
 -------------
 
-At least CPython 3.4 is needed.
-Other interpreters such as Pypy and older CPython versions are not supported and will not be supported.
+At least CPython 3.5 or a recent Pypy3 version is needed.

@@ -1,0 +1,60 @@
+name: Build wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: OS
+        required: true
+        default: ubuntu-20.04
+      python:
+        description: Python
+        required: true
+        default: 3.9
+      manylinux:
+        description: Manylinux
+        required: true
+        default: manylinux2014
+
+jobs:
+  build_wheels:
+    name: Build compat:${{ github.event.inputs.manylinux }}, python:${{ github.event.inputs.python }}, os:${{ github.event.inputs.os }}
+    runs-on: ${{ github.event.inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          key: cache--${{ github.event.inputs.os }}--${{ github.event.inputs.python }}--${{ hashFiles('./requirements.txt') }}
+          path: ~/.cache/pip
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ github.event.inputs.python }}
+
+      - name: Update pip
+        run: python -m pip install -U pip wheel setuptools
+
+      - name: Install requirements
+        run: python -m pip install -Ur requirements.txt
+
+      - name: Prepare for compilation
+        run: make prepare
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_SKIP: "cp27-* pp27-*"  # skip Python 2.7 wheels
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ github.event.inputs.manylinux }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ github.event.inputs.manylinux }}
+
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Wheelhouse
+          path: ./wheelhouse/*.whl

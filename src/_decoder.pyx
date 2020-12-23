@@ -241,6 +241,18 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
     return result
 
 
+cdef object _decode_double(StackHeapString[char] &buf, Py_ssize_t start):
+    cdef double d0
+    cdef const char *end_of_double
+
+    d0 = 0.0  # silence warning
+    end_of_double = parse_number(buf.data(), &d0)
+    if end_of_double != NULL and end_of_double[0] == b'\0':
+        return PyFloat_FromDouble(d0)
+
+    _raise_unclosed('NumericLiteral', start)
+
+
 cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] &buf,
                                         int32_t *c_in_out, Py_ssize_t start):
     cdef uint32_t c0
@@ -289,11 +301,12 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
 
         c_in_out[0] = c1
 
-        buf.push_back(b'\0')
-        try:
-            return PyOS_string_to_double(buf.data(), NULL, NULL)
-        except Exception:
-            _raise_unclosed('NumericLiteral', start)
+        if buf.data()[buf.size() - 1] == b'.':
+            (<char*> buf.data())[buf.size() - 1] = b'\0'
+        else:
+            buf.push_back(b'\0')
+
+        return _decode_double(buf, start)
     elif _is_e(c0):
         while True:
             if not _reader_good(reader):
@@ -321,12 +334,18 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
                                int32_t *c_in_out, Py_ssize_t start):
     cdef uint32_t c0
     cdef int32_t c1
-    cdef boolean is_float
+    cdef boolean is_float = False
+    cdef boolean was_point = False
+    cdef boolean leading_point = False
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
 
-    is_float = False
+    if c0 == b'.':
+        buf.push_back(b'0')
+        is_float = True
+        leading_point = True
+
     while True:
         if _is_decimal(c0):
             pass
@@ -336,8 +355,18 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
             c1 = cast_to_int32(c0)
             break
 
-        if c0 != b'_':
+        if c0 == b'_':
+            pass
+        elif c0 != b'.':
+            if was_point:
+                was_point = False
+                if not _is_e(c0):
+                    buf.push_back(b'.')
             buf.push_back(<char> <unsigned char> c0)
+        elif not was_point:
+            was_point = True
+        else:
+            _raise_unclosed('NumericLiteral', start)
 
         if not _reader_good(reader):
             c1 = -1
@@ -347,14 +376,19 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
 
     c_in_out[0] = c1
 
-    buf.push_back(b'\0')
-    try:
-        if is_float:
-            return PyOS_string_to_double(buf.data(), NULL, NULL)
-        else:
-            return PyLong_FromString(buf.data(), NULL, 10)
-    except Exception:
+    if leading_point and buf.size() == 1:  # single '.'
         _raise_unclosed('NumericLiteral', start)
+
+    buf.push_back(b'\0')
+
+    if not is_float:
+        try:
+            return PyLong_FromString(buf.data(), NULL, 10)
+        except Exception:
+            pass
+        _raise_unclosed('NumericLiteral', start)
+    else:
+        return _decode_double(buf, start)
 
 
 cdef object _decode_number(ReaderRef reader, int32_t *c_in_out):
