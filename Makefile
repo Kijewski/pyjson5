@@ -2,7 +2,7 @@ all: sdist bdist_wheel docs
 
 .DELETE_ON_ERROR:
 
-.PHONY: all sdist bdist_wheel clean docs
+.PHONY: all sdist bdist_wheel clean docs prepare
 
 export PYTHONUTF8 := 1
 export PYTHONIOENCODING := UTF-8
@@ -30,7 +30,9 @@ src/_escape_dct.hpp: make_escape_dct.py
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
 	python -m cython -f -o $@ $<
 
-sdist: pyjson5.cpp ${FILES}
+prepare: pyjson5.cpp ${FILES}
+
+sdist: prepare
 	rm -f -- dist/pyjson5-*.tar.gz
 	python setup.py sdist
 
