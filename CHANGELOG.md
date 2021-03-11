@@ -1,3 +1,8 @@
+### 1.5.0
+
+* Faster floating-point number encoding using [Junekey Jeon's Dragonbox algorithm](https://github.com/abolz/Drachennest/blob/77f4889a4cd9d7f0b9da82a379f14beabcfba13e/src/dragonbox.cc) implemented by Alexander Bolz
+* Removed a lot of configuration options from pyjson5.Options()
+
 ### 1.4.9
 
 * Faster floating-point number decoding using [fast_double_parser](https://github.com/lemire/fast_double_parser) by Daniel Lemire

@@ -130,6 +130,10 @@ cdef extern from 'third-party/fast_double_parser/include/fast_double_parser.h' n
     const char *parse_number(const char *p, double *outDouble)
 
 
+cdef extern from 'src/dragonbox.cc' namespace 'dragonbox' nogil:
+    char *Dtoa(char* buffer, double value)
+
+
 cdef extern from 'Python.h':
     enum:
         PyUnicode_WCHAR_KIND

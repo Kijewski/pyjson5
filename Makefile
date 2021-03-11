@@ -10,7 +10,8 @@ export PYTHONIOENCODING := UTF-8
 INCLUDES := \
     src/VERSION src/DESCRIPTION \
     src/_decoder_recursive_select.hpp src/_unicode_cat_of.hpp \
-    src/_escape_dct.hpp src/_stack_heap_string.hpp src/native.hpp
+    src/_escape_dct.hpp src/_stack_heap_string.hpp src/native.hpp \
+    src/dragonbox.cc
 
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 

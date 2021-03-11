@@ -286,49 +286,46 @@ cdef int _encode_datetime(WriterRef writer, object data) except -1:
     return True
 
 
-cdef int _encode_format_string(WriterRef writer, object data, object formatter_string) except -1:
+cdef int _encode_format_string(WriterRef writer, object data, object fmt) except -1:
+    cdef object formatted
     cdef const char *string
     cdef Py_ssize_t length = 0  # silence warning
 
-    if expect(formatter_string is None, False):
-        _raise_unstringifiable(data)
-
-    formatter_string = PyUnicode_Format(formatter_string, data)
-    string = PyUnicode_AsUTF8AndSize(formatter_string, &length)
+    formatted = PyUnicode_Format(fmt, data)
+    string = PyUnicode_AsUTF8AndSize(formatted, &length)
     writer.append_s(writer, string, length)
 
     return True
 
 
 cdef int _encode_float(WriterRef writer, object data) except -1:
-    cdef object formatter_string
     cdef double value = PyFloat_AsDouble(data)
     cdef int classification = fpclassify(value)
+    cdef char buf[64]
+    cdef char *end
+    cdef char *string
+    cdef Py_ssize_t length
 
     if classification == FP_NORMAL:
-        return _encode_format_string(writer, data, (<Options> writer.options).floatformat)
-
-    if classification in (FP_SUBNORMAL, FP_ZERO):
-        writer.append_c(writer, b'0')
-        return True
-
-    if classification == FP_NAN:
-        formatter_string = (<Options> writer.options).nan
+        end = Dtoa(buf, PyFloat_AsDouble(data))
+        length = end - buf
+        string = buf
+    elif classification in (FP_SUBNORMAL, FP_ZERO):
+        string = b'0.0'
+        length = 3
+    elif classification == FP_NAN:
+        string = b'NaN'
+        length = 3
     else:
         # classification == FP_INFINITE
         if value > 0.0:
-            formatter_string = (<Options> writer.options).posinfinity
+            string = b'Infinity'
+            length = 8
         else:
-            formatter_string = (<Options> writer.options).neginfinity
+            string = b'-Infinity'
+            length = 9
 
-    if expect(formatter_string is None, False):
-        _raise_unstringifiable(data)
-
-    writer.append_s(
-        writer,
-        <const char*> PyUnicode_1BYTE_DATA(formatter_string),
-        PyUnicode_GET_LENGTH(formatter_string),
-    )
+    writer.append_s(writer, string, length)
     return True
 
 
@@ -339,7 +336,7 @@ cdef int _encode_long(WriterRef writer, object data) except -1:
         else:
             writer.append_s(writer, 'false', 5)
     else:
-        _encode_format_string(writer, data, (<Options> writer.options).intformat)
+        _encode_format_string(writer, data, DEFAULT_INTFORMAT)
     return True
 
 
@@ -347,7 +344,7 @@ cdef int _encode_decimal(WriterRef writer, object data) except -1:
     if not isinstance(data, Decimal):
         return False
 
-    _encode_format_string(writer, data, (<Options> writer.options).decimalformat)
+    _encode_format_string(writer, data, DEFAULT_DECIMALFORMAT)
     return True
 
 
