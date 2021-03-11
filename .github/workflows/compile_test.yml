@@ -12,8 +12,8 @@ jobs:
           - macos-latest
           - windows-latest
         python: [
-          '3.5',
-          # '3.6', '3.7', '3.8',  # it takes too much GitHub action time to run tests on all versions in between
+          '3.6',
+          # '3.5', '3.7', '3.8',  # it takes too much GitHub action time to run tests on all versions in between
           '3.9',
         ]
         include:

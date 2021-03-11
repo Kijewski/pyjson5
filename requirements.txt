@@ -3,6 +3,6 @@ colorama == 0.*, >= 0.4.3
 cython == 0.*, >= 0.29.14
 more_itertools == 8.*, >= 8.0.2
 sphinx == 2.*, >= 2.2.2
-sphinx_autodoc_typehints == 1.*, >= 1.10.3
+sphinx_autodoc_typehints == 1.*, >= 1.10.3, < 1.11
 sphinx_rtd_theme == 0.*, >= 0.4.3
 wheel == 0.*, >= 0.33.6
