@@ -16,7 +16,7 @@ INCLUDES := \
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
-	curl -s -o $@ https://www.unicode.org/Public/13.0.0/ucd/extracted/DerivedGeneralCategory.txt
+	curl -s -o $@ https://www.unicode.org/Public/14.0.0/ucd/extracted/DerivedGeneralCategory-14.0.0d9.txt
 	python sha512sum.py -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py

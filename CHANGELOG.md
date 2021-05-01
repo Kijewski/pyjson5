@@ -1,3 +1,7 @@
+### 1.5.1
+
+* Update up Unicode 14.0.0
+
 ### 1.5.0
 
 * Faster floating-point number encoding using [Junekey Jeon's Dragonbox algorithm](https://github.com/abolz/Drachennest/blob/77f4889a4cd9d7f0b9da82a379f14beabcfba13e/src/dragonbox.cc) implemented by Alexander Bolz
