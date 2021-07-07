@@ -1,6 +1,12 @@
+### 1.5.2
+
+* Add file extensions to fix compilation with current Apple SDKs
+* Update fast_double_parser to v0.5.0
+* Update to Unicode 14.0.0d18
+
 ### 1.5.1
 
-* Update up Unicode 14.0.0
+* Update up Unicode 14.0.0d9
 
 ### 1.5.0
 

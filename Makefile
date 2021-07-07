@@ -8,7 +8,7 @@ export PYTHONUTF8 := 1
 export PYTHONIOENCODING := UTF-8
 
 INCLUDES := \
-    src/VERSION src/DESCRIPTION \
+    src/VERSION.inc src/DESCRIPTION.inc \
     src/_decoder_recursive_select.hpp src/_unicode_cat_of.hpp \
     src/_escape_dct.hpp src/_stack_heap_string.hpp src/native.hpp \
     src/dragonbox.cc
@@ -16,7 +16,7 @@ INCLUDES := \
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
-	curl -s -o $@ https://www.unicode.org/Public/14.0.0/ucd/extracted/DerivedGeneralCategory-14.0.0d9.txt
+	curl -s -o $@ https://www.unicode.org/Public/14.0.0/ucd/extracted/DerivedGeneralCategory-14.0.0d18.txt
 	python sha512sum.py -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py

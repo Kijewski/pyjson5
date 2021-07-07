@@ -173,12 +173,12 @@ static inline AlwaysTrue exception_thrown() {
 const EscapeDct ESCAPE_DCT;
 
 const char VERSION[] =
-#   include "./VERSION"
+#   include "./VERSION.inc"
 ;
 static constexpr std::size_t VERSION_LENGTH = sizeof(VERSION) - 1;
 
 const char LONGDESCRIPTION[] =
-#   include "./DESCRIPTION"
+#   include "./DESCRIPTION.inc"
 ;
 static constexpr std::size_t LONGDESCRIPTION_LENGTH = sizeof(LONGDESCRIPTION) - 1;
 

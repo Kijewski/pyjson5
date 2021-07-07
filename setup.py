@@ -19,8 +19,8 @@ name = 'pyjson5'
 
 setup(
     name=name,
-    version=get_text('VERSION'),
-    long_description=get_text('DESCRIPTION'),
+    version=get_text('VERSION.inc'),
+    long_description=get_text('DESCRIPTION.inc'),
     description='JSON5 serializer and parser for Python 3 written in Cython.',
     author='René Kijewski',
     author_email='pypi.org@k6i.de',
