@@ -10,11 +10,15 @@ on:
       python:
         description: Python
         required: true
-        default: 3.9
+        default: "3.9"
       manylinux:
         description: Manylinux
         required: true
         default: manylinux2014
+      archs:
+        description: CIBW_ARCHS
+        required: true
+        default: auto
 
 jobs:
   build_wheels:
@@ -52,6 +56,7 @@ jobs:
           CIBW_SKIP: "cp27-* pp27-*"  # skip Python 2.7 wheels
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ github.event.inputs.manylinux }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ github.event.inputs.manylinux }}
+          CIBW_ARCHS: ${{ github.event.inputs.archs }}
 
       - name: Store artifacts
         uses: actions/upload-artifact@v2
