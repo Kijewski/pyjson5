@@ -30,7 +30,7 @@ setup(
     python_requires='~= 3.5',
     zip_safe=False,
     ext_modules=[Extension(
-        name,
+        name + '.' + name,
         sources=[name + '.pyx'],
         include_dirs=['src'],
         extra_compile_args=extra_compile_args,
@@ -53,8 +53,19 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Text Processing :: General',
     ],
+    packages=[name],
+    package_dir={
+        '': 'src',
+    },
+    package_data = {
+        name: [
+            '__init__.pyi',
+            'py.typed',
+        ],
+    },
 )

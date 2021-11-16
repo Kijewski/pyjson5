@@ -67,10 +67,10 @@ def decode_buffer(
     ...
 
 def decode_callback(
-    cb: Callable[[...], Union[str, bytes, bytearray, int, None]],
+    cb: Callable[[_T], Union[str, bytes, bytearray, int, None]],
     maxdepth: Optional[int] = ...,
     some: bool = ...,
-    args: Optional[Iterable[Any]] = None,
+    args: Optional[Iterable[_T]] = None,
 ) -> Any:
     ...
 
@@ -167,7 +167,6 @@ def dump(obj: Any, fp: _SupportsWrite[str]) -> None:
     ...
 
 class Json5Exception(Exception):
-
     def __init__(self, message: Optional[str] = ..., *args: Any) -> None:
         ...
 

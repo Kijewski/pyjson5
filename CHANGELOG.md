@@ -1,3 +1,8 @@
+### 1.5.3
+
+* Add [PEP 484](https://www.python.org/dev/peps/pep-0484/) type hints ([Pascal Corpet](https://github.com/pcorpet))
+* Update [JSONTestSuite](https://github.com/nst/JSONTestSuite)
+
 ### 1.5.2
 
 * Add file extensions to fix compilation with current Apple SDKs

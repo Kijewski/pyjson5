@@ -1,9 +1,7 @@
-include __init__.pyi
 include LICENSE
 include make_*.py
 include sha512sum.py
 include Makefile
-include py.typed
 include pyjson5.cpp
 include pyjson5.pyx
 include requires.txt
