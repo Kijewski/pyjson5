@@ -39,7 +39,9 @@ cdef class Json5IllegalCharacter(Json5DecoderException):
 
     @property
     def character(self):
-        '''Extranous character.'''
+        '''
+        Illegal character.
+        '''
         return self.args[2]
 
 

@@ -1,30 +1,36 @@
-import typing
 from typing import (
-    Any,
-    Callable,
-    Final,
-    Generic,
-    Iterable,
-    Literal,
-    Optional,
-    Protocol,
-    Tuple,
-    TypeVar,
-    Union,
+    Any, Callable, final, Final, Generic, Iterable, Literal, Optional,
+    overload, Protocol, Tuple, TypeVar, Union,
 )
+
+
+_T = TypeVar('_T')
 
 class _SupportsRead(Protocol):
     def read(self, size: int = ...) -> str:
         ...
 
-_T = TypeVar('_T')
-
 class _SupportsWrite(Generic[_T]):
     def write(self, s: _T) -> None:
         ...
 
-@typing.final
+_CallbackStr = TypeVar('_CallbackStr', bound=Callable[[str], None])
+
+_CallbackBytes = TypeVar('_CallbackBytes', bound=Callable[[bytes], None])
+
+_SupportsWriteBytes = TypeVar('_SupportsWriteBytes', bound=_SupportsWrite[bytes])
+
+_SupportsWriteStr = TypeVar('_SupportsWriteStr', bound=_SupportsWrite[str])
+
+
+###############################################################################
+### _exports.pyx
+###############################################################################
+
+
+@final
 class Options:
+    '''Customizations for the ``encoder_*(...)`` function family.'''
     quotationmark: Final[str] = ...
     tojson: Final[Optional[str]] = ...
     mappingtypes: Final[Tuple[type, ...]] = ...
@@ -43,19 +49,23 @@ class Options:
         tojson: Optional[str],
         mappingtypes: Optional[Tuple[type, ...]],
     ) -> Options:
+        '''Creates a new Options instance by modifying some members.'''
         ...
 
 def decode(data: str, maxdepth: Optional[int] = ..., some: bool = ...) -> Any:
+    '''Decodes JSON5 serialized data from an ``str`` object.'''
     ...
 
 def decode_latin1(
     data: bytes, maxdepth: Optional[int] = ..., some: bool = ...,
 ) -> Any:
+    '''Decodes JSON5 serialized data from a ``bytes`` object.'''
     ...
 
 def decode_utf8(
     data: bytes, maxdepth: Optional[int] = ..., some: bool = ...,
 ) -> Any:
+    '''Decodes JSON5 serialized data from a ``bytes`` object.'''
     ...
 
 def decode_buffer(
@@ -64,19 +74,22 @@ def decode_buffer(
     some: bool = ...,
     wordlength: Optional[int] = ...,
 ) -> Any:
+    '''Decodes JSON5 serialized data from an object that supports the buffer protocol, e.g. bytearray.'''
     ...
 
 def decode_callback(
-    cb: Callable[[_T], Union[str, bytes, bytearray, int, None]],
+    cb: Callable[..., Union[str, bytes, bytearray, int, None]],
     maxdepth: Optional[int] = ...,
     some: bool = ...,
-    args: Optional[Iterable[_T]] = None,
+    args: Optional[Iterable[Any]] = [],
 ) -> Any:
+    '''Decodes JSON5 serialized data by invoking a callback.'''
     ...
 
 def decode_io(
     fp: _SupportsRead, maxdepth: Optional[int] = ..., some: bool = ...,
 ) -> Any:
+    '''Decodes JSON5 serialized data from a file-like object.'''
     ...
 
 def encode(
@@ -86,6 +99,7 @@ def encode(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> str:
+    '''Serializes a Python object to a JSON5 compatible unicode string.'''
     ...
 
 def encode_bytes(
@@ -95,11 +109,10 @@ def encode_bytes(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> str:
+    '''Serializes a Python object to a JSON5 compatible bytes string.'''
     ...
 
-_CallbackStr = TypeVar('_CallbackStr', bound=Callable[[str], None])
-
-@typing.overload
+@overload
 def encode_callback(
     data: Any, cb: _CallbackStr, supply_bytes: Literal[False] = ..., *,
     options: Optional[Options] = ...,
@@ -107,11 +120,10 @@ def encode_callback(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> _CallbackStr:
+    '''Serializes a Python object into a callback function.'''
     ...
 
-_CallbackBytes = TypeVar('_CallbackBytes', bound=Callable[[bytes], None])
-
-@typing.overload
+@overload
 def encode_callback(
     data: Any, cb: _CallbackBytes, supply_bytes: Literal[True], *,
     options: Optional[Options] = ...,
@@ -121,9 +133,7 @@ def encode_callback(
 ) -> _CallbackBytes:
     ...
 
-_SupportsWriteBytes = TypeVar('_SupportsWriteBytes', bound=_SupportsWrite[bytes])
-
-@typing.overload
+@overload
 def encode_io(
     data: Any, fp: _SupportsWriteBytes, supply_bytes: Literal[True] = ..., *,
     options: Optional[Options] = ...,
@@ -131,11 +141,10 @@ def encode_io(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> _SupportsWriteBytes:
+    '''Serializes a Python object into a file-object.'''
     ...
 
-_SupportsWriteStr = TypeVar('_SupportsWriteStr', bound=_SupportsWrite[str])
-
-@typing.overload
+@overload
 def encode_io(
     data: Any, fp: _SupportsWriteStr, supply_bytes: Literal[False], *,
     options: Optional[Options] = ...,
@@ -152,21 +161,40 @@ def encode_noop(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> bool:
+    '''Test if the input is serializable.'''
     ...
 
+
+###############################################################################
+### _legacy.pyx
+###############################################################################
+
+
 def loads(s: str, *, encoding: str = ...) -> Any:
+    '''Decodes JSON5 serialized data from a string.'''
     ...
 
 def load(fp: _SupportsRead) -> Any:
+    '''Decodes JSON5 serialized data from a file-like object.'''
     ...
 
 def dumps(obj: Any) -> str:
+    '''Serializes a Python object to a JSON5 compatible unicode string.'''
     ...
 
 def dump(obj: Any, fp: _SupportsWrite[str]) -> None:
+    '''Serializes a Python object to a JSON5 compatible unicode string.'''
     ...
 
+
+###############################################################################
+### _exceptions.pyx
+###############################################################################
+
+
 class Json5Exception(Exception):
+    '''Base class of any exception thrown by PyJSON5.'''
+
     def __init__(self, message: Optional[str] = ..., *args: Any) -> None:
         ...
 
@@ -174,10 +202,19 @@ class Json5Exception(Exception):
     def message(self) -> Optional[str]:
         ...
 
+
+###############################################################################
+### _exceptions_encoder.pyx
+###############################################################################
+
+
 class Json5EncoderException(Json5Exception):
+    '''Base class of any exception thrown by the serializer.'''
     ...
 
+@final
 class Json5UnstringifiableType(Json5EncoderException):
+    '''The encoder was not able to stringify the input, or it was told not to by the supplied ``Options``.'''
     def __init__(
         self, message: Optional[str] = ..., unstringifiable: Any = ...,
     ) -> None:
@@ -185,24 +222,40 @@ class Json5UnstringifiableType(Json5EncoderException):
 
     @property
     def unstringifiable(self) -> Any:
+        '''The value that caused the problem.'''
         ...
 
+
+###############################################################################
+### _exceptions_decoder.pyx
+###############################################################################
+
+
 class Json5DecoderException(Json5Exception):
+    '''Base class of any exception thrown by the parser.'''
     def __init__(
         self, message: Optional[str] = ..., result: Any = ..., *args: Any,
     ) -> None:
         ...
 
-@typing.final
+    @property
+    def result(self) -> Any:
+        '''Deserialized data up until now.'''
+        ...
+
+@final
 class Json5NestingTooDeep(Json5DecoderException):
+    '''The maximum nesting level on the input data was exceeded.'''
     ...
 
-@typing.final
+@final
 class Json5EOF(Json5DecoderException):
+    '''The input ended prematurely.'''
     ...
 
-@typing.final
+@final
 class Json5IllegalCharacter(Json5DecoderException):
+    '''An unexpected character was encountered.'''
     def __init__(
         self,
         message: Optional[str] = ...,
@@ -214,10 +267,12 @@ class Json5IllegalCharacter(Json5DecoderException):
 
     @property
     def character(self) -> Optional[str]:
+        '''Illegal character.'''
         ...
 
-@typing.final
+@final
 class Json5ExtraData(Json5DecoderException):
+    '''The input contained extranous data.'''
     def __init__(
         self,
         message: Optional[str] = ...,
@@ -229,19 +284,22 @@ class Json5ExtraData(Json5DecoderException):
 
     @property
     def character(self) -> Optional[str]:
+        '''Extranous character.'''
         ...
 
-@typing.final
+@final
 class Json5IllegalType(Json5DecoderException):
+    '''The user supplied callback function returned illegal data.'''
     def __init__(
         self,
         message: Optional[str] = ...,
         result: Any = ...,
-        value: Optional[str] = ...,
+        value: Optional[Any] = ...,
         *args: Any,
     ) -> None:
         ...
 
     @property
-    def value(self) -> Optional[str]:
+    def value(self) -> Optional[Any]:
+        '''Value that caused the problem.'''
         ...
