@@ -1,4 +1,4 @@
-cibuildwheel == 1.*, >= 1.10.0
+cibuildwheel == 2.*, >= 2.2.2
 colorama == 0.*, >= 0.4.3
 cython == 0.*, >= 0.29.14
 more_itertools == 8.*, >= 8.0.2
