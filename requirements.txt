@@ -1,5 +1,6 @@
 cibuildwheel == 2.*, >= 2.2.2
 colorama == 0.*, >= 0.4.3
+docutils == 0.16.*
 cython == 0.*, >= 0.29.14
 more_itertools == 8.*, >= 8.0.2
 sphinx == 2.*, >= 2.2.2
