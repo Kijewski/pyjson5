@@ -349,11 +349,23 @@ cdef int _encode_decimal(WriterRef writer, object data) except -1:
 
 
 cdef int _encode_unstringifiable(WriterRef writer, object data) except -1:
-    if expect(not data, True):
+    if not data:
         writer.append_s(writer, b'none', 4)
-    else:
-        _raise_unstringifiable(data)
-    return True
+        return True
+
+    Py_EnterRecursiveCall(' while encoding JSON5 object with vars(obj) fallback')
+    try:
+        try:
+            data = PyObject_GenericGetDict(data, NULL)
+        except:
+            pass
+        else:
+            if _encode_mapping(writer, data):
+                return True
+    finally:
+        Py_LeaveRecursiveCall()
+
+    _raise_unstringifiable(data)
 
 
 cdef int _encode_other(WriterRef writer, object data):
