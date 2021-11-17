@@ -12,6 +12,7 @@ Quick Decoder Summary
 .. autosummary::
 
     ~pyjson5.decode
+    ~pyjson5.decode_latin1
     ~pyjson5.decode_buffer
     ~pyjson5.decode_callback
     ~pyjson5.decode_io
@@ -29,6 +30,8 @@ Full Decoder Description
 ------------------------
 
 .. autofunction:: pyjson5.decode
+
+.. autofunction:: pyjson5.decode_latin1
 
 .. autofunction:: pyjson5.decode_buffer
 

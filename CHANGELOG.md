@@ -1,3 +1,9 @@
+### 1.6.0
+
+* Fallback to encode `vars(obj)` if `obj` is not stringifyable, e.g. to encode [dataclasses](https://docs.python.org/3/library/dataclasses.html).
+* Update documentation to use newer [sphinx](https://www.sphinx-doc.org/) version.
+* Use [dependabot](https://github.com/dependabot) to keep dependencies current.
+
 ### 1.5.3
 
 * Add [PEP 484](https://www.python.org/dev/peps/pep-0484/) type hints ([Pascal Corpet](https://github.com/pcorpet))

@@ -197,6 +197,7 @@ cdef extern from 'Python.h':
     void ObjectFree 'PyObject_Free'(void *p)
     object ObjectInit 'PyObject_INIT'(PyObject *obj, type cls)
     PyVarObject *ObjectInitVar 'PyObject_InitVar'(PyVarObject *obj, type cls, Py_ssize_t size)
+    object PyObject_GenericGetDict(object o, void *context)
 
     object PyLong_FromString(const char *str, char **pend, int base)
 

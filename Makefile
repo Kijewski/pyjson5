@@ -2,7 +2,7 @@ all: sdist bdist_wheel docs
 
 .DELETE_ON_ERROR:
 
-.PHONY: all sdist bdist_wheel clean docs prepare
+.PHONY: all sdist bdist_wheel clean docs prepare test
 
 export PYTHONUTF8 := 1
 export PYTHONIOENCODING := UTF-8
@@ -50,3 +50,8 @@ clean:
 	[ ! -d dist/ ] || rm -r -- dist/
 	[ ! -d pyjson5.egg-info/ ] || rm -r -- pyjson5.egg-info/
 	rm -f -- pyjson5.*.so python5.cpp
+
+test: bdist_wheel
+	pip install --force dist/pyjson5-*.whl
+	python run-minefield-test.py
+	python run-tests.py
