@@ -19,6 +19,10 @@ on:
         description: CIBW_ARCHS
         required: true
         default: auto
+      skip:
+        description: CIBW_SKIP
+        required: true
+        default: "cp27-* pp27-*"
 
 jobs:
   build_wheels:
@@ -53,7 +57,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: "cp27-* pp27-*"  # skip Python 2.7 wheels
+          CIBW_SKIP: "${{ github.event.inputs.skip }}"  # skip Python 2.7 wheels
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ github.event.inputs.manylinux }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ github.event.inputs.manylinux }}
           CIBW_ARCHS: ${{ github.event.inputs.archs }}
