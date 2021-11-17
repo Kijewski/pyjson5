@@ -1,4 +1,4 @@
-global DEFAULT_MAX_NESTING_LEVEL, __version__, __all__
+global DEFAULT_MAX_NESTING_LEVEL, __all__, __author__, __doc__, __license__, __version__
 
 DEFAULT_MAX_NESTING_LEVEL = 32
 '''
@@ -618,3 +618,7 @@ __all__ = (
 )
 
 __doc__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, LONGDESCRIPTION, LONGDESCRIPTION_LENGTH)
+
+__license__ = 'Apache-2.0'
+
+__author__ = '2018-2021 René Kijewski <rene.[surname]@fu-berlin.de>'
