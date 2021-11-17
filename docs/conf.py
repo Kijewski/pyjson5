@@ -6,12 +6,14 @@ sys.path.insert(0, os.path.abspath('..'))
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.inheritance_diagram',
     'sphinx_autodoc_typehints',
     'sphinx.ext.autosectionlabel',
+    'myst_parser',
 ]
 
 templates_path = ['_templates']

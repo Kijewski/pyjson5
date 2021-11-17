@@ -33,12 +33,13 @@ Table of Contents
 -----------------
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 2
 
     encoder.rst
     decoder.rst
     exceptions.rst
     performance.rst
+    changelog.md
 
 
 Quick Summary
