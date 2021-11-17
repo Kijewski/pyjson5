@@ -3,6 +3,7 @@
 * Fallback to encode `vars(obj)` if `obj` is not stringifyable, e.g. to encode [dataclasses](https://docs.python.org/3/library/dataclasses.html).
 * Update documentation to use newer [sphinx](https://www.sphinx-doc.org/) version.
 * Use [dependabot](https://github.com/dependabot) to keep dependencies current.
+* Update [fast_double_parser](https://github.com/lemire/fast_double_parser).
 
 ### 1.5.3
 
