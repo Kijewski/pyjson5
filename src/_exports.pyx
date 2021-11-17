@@ -13,7 +13,7 @@ Current library version.
 
 def decode(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data from an ``str`` object.
+    Decodes JSON5 serialized data from an :class:`str` object.
 
     .. code:: python
 
@@ -21,7 +21,7 @@ def decode(object data, object maxdepth=None, object some=False):
 
     Parameters
     ----------
-    data : unicode
+    data : str
         JSON5 serialized data
     maxdepth : Optional[int]
         Maximum nesting level before are the parsing is aborted.
@@ -58,7 +58,7 @@ def decode(object data, object maxdepth=None, object some=False):
 
 def decode_latin1(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data from a ``bytes`` object.
+    Decodes JSON5 serialized data from a :class:`bytes` object.
 
     .. code:: python
 
@@ -69,9 +69,9 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
     data : bytes
         JSON5 serialized data, encoded as Latin-1 or ASCII.
     maxdepth : Optional[int]
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     some : bool
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
 
     Raises
     ------
@@ -83,14 +83,14 @@ def decode_latin1(object data, object maxdepth=None, object some=False):
     Returns
     -------
     object
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     '''
     return decode_buffer(data, maxdepth, bool(some), 1)
 
 
 def decode_utf8(object data, object maxdepth=None, object some=False):
     '''
-    Decodes JSON5 serialized data from a ``bytes`` object.
+    Decodes JSON5 serialized data from a :class:`bytes` object.
 
     .. code:: python
 
@@ -101,9 +101,9 @@ def decode_utf8(object data, object maxdepth=None, object some=False):
     data : bytes
         JSON5 serialized data, encoded as UTF-8 or ASCII.
     maxdepth : Optional[int]
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     some : bool
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
 
     Raises
     ------
@@ -115,7 +115,7 @@ def decode_utf8(object data, object maxdepth=None, object some=False):
     Returns
     -------
     object
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     '''
     return decode_buffer(data, maxdepth, bool(some), 0)
 
@@ -123,8 +123,8 @@ def decode_utf8(object data, object maxdepth=None, object some=False):
 def decode_buffer(object obj, object maxdepth=None, object some=False,
                   object wordlength=None):
     '''
-    Decodes JSON5 serialized data from an object that supports the buffer
-    protocol, e.g. bytearray.
+    Decodes JSON5 serialized data from an object that supports the buffer protocol,
+    e.g. :class:`bytearray`.
 
     .. code:: python
 
@@ -137,14 +137,14 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     data : object
         JSON5 serialized data.
         The argument must support Python's buffer protocol, i.e.
-        ``memoryview(...)`` must work. The buffer must be contigious.
+        :class:`memoryview(…) <memoryview>` must work. The buffer must be contigious.
     maxdepth : Optional[int]
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     some : bool
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     wordlength : Optional[int]
         Must be 0, 1, 2, 4 to denote UTF-8, UCS1, USC2 or USC4 data, resp.
-        Surrogates are not supported. Decode the data to an ``str`` if need be.
+        Surrogates are not supported. Decode the data to an :class:`str` if need be.
         If ``None`` is supplied, then the buffer's ``itemsize`` is used.
 
     Raises
@@ -159,7 +159,7 @@ def decode_buffer(object obj, object maxdepth=None, object some=False,
     Returns
     -------
     object
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     '''
     cdef Py_buffer view
 
@@ -193,17 +193,17 @@ def decode_callback(object cb, object maxdepth=None, object some=False,
         The functions is called like ``cb(*args)``, and it returns:
 
         * **str, bytes, bytearray:** \
-            ``len(...) == 0`` denotes exhausted input. \
-            ``len(...) == 1`` is the next character.
+            ``len(…) == 0`` denotes exhausted input. \
+            ``len(…) == 1`` is the next character.
         * **int:** \
             ``< 0`` denotes exhausted input. \
            ``>= 0`` is the ordinal value of the next character.
         * **None:** \
             input exhausted
     maxdepth : Optional[int]
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     some : bool
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     args : Optional[Iterable[Any]]
         Arguments to call ``cb`` with.
 
@@ -217,7 +217,7 @@ def decode_callback(object cb, object maxdepth=None, object some=False,
     Returns
     -------
     object
-        see ``decode(...)``
+        see :func:`decode(…) <pyjson5.decode>`
     '''
     if not callable(cb):
         raise TypeError(f'type(cb)=={type(cb)!r} is not callable')
@@ -257,9 +257,9 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     fp : IOBase
         A file-like object to parse from.
     maxdepth : Optional[int] = None
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
     some : bool
-        see `decode(...) <pyjson5.decode_>`_
+        see :func:`decode(…) <pyjson5.decode>`
 
     Raises
     ------
@@ -271,7 +271,7 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     Returns
     -------
     object
-        see ``decode(...)``
+        see :func:`decode(…) <pyjson5.decode>`
     '''
     if not isinstance(fp, IOBase):
         raise TypeError(f'type(fp)=={type(fp)!r} is not IOBase compatible')
@@ -288,7 +288,7 @@ def decode_io(object fp, object maxdepth=None, object some=True):
 
 def encode(object data, *, options=None, **options_kw):
     '''
-    Serializes a Python object to a JSON5 compatible unicode string.
+    Serializes a Python object as a JSON5 compatible string.
 
     .. code:: python
 
@@ -385,11 +385,11 @@ def encode_bytes(object data, *, options=None, **options_kw):
     Parameters
     ----------
     data : object
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options : Optional[Options]
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options_kw
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
 
     Raises
     ------
@@ -401,7 +401,7 @@ def encode_bytes(object data, *, options=None, **options_kw):
     Returns
     -------
     bytes
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     '''
     cdef void *temp
     cdef object result
@@ -472,18 +472,18 @@ def encode_callback(object data, object cb, object supply_bytes=False, *,
     Parameters
     ----------
     data : object
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     cb : Callable[[Union[bytes|str]], None]
         A callback function.
-        Depending on the truthyness of ``supply_bytes`` either ``bytes`` or
-        ``str`` is supplied.
+        Depending on the truthyness of ``supply_bytes`` either :class:`bytes` or
+        :class:`str` is supplied.
     supply_bytes : bool
-        Call ``cb(...)`` with a ``bytes`` argument if true,
-        otherwise ``str``.
+        Call ``cb(…)`` with a :class:`bytes` argument if true,
+        otherwise :class:`str`.
     options : Optional[Options]
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options_kw
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
 
     Raises
     ------
@@ -515,22 +515,22 @@ def encode_io(object data, object fp, object supply_bytes=True, *,
     '''
     Serializes a Python object into a file-object.
 
-    The return value of ``fp.write(...)`` is not checked.
+    The return value of :meth:`fp.write(…) <io.BufferedWriter.write>` is not checked.
     If ``fp`` is unbuffered, then the result will be garbage!
 
     Parameters
     ----------
     data : object
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     fp : IOBase
         A file-like object to serialize into.
     supply_bytes : bool
-        Call ``fp.write(...)`` with a ``bytes`` argument if true,
-        otherwise ``str``.
+        Call :meth:`fp.write(…) <io.BufferedWriter.write>` with a :class:`bytes` argument if true,
+        otherwise :class:`str`.
     options : Optional[Options]
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options_kw
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
 
     Raises
     ------
@@ -579,11 +579,11 @@ def encode_noop(object data, *, options=None, **options_kw):
     Parameters
     ----------
     data : object
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options : Optional[Options]
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
     options_kw
-        see `encode(...) <pyjson5.encode_>`_
+        see :func:`encode(…) <pyjson5.encode>`
 
     Returns
     -------

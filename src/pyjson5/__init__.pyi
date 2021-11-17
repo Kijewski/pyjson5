@@ -99,7 +99,7 @@ def encode(
     tojson: Optional[str],
     mappingtypes: Optional[Tuple[type, ...]],
 ) -> str:
-    '''Serializes a Python object to a JSON5 compatible unicode string.'''
+    '''Serializes a Python object to a JSON5 compatible string.'''
     ...
 
 def encode_bytes(
@@ -179,11 +179,11 @@ def load(fp: _SupportsRead) -> Any:
     ...
 
 def dumps(obj: Any) -> str:
-    '''Serializes a Python object to a JSON5 compatible unicode string.'''
+    '''Serializes a Python object to a JSON5 compatible string.'''
     ...
 
 def dump(obj: Any, fp: _SupportsWrite[str]) -> None:
-    '''Serializes a Python object to a JSON5 compatible unicode string.'''
+    '''Serializes a Python object to a JSON5 compatible string.'''
     ...
 
 
