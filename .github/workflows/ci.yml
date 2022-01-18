@@ -1,4 +1,4 @@
-name: So, does it work?
+name: CI
 
 on: [push]
 

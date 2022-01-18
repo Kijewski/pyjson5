@@ -4,7 +4,9 @@ include sha512sum.py
 include Makefile
 include pyjson5.cpp
 include pyjson5.pyx
+include pyproject.toml
 include requires.txt
+include setup.cfg
 include third-party/fast_double_parser/include/fast_double_parser.h
 recursive-include docs **
 recursive-include src **

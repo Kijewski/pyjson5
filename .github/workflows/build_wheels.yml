@@ -1,4 +1,4 @@
-name: Build Manylinux Wheels
+name: Build Wheels
 
 on:
   workflow_dispatch:
@@ -57,7 +57,8 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: "${{ github.event.inputs.skip }}"  # skip Python 2.7 wheels
+          CIBW_BUILD_FRONTEND: build
+          CIBW_SKIP: "${{ github.event.inputs.skip }}"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ github.event.inputs.manylinux }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ github.event.inputs.manylinux }}
           CIBW_ARCHS: ${{ github.event.inputs.archs }}

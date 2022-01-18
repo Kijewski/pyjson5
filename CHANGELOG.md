@@ -1,11 +1,15 @@
 # Changelog
 
+**1.6.1**
+
+* Fix [PEP 517](https://www.python.org/dev/peps/pep-0517/)-like installation using [build](https://github.com/pypa/build) (by [Tomasz Kłoczko](https://github.com/kloczek))
+
 **1.6.0**
 
-* Fallback to encode `vars(obj)` if `obj` is not stringifyable, e.g. to serialize [dataclasses](https://docs.python.org/3/library/dataclasses.html).
-* Update documentation to use newer [sphinx](https://www.sphinx-doc.org/) version.
-* Use [dependabot](https://github.com/dependabot) to keep dependencies current.
-* Update [fast_double_parser](https://github.com/lemire/fast_double_parser).
+* Fallback to encode `vars(obj)` if `obj` is not stringifyable, e.g. to serialize [dataclasses](https://docs.python.org/3/library/dataclasses.html)
+* Update documentation to use newer [sphinx](https://www.sphinx-doc.org/) version
+* Use [dependabot](https://github.com/dependabot) to keep dependencies current
+* Update [fast_double_parser](https://github.com/lemire/fast_double_parser)
 
 **1.5.3**
 
