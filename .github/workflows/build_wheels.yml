@@ -35,7 +35,7 @@ jobs:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           key: cache--${{ github.event.inputs.os }}--${{ github.event.inputs.python }}--${{ hashFiles('./requirements.txt') }}
           path: ~/.cache/pip

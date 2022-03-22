@@ -28,7 +28,7 @@ jobs:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           key: cache--${{ matrix.os }}--${{ matrix.python }}--${{ hashFiles('./requirements.txt') }}
           path: ~/.cache/pip
