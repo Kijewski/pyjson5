@@ -1,13 +1,9 @@
-build
-cibuildwheel == 2.*
-colorama == 0.4.*
+# keep synchronous to setup.cfg
+pyiced == 1.6.1
+
 docutils == 0.17.*
-cython == 0.*
-more_itertools == 8.*
 myst-parser == 0.18.*
-setuptools
 sphinx == 5.*
 sphinx_autodoc_typehints == 1.*
 sphinx_rtd_theme == 1.*
 sphinxprettysearchresults == 0.3.*
-wheel

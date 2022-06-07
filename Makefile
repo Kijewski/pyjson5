@@ -2,7 +2,7 @@ all: sdist bdist_wheel docs
 
 .DELETE_ON_ERROR:
 
-.PHONY: all sdist bdist_wheel clean docs prepare test
+.PHONY: all sdist bdist_wheel clean docs prepare test install
 
 export PYTHONUTF8 := 1
 export PYTHONIOENCODING := UTF-8
@@ -41,8 +41,10 @@ bdist_wheel: pyjson5.cpp ${FILES} | sdist
 	rm -f -- dist/pyjson5-*.whl
 	python setup.py bdist_wheel
 
-docs: bdist_wheel $(wildcard docs/* docs/*/*)
+install: bdist_wheel
 	pip install --force dist/pyjson5-*.whl
+
+docs: install $(wildcard docs/* docs/*/*)
 	python -m sphinx -M html docs/ dist/
 
 clean:
