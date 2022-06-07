@@ -51,6 +51,9 @@ jobs:
       - name: Install requirements
         run: python -m pip install -Ur requirements.txt
 
+      - name: Install cibuildwheel
+        run: python -m pip install -U 'cibuildwheel==2.*'
+
       - name: Prepare for compilation
         run: make prepare
 

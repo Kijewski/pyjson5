@@ -1,0 +1,9 @@
+# keep synchronous to setup.cfg
+pyiced == 1.6.1
+
+docutils == 0.17.*
+myst-parser == 0.18.*
+sphinx == 5.*
+sphinx_autodoc_typehints == 1.*
+sphinx_rtd_theme == 1.*
+sphinxprettysearchresults == 0.3.*
