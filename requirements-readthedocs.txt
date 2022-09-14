@@ -1,5 +1,5 @@
 # keep synchronous to setup.cfg
-pyiced == 1.6.1
+pyjson5 == 1.6.2
 
 docutils == 0.17.*
 myst-parser == 0.18.*

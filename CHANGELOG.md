@@ -1,5 +1,9 @@
 # Changelog
 
+**1.6.2**
+
+* Update to Unicode 15.0.0
+
 **1.6.1**
 
 * Fix [PEP 517](https://www.python.org/dev/peps/pep-0517/)-like installation using [build](https://github.com/pypa/build) (by [Tomasz Kłoczko](https://github.com/kloczek))
