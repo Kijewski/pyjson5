@@ -6,15 +6,11 @@ on:
       os:
         description: OS
         required: true
-        default: ubuntu-20.04
+        default: windows-2022
       python:
         description: Python
         required: true
-        default: "3.9"
-      manylinux:
-        description: Manylinux
-        required: true
-        default: manylinux2014
+        default: "3.10"
       archs:
         description: CIBW_ARCHS
         required: true
@@ -57,16 +53,11 @@ jobs:
       - name: Prepare for compilation
         run: make prepare
 
-      - name: Pull docker image
-        run: docker pull "quay.io/pypa/${{ github.event.inputs.manylinux }}"
-
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: "${{ github.event.inputs.skip }}"
-          CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/${{ github.event.inputs.manylinux }}"
-          CIBW_MANYLINUX_I686_IMAGE: "quay.io/pypa/${{ github.event.inputs.manylinux }}"
           CIBW_ARCHS: ${{ github.event.inputs.archs }}
 
       - name: Store artifacts
