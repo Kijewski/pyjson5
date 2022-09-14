@@ -1,7 +1,7 @@
 # keep synchronous to setup.cfg
 pyjson5 == 1.6.2
 
-docutils == 0.17.*
+docutils == 0.19
 myst-parser == 0.18.*
 sphinx == 5.*
 sphinx_autodoc_typehints == 1.*
