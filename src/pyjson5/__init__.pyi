@@ -1,17 +1,17 @@
 from typing import (
-    Any, Callable, final, Final, Generic, Iterable, Literal, Optional,
-    overload, Protocol, Tuple, TypeVar, Union,
+    Any, Callable, final, Final, Iterable, Literal, Optional, overload,
+    Protocol, Tuple, TypeVar, Union,
 )
 
 
-_T = TypeVar('_T')
+_Data = TypeVar('_Data')
 
 class _SupportsRead(Protocol):
     def read(self, size: int = ...) -> str:
         ...
 
-class _SupportsWrite(Generic[_T]):
-    def write(self, s: _T) -> None:
+class _SupportsWrite(Protocol[_Data]):
+    def write(self, s: _Data) -> Any:
         ...
 
 _CallbackStr = TypeVar('_CallbackStr', bound=Callable[[str], None])
