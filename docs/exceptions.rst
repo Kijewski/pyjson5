@@ -12,6 +12,6 @@ Exceptions
     pyjson5.Json5ExtraData
     pyjson5.Json5IllegalType
 
-.. autoclass:: pyjson5.Json5Exception
+.. autoexception:: pyjson5.Json5Exception
     :members:
     :inherited-members:

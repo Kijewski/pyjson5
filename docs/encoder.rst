@@ -64,10 +64,10 @@ Encoder Exceptions
     pyjson5.Json5EncoderException
     pyjson5.Json5UnstringifiableType
 
-.. autoclass:: pyjson5.Json5EncoderException
+.. autoexception:: pyjson5.Json5EncoderException
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5UnstringifiableType
+.. autoexception:: pyjson5.Json5UnstringifiableType
     :members:
     :inherited-members:

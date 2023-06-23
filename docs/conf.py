@@ -35,34 +35,8 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 todo_include_todos = False
 
-html_theme = 'sphinx_rtd_theme'
-html_theme_options = {
-    'navigation_depth': -1,
-}
-html_sidebars = {
-    '**': [
-        'localtoc.html',
-        'searchbox.html',
-    ]
-}
+html_theme = 'furo'
 htmlhelp_basename = 'PyJSON5doc'
-
-latex_elements = {}
-latex_documents = [
-    (master_doc, 'PyJSON5.tex', u'PyJSON5 Documentation',
-     u'René Kijewski', 'manual'),
-]
-
-man_pages = [
-    (master_doc, 'pyjson5', u'PyJSON5 Documentation',
-     [author], 1)
-]
-
-texinfo_documents = [
-    (master_doc, 'PyJSON5', u'PyJSON5 Documentation',
-     author, 'PyJSON5', 'One line description of project.',
-     'Miscellaneous'),
-]
 
 display_toc = True
 autodoc_default_flags = ['members']
