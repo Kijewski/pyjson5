@@ -25,6 +25,7 @@ run.cgi
 
 .*
 !.git*
+!.readthedocs.yaml
 
 *.orig
 
