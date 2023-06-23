@@ -16,12 +16,14 @@ extensions = [
     'myst_parser',
 ]
 
+language = "en"
+
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 
 project = u'PyJSON5'
-copyright = u'2018-2022, René Kijewski'
+copyright = u'2018-2023, René Kijewski'
 author = u'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:

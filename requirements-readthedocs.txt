@@ -1,6 +1,8 @@
 # keep synchronous to setup.cfg
-pyjson5 == 1.6.2
+# keep synchronous to src/VERSION.inc
+pyjson5 == 1.6.3
 
+# keep synchronous to requirements-dev.txt
 docutils == 0.17.*
 myst-parser == 0.18.*
 sphinx == 5.*
