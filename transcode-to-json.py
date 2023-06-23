@@ -47,27 +47,27 @@ def eq_with_nans(left, right):
     return True
 
 
-argparser = ArgumentParser(description='Run JSON5 parser tests')
-argparser.add_argument('input', type=Path)
-argparser.add_argument('output', nargs='?', type=Path)
+argparser = ArgumentParser(description="Run JSON5 parser tests")
+argparser.add_argument("input", type=Path)
+argparser.add_argument("output", nargs="?", type=Path)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     basicConfig(level=DEBUG)
     logger = getLogger(__name__)
 
     args = argparser.parse_args()
     try:
         # open() does not work with Paths in Python 3.5
-        with codecs_open(str(args.input.resolve()), 'r', 'UTF-8') as f:
+        with codecs_open(str(args.input.resolve()), "r", "UTF-8") as f:
             data = f.read()
     except Exception:
-        logger.error('Could not even read file: %s', args.input, exc_info=True)
+        logger.error("Could not even read file: %s", args.input, exc_info=True)
         raise SystemExit(-1)
 
     try:
         obj = decode(data)
     except Exception:
-        logger.error('Could not parse content: %s', args.input)
+        logger.error("Could not parse content: %s", args.input)
         raise SystemExit(1)
 
     try:
@@ -76,23 +76,27 @@ if __name__ == '__main__':
         pass
     else:
         if not eq_with_nans(obj, json_obj):
-            logger.error('JSON and PyJSON5 did not read the same data: %s, %r != %r', args.input, obj, json_obj)
+            logger.error(
+                "JSON and PyJSON5 did not read the same data: %s, %r != %r",
+                args.input,
+                obj,
+                json_obj,
+            )
             raise SystemExit(2)
 
     try:
         data = encode(obj)
     except Exception:
-        logger.error('Could open stringify content: %s', args.input, exc_info=True)
+        logger.error("Could open stringify content: %s", args.input, exc_info=True)
         raise SystemExit(2)
 
     if args.output is not None:
         try:
             # open() does not work with Paths in Python 3.5
-            with codecs_open(str(args.output.resolve()), 'w', 'UTF-8') as f:
+            with codecs_open(str(args.output.resolve()), "w", "UTF-8") as f:
                 f.write(data)
         except Exception:
-            logger.error('Could open output file: %s', args.output, exc_info=True)
+            logger.error("Could open output file: %s", args.output, exc_info=True)
             raise SystemExit(-1)
 
     raise SystemExit(0)
-

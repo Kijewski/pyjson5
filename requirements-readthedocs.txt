@@ -1,9 +1,10 @@
 # keep synchronous to setup.cfg
-pyjson5 == 1.6.2
+# keep synchronous to src/VERSION.inc
+pyjson5 == 1.6.3
 
-docutils == 0.17.*
-myst-parser == 0.18.*
-sphinx == 5.*
+# keep synchronous to requirements-dev.txt
+docutils == 0.19.*
+furo
+myst-parser == 2.*
+sphinx == 7.*
 sphinx_autodoc_typehints == 1.*
-sphinx_rtd_theme == 1.*
-sphinxprettysearchresults == 0.3.*

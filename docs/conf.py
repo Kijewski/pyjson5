@@ -16,13 +16,15 @@ extensions = [
     'myst_parser',
 ]
 
+language = "en"
+
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 
-project = u'PyJSON5'
-copyright = u'2018-2022, René Kijewski'
-author = u'René Kijewski'
+project = 'PyJSON5'
+copyright = '2018-2023, René Kijewski'
+author = 'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:
     version = eval(f.read().strip())
@@ -33,41 +35,15 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 todo_include_todos = False
 
-html_theme = 'sphinx_rtd_theme'
-html_theme_options = {
-    'navigation_depth': -1,
-}
-html_sidebars = {
-    '**': [
-        'localtoc.html',
-        'searchbox.html',
-    ]
-}
+html_theme = 'furo'
 htmlhelp_basename = 'PyJSON5doc'
-
-latex_elements = {}
-latex_documents = [
-    (master_doc, 'PyJSON5.tex', u'PyJSON5 Documentation',
-     u'René Kijewski', 'manual'),
-]
-
-man_pages = [
-    (master_doc, 'pyjson5', u'PyJSON5 Documentation',
-     [author], 1)
-]
-
-texinfo_documents = [
-    (master_doc, 'PyJSON5', u'PyJSON5 Documentation',
-     author, 'PyJSON5', 'One line description of project.',
-     'Miscellaneous'),
-]
 
 display_toc = True
 autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.10', None),
+    'python': ('https://docs.python.org/3.11', None),
 }
 
 inheritance_graph_attrs = {

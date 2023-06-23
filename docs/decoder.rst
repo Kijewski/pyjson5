@@ -59,26 +59,26 @@ Decoder Exceptions
     pyjson5.Json5ExtraData
     pyjson5.Json5IllegalType
 
-.. autoclass:: pyjson5.Json5DecoderException
+.. autoexception:: pyjson5.Json5DecoderException
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5NestingTooDeep
+.. autoexception:: pyjson5.Json5NestingTooDeep
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5EOF
+.. autoexception:: pyjson5.Json5EOF
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5IllegalCharacter
+.. autoexception:: pyjson5.Json5IllegalCharacter
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5ExtraData
+.. autoexception:: pyjson5.Json5ExtraData
     :members:
     :inherited-members:
 
-.. autoclass:: pyjson5.Json5IllegalType
+.. autoexception:: pyjson5.Json5IllegalType
     :members:
     :inherited-members:

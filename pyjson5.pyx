@@ -1,7 +1,7 @@
 # distutils: language = c++
 # cython: embedsignature = True, language_level = 3, warn.undeclared = True, warn.unreachable = True, warn.maybe_uninitialized = True
 
-# Copyright 2018-2022 René Kijewski <rene.SURNAME@fu-berlin.de>
+# Copyright 2018-2023 René Kijewski <pypi.org@k6i.de>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

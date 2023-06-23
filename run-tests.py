@@ -11,29 +11,31 @@ from colorama import init, Fore
 from pyjson5 import decode_io
 
 
-argparser = ArgumentParser(description='Run JSON5 parser tests')
-argparser.add_argument('tests', nargs='?', type=Path, default=Path('third-party/json5-tests'))
+argparser = ArgumentParser(description="Run JSON5 parser tests")
+argparser.add_argument(
+    "tests", nargs="?", type=Path, default=Path("third-party/json5-tests")
+)
 
 suffix_implies_success = {
-    '.json': True,
-    '.json5': True,
-    '.txt': False,
+    ".json": True,
+    ".json5": True,
+    ".txt": False,
 }
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     basicConfig(level=INFO)
     logger = getLogger(__name__)
 
     init()
 
-    if name != 'nt':
-        code_severe = Fore.RED + '😱'
-        code_good = Fore.CYAN + '😄'
-        code_bad = Fore.YELLOW + '😠'
+    if name != "nt":
+        code_severe = Fore.RED + "😱"
+        code_good = Fore.CYAN + "😄"
+        code_bad = Fore.YELLOW + "😠"
     else:
-        code_severe = Fore.RED + 'SEVERE'
-        code_good = Fore.CYAN + 'GOOD'
-        code_bad = Fore.YELLOW + 'BAD'
+        code_severe = Fore.RED + "SEVERE"
+        code_good = Fore.CYAN + "GOOD"
+        code_bad = Fore.YELLOW + "BAD"
 
     good = 0
     bad = 0
@@ -41,8 +43,8 @@ if __name__ == '__main__':
 
     args = argparser.parse_args()
     index = 0
-    for path in sorted(args.tests.glob('*/*.*')):
-        kind = path.suffix.split('.')[-1]
+    for path in sorted(args.tests.glob("*/*.*")):
+        kind = path.suffix.split(".")[-1]
         expect_success = suffix_implies_success.get(path.suffix)
         if expect_success is None:
             continue
@@ -51,10 +53,10 @@ if __name__ == '__main__':
         category = path.parent.name
         name = path.stem
         try:
-            p = Popen((executable, 'transcode-to-json.py', str(path)))
+            p = Popen((executable, "transcode-to-json.py", str(path)))
             outcome = p.wait(5)
         except Exception:
-            logger.error('Error while testing: %s', path, exc_info=True)
+            logger.error("Error while testing: %s", path, exc_info=True)
             severe += 1
             continue
 
@@ -64,14 +66,23 @@ if __name__ == '__main__':
         is_good = is_success if expect_success else is_failure
         code = code_severe if is_severe else code_good if is_good else code_bad
         print(
-            '#', index, ' ', code, ' '
-            'Category <', category, '> | '
-            'Test <', name, '> | '
-            'Data <', kind, '> | '
-            'Expected <', 'pass' if expect_success else 'FAIL', '> | '
-            'Actual <', 'pass' if is_success else 'FAIL', '>',
+            "#",
+            index,
+            " ",
+            code,
+            " " "Category <",
+            category,
+            "> | " "Test <",
+            name,
+            "> | " "Data <",
+            kind,
+            "> | " "Expected <",
+            "pass" if expect_success else "FAIL",
+            "> | " "Actual <",
+            "pass" if is_success else "FAIL",
+            ">",
             Fore.RESET,
-            sep='',
+            sep="",
         )
         if is_severe:
             severe += 1
@@ -85,11 +96,15 @@ if __name__ == '__main__':
     code = code_severe if is_severe else code_good if is_good else code_bad
     print()
     print(
-        code, ' ',
-        good, ' × correct outcome | ',
-        bad, ' × wrong outcome | ',
-        severe, ' × severe errors',
+        code,
+        " ",
+        good,
+        " × correct outcome | ",
+        bad,
+        " × wrong outcome | ",
+        severe,
+        " × severe errors",
         Fore.RESET,
-        sep=''
+        sep="",
     )
     raise SystemExit(2 if is_severe else 0 if is_good else 1)
