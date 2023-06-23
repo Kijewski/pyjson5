@@ -14,13 +14,11 @@ jobs:
         python: [
           '3.5',
           # '3.6', '3.7', '3.8', '3.9', # it takes too much GitHub action time to run tests on all versions in between
-          '3.10',
+          '3.11',
         ]
         include:
           - os: ubuntu-latest
             python: pypy-3.7
-        
-    name: Python ${{ matrix.python }} on ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
@@ -56,3 +54,38 @@ jobs:
 
       - name: Run "JSON is a Minefield" suite
         run: python run-minefield-test.py
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          key: lint--${{ hashFiles('./requirements*.txt', './Makefile') }}
+          restore-keys: lint--
+          path: ~/.cache/pip
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Display Python version
+        run: python -c 'import sys; print(sys.version)'
+
+      - name: Update pip
+        run: python -m pip install -U pip wheel setuptools
+
+      - name: Install requirements
+        run: python -m pip install -Ur requirements-dev.txt
+
+      - name: Compile project
+        run: make install
+
+      - name: Run black
+        run: python -m black --check ./*.py ./src/
