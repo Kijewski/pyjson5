@@ -8,4 +8,3 @@ myst-parser == 0.18.*
 sphinx == 5.*
 sphinx_autodoc_typehints == 1.*
 sphinx_rtd_theme == 1.*
-sphinxprettysearchresults == 0.3.*

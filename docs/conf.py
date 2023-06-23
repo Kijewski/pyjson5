@@ -22,9 +22,9 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 
-project = u'PyJSON5'
-copyright = u'2018-2023, René Kijewski'
-author = u'René Kijewski'
+project = 'PyJSON5'
+copyright = '2018-2023, René Kijewski'
+author = 'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:
     version = eval(f.read().strip())
@@ -69,7 +69,7 @@ autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.10', None),
+    'python': ('https://docs.python.org/3.11', None),
 }
 
 inheritance_graph_attrs = {
