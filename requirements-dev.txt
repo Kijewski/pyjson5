@@ -1,7 +1,7 @@
 black
 build
 colorama == 0.4.*
-cython == 0.*
+cython == 3.*
 more_itertools == 9.*
 mypy
 setuptools
