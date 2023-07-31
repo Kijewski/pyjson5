@@ -10,7 +10,7 @@ on:
       python:
         description: Python
         required: true
-        default: "3.10"
+        default: "3.11"
       archs:
         description: CIBW_ARCHS
         required: true
