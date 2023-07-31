@@ -51,7 +51,7 @@ jobs:
       run: python -m pip install -Ur requirements-dev.txt
 
     - name: Compile
-      run: make bdist_wheel
+      run: make wheel
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
