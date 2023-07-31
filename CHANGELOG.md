@@ -1,5 +1,9 @@
 # Changelog
 
+**1.6.4**
+
+* Update to Cython 3
+
 **1.6.3**
 
 * Fix typing for `dump()` ([#61](https://github.com/Kijewski/pyjson5/issues/61))
