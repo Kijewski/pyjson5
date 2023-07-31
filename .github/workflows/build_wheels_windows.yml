@@ -59,6 +59,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: "${{ github.event.inputs.skip }}"
           CIBW_ARCHS: ${{ github.event.inputs.archs }}
+          CIBW_PRERELEASE_PYTHONS: True
 
       - name: Store artifacts
         uses: actions/upload-artifact@v3

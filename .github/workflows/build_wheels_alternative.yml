@@ -65,6 +65,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: "${{ github.event.inputs.manylinux }}"
           CIBW_MANYLINUX_I686_IMAGE: "${{ github.event.inputs.manylinux }}"
           CIBW_ARCHS: ${{ github.event.inputs.archs }}
+          CIBW_PRERELEASE_PYTHONS: True
 
       - name: Store artifacts
         uses: actions/upload-artifact@v3
