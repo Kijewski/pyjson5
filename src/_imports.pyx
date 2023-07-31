@@ -94,6 +94,8 @@ cdef extern from 'src/native.hpp' namespace 'JSON5EncoderCpp' nogil:
     uint32_t unicode_join_surrogates(uint32_t hi, uint32_t lo)
 
     void reset_hash[T](T *obj)
+    void reset_wstr[T](T *obj)
+    void set_ready[T](T *obj)
     AlwaysTrue exception_thrown() except True
     void unreachable()
 

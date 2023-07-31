@@ -3,6 +3,7 @@
 **1.6.4**
 
 * Update to Cython 3
+* Update for Python 3.12
 
 **1.6.3**
 

@@ -8,7 +8,6 @@ from subprocess import Popen
 from sys import executable
 
 from colorama import init, Fore
-from pyjson5 import decode_io
 
 
 argparser = ArgumentParser(description="Run JSON5 parser tests")

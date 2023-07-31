@@ -361,11 +361,11 @@ def encode(object data, *, options=None, **options_kw):
 
         (<PyASCIIObject*> result).length = length
         reset_hash(<PyASCIIObject*> result)
-        (<PyASCIIObject*> result).wstr = NULL
+        reset_wstr(<PyASCIIObject*> result)
         (<PyASCIIObject*> result).state.interned = SSTATE_NOT_INTERNED
         (<PyASCIIObject*> result).state.kind = PyUnicode_1BYTE_KIND
         (<PyASCIIObject*> result).state.compact = True
-        (<PyASCIIObject*> result).state.ready = True
+        set_ready(<PyASCIIObject*> result)
         (<PyASCIIObject*> result).state.ascii = True
 
         return result

@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     init()
 
-    good = bad = severe = 0
+    good = bad = errors = severe = 0
 
     if name != "nt":
         code_severe = Fore.RED + "😱"

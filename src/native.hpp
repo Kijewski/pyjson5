@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 
 namespace JSON5EncoderCpp {
 
@@ -98,16 +99,23 @@ static inline std::uint32_t unicode_join_surrogates(std::uint32_t hi, std::uint3
     return (((hi & 0x03FFu) << 10) | (lo & 0x03FFu)) + 0x10000u;
 }
 
+
+template <class T>
+struct VoidT_ {
+    using Value = void*;
+};
+
+
 template <typename T>
 struct has_ob_shash {
-    template <typename C> static std::uint8_t test(decltype(&C::ob_shash)) ;
+    template <typename C> static std::uint8_t test(typename VoidT_<decltype((std::declval<C>().ob_shash, true))>::Value);
     template <typename C> static std::uint64_t test(...);
     enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
 };
 
 template <typename T>
 struct has_hash {
-    template <typename C> static std::uint8_t test(decltype(&C::hash)) ;
+    template <typename C> static std::uint8_t test(typename VoidT_<decltype((std::declval<C>().hash, true))>::Value);
     template <typename C> static std::uint64_t test(...);
     enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
 };
@@ -141,6 +149,66 @@ static inline void reset_hash(T *obj) {
     ResetHash_<T>::reset(obj);
 }
 
+
+template <typename T>
+struct has_wstr {
+    template <typename C> static std::uint8_t test(typename VoidT_<decltype((std::declval<C>().wstr, true))>::Value);
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template<class T, bool hash = has_wstr<T>::value>
+struct ResetWstr_;
+
+template<class T>
+struct ResetWstr_ <T, true> {
+    static inline void reset(T *obj) {
+        obj->wstr = nullptr;  // CPython >= 3.12: absent
+    }
+};
+
+template<class T>
+struct ResetWstr_ <T, false> {
+    static inline void reset(T *) {
+        (void) 0;
+    }
+};
+
+template <class T>
+static inline void reset_wstr(T *obj) {
+    ResetWstr_<T>::reset(obj);
+}
+
+template <typename T>
+struct has_ready {
+    template <typename C> static std::uint8_t test(typename VoidT_<decltype((std::declval<C>().state.ready, true))>::Value);
+    template <typename C> static std::uint64_t test(...);
+    enum { value = sizeof(test<T>(0)) == sizeof(std::uint8_t) };
+};
+
+template<class T, bool hash = has_ready<T>::value>
+struct SetReady_;
+
+template<class T>
+struct SetReady_ <T, true> {
+    static inline void set(T *obj) {
+        obj->state.ready = true;  // CPython >= 3.12: absent
+    }
+};
+
+template<class T>
+struct SetReady_ <T, false> {
+    static inline void set(T *) {
+        (void) 0;
+    }
+};
+
+template <class T>
+static inline void set_ready(T *obj) {
+    SetReady_<T>::set(obj);
+}
+
+
 static int iter_next(PyObject *iterator, PyObject **value) {
     Py_XDECREF(*value);
     PyObject *v = PyIter_Next(iterator);
@@ -166,7 +234,6 @@ static inline AlwaysTrue exception_thrown() {
 #else // ???
     inline void unreachable() {}
 #endif
-
 
 #include "./_escape_dct.hpp"
 
