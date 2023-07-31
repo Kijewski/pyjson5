@@ -1,6 +1,6 @@
 # keep synchronous to setup.cfg
 # keep synchronous to src/VERSION.inc
-pyjson5 == 1.6.3
+pyjson5 == 1.6.4
 
 # keep synchronous to requirements-dev.txt
 docutils == 0.19.*
