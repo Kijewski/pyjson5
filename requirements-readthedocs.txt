@@ -3,7 +3,7 @@
 pyjson5 == 1.6.4
 
 # keep synchronous to requirements-dev.txt
-docutils == 0.19.*
+docutils == 0.20.*
 furo
 myst-parser == 2.*
 sphinx == 7.*
