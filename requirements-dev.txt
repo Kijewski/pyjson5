@@ -2,13 +2,13 @@ black
 build
 colorama == 0.4.*
 cython < 4, >= 0.29
-more_itertools == 9.*
+more_itertools == 10.*
 mypy
 setuptools
 wheel
 
 # keep synchronous to requirements-readthecocs.txt
-docutils == 0.19.*
+docutils == 0.20.*
 furo
 myst-parser == 2.*
 sphinx == 7.*
