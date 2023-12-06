@@ -1,5 +1,9 @@
 # Changelog
 
+**1.6.5 (2023-12-04)**
+
+* Fix type hints for optional arguments
+
 **1.6.4 (2023-07-31)**
 
 * Update to Cython 3

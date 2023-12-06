@@ -45,15 +45,15 @@ class Options:
         self,
         *,
         quotationmark: Optional[str] = ...,
-        tojson: Optional[str],
-        mappingtypes: Optional[Tuple[type, ...]],
+        tojson: Optional[str] = ...,
+        mappingtypes: Optional[Tuple[type, ...]] = ...,
     ) -> None: ...
     def update(
         self,
         *,
         quotationmark: Optional[str] = ...,
-        tojson: Optional[str],
-        mappingtypes: Optional[Tuple[type, ...]],
+        tojson: Optional[str] = ...,
+        mappingtypes: Optional[Tuple[type, ...]] = ...,
     ) -> Options:
         """Creates a new Options instance by modifying some members."""
 
@@ -86,7 +86,7 @@ def decode_callback(
     cb: Callable[..., Union[str, bytes, bytearray, int, None]],
     maxdepth: Optional[int] = ...,
     some: bool = ...,
-    args: Optional[Iterable[Any]] = [],
+    args: Optional[Iterable[Any]] = ...,
 ) -> Any:
     """Decodes JSON5 serialized data by invoking a callback."""
 
@@ -102,8 +102,8 @@ def encode(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> str:
     """Serializes a Python object to a JSON5 compatible string."""
     ...
@@ -113,9 +113,9 @@ def encode_bytes(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
-) -> str:
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
+) -> bytes:
     """Serializes a Python object to a JSON5 compatible bytes string."""
 
 @overload
@@ -126,8 +126,8 @@ def encode_callback(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> _CallbackStr:
     """Serializes a Python object into a callback function."""
 
@@ -139,8 +139,8 @@ def encode_callback(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> _CallbackBytes: ...
 @overload
 def encode_io(
@@ -150,8 +150,8 @@ def encode_io(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> _SupportsWriteBytes:
     """Serializes a Python object into a file-object."""
 
@@ -163,16 +163,16 @@ def encode_io(
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> _SupportsWriteStr: ...
 def encode_noop(
     data: Any,
     *,
     options: Optional[Options] = ...,
     quotationmark: Optional[str] = ...,
-    tojson: Optional[str],
-    mappingtypes: Optional[Tuple[type, ...]],
+    tojson: Optional[str] = ...,
+    mappingtypes: Optional[Tuple[type, ...]] = ...,
 ) -> bool:
     """Test if the input is serializable."""
 
