@@ -68,7 +68,7 @@ jobs:
           CIBW_PRERELEASE_PYTHONS: True
 
       - name: Store artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Wheelhouse
           path: ./wheelhouse/*.whl
