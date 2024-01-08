@@ -45,10 +45,10 @@ jobs:
         run: make install
 
       - name: Run JSON5 tests suite
-        run: python run-tests.py
+        run: python scripts/run-tests.py
 
       - name: Run "JSON is a Minefield" suite
-        run: python run-minefield-test.py
+        run: python scripts/run-minefield-test.py
 
   lint:
     runs-on: ubuntu-latest

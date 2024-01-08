@@ -1,6 +1,4 @@
 include LICENSE
-include make_*.py
-include sha512sum.py
 include Makefile
 include pyjson5.cpp
 include pyjson5.pyx
@@ -9,4 +7,7 @@ include requires.txt
 include setup.cfg
 include third-party/fast_double_parser/include/fast_double_parser.h
 recursive-include docs **
+recursive-include scripts **
 recursive-include src **
+recursive-include third-party/json5-tests **
+recursive-include third-party/JSONTestSuite/test_parsing **
