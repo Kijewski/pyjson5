@@ -17,15 +17,15 @@ FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
 	curl -s -o $@ https://www.unicode.org/Public/15.0.0/ucd/extracted/DerivedGeneralCategory.txt
-	python sha512sum.py -c $@.sha
+	python scripts/sha512sum.py -c $@.sha
 
-src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt make_unicode_categories.py
-	python make_unicode_categories.py $< $@
+src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt scripts/make_unicode_categories.py
+	python scripts/make_unicode_categories.py $< $@
 
-src/_decoder_recursive_select.py.hpp: make_decoder_recursive_select.py
+src/_decoder_recursive_select.py.hpp: scripts/make_decoder_recursive_select.py
 	python $< $@
 
-src/_escape_dct.hpp: make_escape_dct.py
+src/_escape_dct.hpp: scripts/make_escape_dct.py
 	python $< $@
 
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
@@ -55,5 +55,5 @@ clean:
 
 test: wheel
 	pip install --force dist/pyjson5-*.whl
-	python run-minefield-test.py
-	python run-tests.py
+	python scripts/run-minefield-test.py
+	python scripts/run-tests.py
