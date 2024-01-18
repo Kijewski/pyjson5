@@ -21,7 +21,7 @@ jobs:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: cache--${{ matrix.os }}--${{ matrix.python }}--${{ hashFiles('./requirements*.txt', './Makefile') }}
           restore-keys: cache--${{ matrix.os }}--${{ matrix.python }}--
@@ -59,7 +59,7 @@ jobs:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: lint--${{ hashFiles('./requirements*.txt', './Makefile') }}
           restore-keys: lint--
