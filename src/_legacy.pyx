@@ -47,7 +47,7 @@ def load(fp, **kw):
 
     Returns
     -------
-    str
+    object
         see :func:`decode_io(…) <pyjson5.decode_io>`
     '''
     return decode_io(fp, None, False)
