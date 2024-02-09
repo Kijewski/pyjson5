@@ -621,4 +621,4 @@ __doc__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, LONGDESCRIPTION, LONGD
 
 __license__ = 'Apache-2.0'
 
-__author__ = '2018-2023 René Kijewski <pypi.org@k6i.de>'
+__author__ = '2018-2024 René Kijewski <pypi.org@k6i.de>'

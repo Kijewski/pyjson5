@@ -1,6 +1,6 @@
 # Changelog
 
-**1.6.6 (2023-02-09)**
+**1.6.6 (2024-02-09)**
 
 * Fix return type of `load()` (by Q-ten, [#88](https://github.com/Kijewski/pyjson5/pull/88))
 

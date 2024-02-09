@@ -23,7 +23,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = 'PyJSON5'
-copyright = '2018-2023, René Kijewski'
+copyright = '2018-2024, René Kijewski'
 author = 'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:
