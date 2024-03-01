@@ -1,5 +1,9 @@
 # Changelog
 
+**1.6.7 (2024-03-01)**
+
+* Update to Unicode 15.1.0
+
 **1.6.6 (2024-02-09)**
 
 * Fix return type of `load()` (by Q-ten, [#88](https://github.com/Kijewski/pyjson5/pull/88))
