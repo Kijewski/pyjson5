@@ -30,7 +30,7 @@ def main(input_file, output_file):
         "nd": IdentifierPart,
     }
 
-    planes = defaultdict(lambda: [0] * 0x1000)
+    planes = defaultdict(lambda: [0] * 0x100)
 
     for input_line in input_file:
         m = match(r"^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s+;\s+([A-Z][a-z])", input_line)
@@ -43,19 +43,19 @@ def main(input_file, output_file):
             end = int(end or start, 16)
             start = int(start, 16)
             for i in range(start, end + 1):
-                planes[i // 0x1000][i % 0x1000] = idx
+                planes[i // 0x100][i % 0x100] = idx
 
     # per: https://spec.json5.org/#white-space
     for i in (0x9, 0xA, 0xB, 0xC, 0xD, 0x20, 0xA0, 0x2028, 0x2028, 0x2029, 0xFEFF):
-        planes[i // 0x1000][i % 0x1000] = WhiteSpace
+        planes[i // 0x100][i % 0x100] = WhiteSpace
 
     # per: https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
     for i in (ord("$"), ord("_"), ord("\\")):
-        planes[i // 0x1000][i % 0x1000] = IdentifierStart
+        planes[i // 0x100][i % 0x100] = IdentifierStart
 
     # per: https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
     for i in (0x200C, 0x200D):
-        planes[i // 0x1000][i % 0x1000] = IdentifierPart
+        planes[i // 0x100][i % 0x100] = IdentifierPart
 
     print("#ifndef JSON5EncoderCpp_unicode_cat_of", file=output_file)
     print("#define JSON5EncoderCpp_unicode_cat_of", file=output_file)
@@ -71,15 +71,18 @@ def main(input_file, output_file):
     print("static unsigned unicode_cat_of(std::uint32_t codepoint) {", file=output_file)
 
     demiplane_to_idx = OrderedDict()  # demiplane_idx → data_idx
-    data_to_idx = [None] * 272  # demiplane data → data_idx
-    for i in range(272):
+    data_to_idx = [None] * 17 * 0x100  # demiplane data → data_idx
+    print("    // A 'demiplane' is a 1/256th of a Unicode plane.", file=output_file)
+    print("    // This way a 'demiplane' fits nicely into a cache line.", file=output_file)
+    print("    alignas(64) static const std::uint8_t demiplane_data[][0x100 / 4] = {", file=output_file)
+    for i in range(17 * 0x100):
         plane_data = ""
         plane = planes[i]
         while plane and plane[-1] == 0:
             plane.pop()
 
         for chunk in chunked(plane, 4 * 16):
-            plane_data += "        "
+            plane_data += "            "
             for value in chunked(chunk, 4):
                 value = reduce(lambda a, i: ((a << 2) | i), reversed(value), 0)
                 plane_data += "0x{:02x}u, ".format(value)
@@ -87,45 +90,39 @@ def main(input_file, output_file):
 
         produced_idx = demiplane_to_idx.get(plane_data)
         if produced_idx is None:
-            produced_idx = i
+            produced_idx = len(demiplane_to_idx)
+            print("        {{  // {} -> 0x{:02x}u".format(i, len(demiplane_to_idx)), file=output_file)
+            print(plane_data, file=output_file, end="")
+            print("        },", file=output_file)
             demiplane_to_idx[plane_data] = produced_idx
 
-            print(
-                "    static std::uint8_t data{:03d}[0x1000 / 4] = {{".format(
-                    produced_idx
-                ),
-                file=output_file,
-            )
-            print(plane_data, file=output_file, end="")
-            print("    };", file=output_file)
-
         data_to_idx[i] = produced_idx
+    print("    };", end="", file=output_file)
     print(file=output_file)
 
-    print("    // A 'demiplane' is a 1/16th of a Unicode plane.", file=output_file)
-    print("    static std::uint8_t *demiplanes[272] = {", end="", file=output_file)
-    for i in range(272):
-        if i % 8 == 0:
+    print("    alignas(64) static const std::uint8_t demiplane_indices[17 * 0x100] = {", end="", file=output_file)
+    for i in range(17 * 0x100):
+        if i % 16 == 0:
             print("\n       ", end="", file=output_file)
-        print(" data{:03d},".format(data_to_idx[i]), end="", file=output_file)
+        print(" 0x{:02x}u,".format(data_to_idx[i]), end="", file=output_file)
     print(file=output_file)
     print("    };", file=output_file)
     print(file=output_file)
 
     print(
-        "    std::uint16_t demiplane_idx = std::uint16_t(codepoint / 0x1000);",
+        "    std::uint32_t demiplane_idx = codepoint / 0x100;",
         file=output_file,
     )
     print(
-        "    if (JSON5EncoderCpp_expect(demiplane_idx >= 272, false)) return 1;",
+        "    if (JSON5EncoderCpp_expect(demiplane_idx >= 17 * 0x100, false)) return 1;",
         file=output_file,
     )
     print(
-        "    std::uint16_t datum_idx = std::uint16_t(codepoint & 0x0fff);",
+        "    std::uint32_t datum_idx = codepoint & (0x100 - 1);",
         file=output_file,
     )
     print(
-        "    const std::uint8_t *demiplane = demiplanes[demiplane_idx];",
+        "    const std::uint8_t *demiplane = demiplane_data[demiplane_indices[demiplane_idx]];",
         file=output_file,
     )
     print(

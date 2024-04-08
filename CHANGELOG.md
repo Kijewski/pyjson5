@@ -1,6 +1,6 @@
 # Changelog
 
-**1.6.7 (2024-03-01)**
+**1.6.7 (unreleased)**
 
 * Update to Unicode 15.1.0
 
