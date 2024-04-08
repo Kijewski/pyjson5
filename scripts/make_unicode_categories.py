@@ -91,44 +91,57 @@ def main(input_file, output_file):
         produced_idx = demiplane_to_idx.get(plane_data)
         if produced_idx is None:
             produced_idx = len(demiplane_to_idx)
-            print("        {{  // {} -> 0x{:02x}u".format(i, len(demiplane_to_idx)), file=output_file)
+            print("        {{   // {} -> 0x{:02x}u".format(i, produced_idx), file=output_file)
             print(plane_data, file=output_file, end="")
             print("        },", file=output_file)
             demiplane_to_idx[plane_data] = produced_idx
 
         data_to_idx[i] = produced_idx
-    print("    };", end="", file=output_file)
+    print("    };", file=output_file)
     print(file=output_file)
 
-    print("    alignas(64) static const std::uint8_t demiplane_indices[17 * 0x100] = {", end="", file=output_file)
-    for i in range(17 * 0x100):
+    snd_lookup_lines = OrderedDict()
+    snd_lookup_indices = OrderedDict()
+    print("    alignas(64) static const std::uint8_t demiplane_snd_data[][64] = {", file=output_file)
+    for start in range(0, 17 * 0x100, 64):
+        snd_lookup_line: str
+        for i in range(start, min(start + 64, 17 * 0x100)):
+            if i % 16 == 0:
+                if i % 64 == 0:
+                    snd_lookup_line = "           "
+                else:
+                    snd_lookup_line += "\n           "
+            snd_lookup_line += " 0x{:02x}u,".format(data_to_idx[i])
+        
+        snd_lookup_idx = snd_lookup_lines.get(snd_lookup_line, None)
+        if snd_lookup_idx is None:
+            snd_lookup_idx = len(snd_lookup_lines)
+            print("        {{   // {} -> 0x{:02x}u".format(start // 64, snd_lookup_idx), file=output_file)
+            print(snd_lookup_line, file=output_file)
+            print("        },", file=output_file)
+            snd_lookup_lines[snd_lookup_line] = snd_lookup_idx
+        snd_lookup_indices[start // 64] = snd_lookup_idx
+    print("    };", file=output_file)
+    print(file=output_file)
+
+    print("    alignas(64) static const std::uint8_t demiplane_snd[17 * 0x100 / 64] = {{".format(68), end="", file=output_file)
+    for i in range(17 * 0x100 // 64):
         if i % 16 == 0:
             print("\n       ", end="", file=output_file)
-        print(" 0x{:02x}u,".format(data_to_idx[i]), end="", file=output_file)
+        print(" 0x{:02x}u,".format(snd_lookup_indices[i]), end="", file=output_file)
     print(file=output_file)
     print("    };", file=output_file)
     print(file=output_file)
 
-    print(
-        "    std::uint32_t demiplane_idx = codepoint / 0x100;",
-        file=output_file,
-    )
-    print(
-        "    if (JSON5EncoderCpp_expect(demiplane_idx >= 17 * 0x100, false)) return 1;",
-        file=output_file,
-    )
-    print(
-        "    std::uint32_t datum_idx = codepoint & (0x100 - 1);",
-        file=output_file,
-    )
-    print(
-        "    const std::uint8_t *demiplane = demiplane_data[demiplane_indices[demiplane_idx]];",
-        file=output_file,
-    )
-    print(
-        "    return (demiplane[datum_idx / 4] >> (2 * (datum_idx % 4))) % 4;",
-        file=output_file,
-    )
+    print("    if (JSON5EncoderCpp_expect(codepoint > 0x10ffff, false)) return 1;", file=output_file)
+    print(file=output_file)
+    print("    std::uint32_t fst_row = codepoint / 0x100;", file=output_file)
+    print("    std::uint32_t fst_col = codepoint % 0x100;", file=output_file)
+    print("    std::uint32_t snd_row = fst_row / 64;", file=output_file)
+    print("    std::uint32_t snd_col = fst_row % 64;", file=output_file)
+    print(file=output_file)
+    print("    const std::uint8_t *cell = demiplane_data[demiplane_snd_data[demiplane_snd[snd_row]][snd_col]];", file=output_file)
+    print("    return (cell[fst_col / 4] >> (2 * (fst_col % 4))) % 4;", file=output_file)
     print("}", file=output_file)
     print(file=output_file)
     print("}", file=output_file)
