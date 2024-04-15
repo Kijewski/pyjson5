@@ -57,6 +57,10 @@ def main(input_file, output_file):
     for i in (0x200C, 0x200D):
         planes[i // 0x100][i % 0x100] = IdentifierPart
 
+    # 0x110000 == NO_EXTRA_DATA is spuriously used as input at the end of an item.
+    # FIXME: this should not be needed. %s/18/17/g once the problem it fixed in the decoder.
+    planes[0x0011_0000 // 0x100][0x0011_0000 % 0x100] = WhiteSpace
+
     print("#ifndef JSON5EncoderCpp_unicode_cat_of", file=output_file)
     print("#define JSON5EncoderCpp_unicode_cat_of", file=output_file)
     print(file=output_file)
@@ -71,11 +75,11 @@ def main(input_file, output_file):
     print("static unsigned unicode_cat_of(std::uint32_t codepoint) {", file=output_file)
 
     demiplane_to_idx = OrderedDict()  # demiplane_idx → data_idx
-    data_to_idx = [None] * 17 * 0x100  # demiplane data → data_idx
+    data_to_idx = [None] * 18 * 0x100  # demiplane data → data_idx
     print("    // A 'demiplane' is a 1/256th of a Unicode plane.", file=output_file)
     print("    // This way a 'demiplane' fits nicely into a cache line.", file=output_file)
     print("    alignas(64) static const std::uint8_t demiplane_data[][0x100 / 4] = {", file=output_file)
-    for i in range(17 * 0x100):
+    for i in range(18 * 0x100):
         plane_data = ""
         plane = planes[i]
         while plane and plane[-1] == 0:
@@ -103,9 +107,9 @@ def main(input_file, output_file):
     snd_lookup_lines = OrderedDict()
     snd_lookup_indices = OrderedDict()
     print("    alignas(64) static const std::uint8_t demiplane_snd_data[][64] = {", file=output_file)
-    for start in range(0, 17 * 0x100, 64):
+    for start in range(0, 18 * 0x100, 64):
         snd_lookup_line: str
-        for i in range(start, min(start + 64, 17 * 0x100)):
+        for i in range(start, min(start + 64, 18 * 0x100)):
             if i % 16 == 0:
                 if i % 64 == 0:
                     snd_lookup_line = "           "
@@ -124,8 +128,8 @@ def main(input_file, output_file):
     print("    };", file=output_file)
     print(file=output_file)
 
-    print("    alignas(64) static const std::uint8_t demiplane_snd[17 * 0x100 / 64] = {{".format(68), end="", file=output_file)
-    for i in range(17 * 0x100 // 64):
+    print("    alignas(64) static const std::uint8_t demiplane_snd[18 * 0x100 / 64] = {{".format(68), end="", file=output_file)
+    for i in range(18 * 0x100 // 64):
         if i % 16 == 0:
             print("\n       ", end="", file=output_file)
         print(" 0x{:02x}u,".format(snd_lookup_indices[i]), end="", file=output_file)
@@ -133,7 +137,7 @@ def main(input_file, output_file):
     print("    };", file=output_file)
     print(file=output_file)
 
-    print("    if (JSON5EncoderCpp_expect(codepoint > 0x10ffff, false)) return 1;", file=output_file)
+    print("    if (codepoint > 0x110000) codepoint = 0x110000;", file=output_file)
     print(file=output_file)
     print("    std::uint32_t fst_row = codepoint / 0x100;", file=output_file)
     print("    std::uint32_t fst_col = codepoint % 0x100;", file=output_file)
