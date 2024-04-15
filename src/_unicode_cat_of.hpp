@@ -817,8 +817,11 @@ static unsigned unicode_cat_of(std::uint32_t codepoint) {
         0x0cu, 0x0cu, 0x0cu, 0x0cu, 0x0eu, 0x0cu, 0x0cu, 0x0cu,
     };
 
-    if (codepoint > 0x110000) codepoint = 0x110000;
+    if (JSON5EncoderCpp_expect(codepoint < 256, true)) {
+        return (demiplane_data[0][codepoint / 4] >> (2 * (codepoint % 4))) % 4;
+    }
 
+    if (codepoint > 0x110000) codepoint = 0x110000;
     std::uint32_t fst_row = codepoint / 0x100;
     std::uint32_t fst_col = codepoint % 0x100;
     std::uint32_t snd_row = fst_row / 64;

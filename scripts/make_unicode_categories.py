@@ -137,8 +137,11 @@ def main(input_file, output_file):
     print("    };", file=output_file)
     print(file=output_file)
 
-    print("    if (codepoint > 0x110000) codepoint = 0x110000;", file=output_file)
+    print("    if (JSON5EncoderCpp_expect(codepoint < 256, true)) {", file=output_file)
+    print("        return (demiplane_data[0][codepoint / 4] >> (2 * (codepoint % 4))) % 4;", file=output_file)
+    print("    }", file=output_file)
     print(file=output_file)
+    print("    if (codepoint > 0x110000) codepoint = 0x110000;", file=output_file)
     print("    std::uint32_t fst_row = codepoint / 0x100;", file=output_file)
     print("    std::uint32_t fst_col = codepoint % 0x100;", file=output_file)
     print("    std::uint32_t snd_row = fst_row / 64;", file=output_file)
