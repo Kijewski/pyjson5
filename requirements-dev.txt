@@ -10,6 +10,6 @@ wheel
 # keep synchronous to requirements-readthecocs.txt
 docutils == 0.20.*
 furo
-myst-parser == 2.*
+myst-parser == 3.*
 sphinx == 7.*
 sphinx_autodoc_typehints == 2.*
