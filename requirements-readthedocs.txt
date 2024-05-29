@@ -5,6 +5,6 @@ pyjson5 == 1.6.7
 # keep synchronous to requirements-dev.txt
 docutils == 0.20.*
 furo
-myst-parser == 2.*
+myst-parser == 3.*
 sphinx == 7.*
 sphinx_autodoc_typehints == 2.*
