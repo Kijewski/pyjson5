@@ -1,8 +1,9 @@
 # Changelog
 
-**1.6.7 (unreleased)**
+**1.6.7 (2024-10-08)**
 
-* Update to Unicode 15.1.0
+* Update to Unicode 16.0.0
+* Update for Python 3.13
 
 **1.6.6 (2024-02-09)**
 

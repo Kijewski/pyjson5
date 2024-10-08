@@ -22,7 +22,7 @@ on:
 
 jobs:
   build_wheels:
-    name: Build compat:${{ github.event.inputs.manylinux }}, python:${{ github.event.inputs.python }}, os:${{ github.event.inputs.os }}
+    name: Build archs:${{ github.event.inputs.archs }}, python:${{ github.event.inputs.python }}, os:${{ github.event.inputs.os }}
     runs-on: ${{ github.event.inputs.os }}
 
     steps:
