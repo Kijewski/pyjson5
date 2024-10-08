@@ -6,10 +6,9 @@ extra_compile_args = [
     "-std=c++11",
     "-O3",
     "-fPIC",
-    "-ggdb1",
+    "-g0",
     "-pipe",
     "-fomit-frame-pointer",
-    "-fstack-protector-strong",
 ]
 
 setup(
