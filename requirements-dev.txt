@@ -7,7 +7,7 @@ mypy
 setuptools
 wheel
 
-# keep synchronous to requirements-readthecocs.txt
+# keep synchronous to requirements-readthedocs.txt
 docutils == 0.20.*
 furo
 myst-parser == 2.*
