@@ -2,12 +2,10 @@
 
 from argparse import ArgumentParser
 from logging import basicConfig, INFO, getLogger
-from os import name
+from os import chdir, name
 from pathlib import Path
 from subprocess import Popen
 from sys import executable
-
-from colorama import init, Fore
 
 
 argparser = ArgumentParser(description="Run JSON5 parser tests")
@@ -24,17 +22,27 @@ suffix_implies_success = {
 if __name__ == "__main__":
     basicConfig(level=INFO)
     logger = getLogger(__name__)
+    chdir(Path(__file__).absolute().parent.parent)
 
-    init()
+    try:
+        from colorama import init, Fore
 
-    if name != "nt":
-        code_severe = Fore.RED + "😱"
-        code_good = Fore.CYAN + "😄"
-        code_bad = Fore.YELLOW + "😠"
+        init()
+    except Exception:
+        code_severe = "SEVERE"
+        code_good = "GOOD"
+        code_bad = "BAD"
+        reset = ""
     else:
-        code_severe = Fore.RED + "SEVERE"
-        code_good = Fore.CYAN + "GOOD"
-        code_bad = Fore.YELLOW + "BAD"
+        if name != "nt":
+            code_severe = Fore.RED + "😱"
+            code_good = Fore.CYAN + "😄"
+            code_bad = Fore.YELLOW + "😠"
+        else:
+            code_severe = Fore.RED + "SEVERE"
+            code_good = Fore.CYAN + "GOOD"
+            code_bad = Fore.YELLOW + "BAD"
+        reset = Fore.RESET
 
     good = 0
     bad = 0
@@ -82,7 +90,7 @@ if __name__ == "__main__":
             "> | " "Actual <",
             "pass" if is_success else "FAIL",
             ">",
-            Fore.RESET,
+            reset,
             sep="",
         )
         if is_severe:
@@ -105,7 +113,7 @@ if __name__ == "__main__":
         " × wrong outcome | ",
         severe,
         " × severe errors",
-        Fore.RESET,
+        reset,
         sep="",
     )
     raise SystemExit(2 if is_severe else 0 if is_good else 1)

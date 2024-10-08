@@ -2,13 +2,10 @@
 
 from argparse import ArgumentParser
 from logging import basicConfig, INFO, getLogger
-from os import name
+from os import chdir, name
 from pathlib import Path
 from subprocess import Popen
 from sys import executable
-
-from colorama import init, Fore
-from pyjson5 import decode_io
 
 
 argparser = ArgumentParser(description="Run JSON5 parser tests")
@@ -28,21 +25,32 @@ suffix_implies_success = {
 if __name__ == "__main__":
     basicConfig(level=INFO)
     logger = getLogger(__name__)
-
-    init()
+    chdir(Path(__file__).absolute().parent.parent)
 
     good = bad = errors = severe = 0
 
-    if name != "nt":
-        code_severe = Fore.RED + "😱"
-        code_good = Fore.CYAN + "😄"
-        code_bad = Fore.YELLOW + "😠"
-        code_ignored = Fore.BLUE + "🙅"
+    try:
+        from colorama import init, Fore
+
+        init()
+    except Exception:
+        code_severe = "SEVERE"
+        code_good = "GOOD"
+        code_bad = "BAD"
+        code_ignored = "IGNORED"
+        reset = ""
     else:
-        code_severe = Fore.RED + "SEVERE"
-        code_good = Fore.CYAN + "GOOD"
-        code_bad = Fore.YELLOW + "BAD"
-        code_ignored = Fore.BLUE + "IGNORED"
+        if name != "nt":
+            code_severe = Fore.RED + "😱"
+            code_good = Fore.CYAN + "😄"
+            code_bad = Fore.YELLOW + "😠"
+            code_ignored = Fore.BLUE + "🙅"
+        else:
+            code_severe = Fore.RED + "SEVERE"
+            code_good = Fore.CYAN + "GOOD"
+            code_bad = Fore.YELLOW + "BAD"
+            code_ignored = Fore.BLUE + "IGNORED"
+        reset = Fore.RESET
 
     script = str(Path(__file__).absolute().parent / "transcode-to-json.py")
 
@@ -98,7 +106,7 @@ if __name__ == "__main__":
             "> | " "Actual <",
             "pass" if outcome == 0 else "FAIL",
             ">",
-            Fore.RESET,
+            reset,
             sep="",
         )
 
@@ -115,7 +123,7 @@ if __name__ == "__main__":
         " wrong outcomes | ",
         severe,
         " severe errors",
-        Fore.RESET,
+        reset,
         sep="",
     )
     raise SystemExit(2 if is_severe else 0 if is_good else 1)
