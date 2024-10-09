@@ -2,7 +2,10 @@ name: Build Wheels (Linux v3)
 
 on:
   workflow_dispatch:
-    inputs: {}
+    inputs:
+      platform:
+        required: true
+        default: x86_64 i686 aarch64 ppc64le s390x armv7l
 
 jobs:
   define-matrix:
@@ -24,7 +27,7 @@ jobs:
 
       - id: set-matrix
         run: |
-          TARGETS="$(python -m cibuildwheel --archs "x86_64 i686 aarch64 ppc64le armv7l" --print-build-identifiers)"
+          TARGETS="$(python -m cibuildwheel --archs "${{ github.event.inputs.platform }}" --print-build-identifiers)"
           echo 'matrix=["'$(echo $TARGETS | sed -e 's/ /","/g')'"]' >> $GITHUB_OUTPUT
         env:
           CIBW_BUILD_FRONTEND: build
