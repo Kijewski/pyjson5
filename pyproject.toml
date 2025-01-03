@@ -1,6 +1,68 @@
-[build-system]
-requires = [
-    "Cython < 4, >= 0.29",
-    "setuptools",
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: 2018-2025 René Kijewski <pypi.org@k6i.de>
+
+[project]
+# keep synchronous to requirements-readthedocs.txt
+# keep synchronous to src/VERSION.inc
+version = "1.6.8"
+
+name = "pyjson5"
+description = "JSON5 serializer and parser for Python 3 written in Cython."
+requires-python = ">= 3.7"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+license = { text = "MIT OR Apache-2.0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Cython",
+    "Programming Language :: JavaScript",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Text Processing :: General",
 ]
+
+[[project.authors]]
+name = "René Kijewski"
+email = "pypi.org@k6i.de"
+
+[[project.maintainers]]
+name = "René Kijewski"
+email = "pypi.org@k6i.de"
+
+[project.urls]
+changelog = "https://github.com/Kijewski/pyjson5/blob/main/CHANGELOG.md"
+code = "https://github.com/Kijewski/pyjson5"
+documentation = "https://pyjson5.readthedocs.io/"
+download = "https://pypi.org/project/pyjson5/"
+homepage = "https://github.com/Kijewski/pyjson5"
+tracker = "https://github.com/Kijewski/pyjson5/issues"
+
+[build-system]
 build-backend = "setuptools.build_meta"
+requires = ["Cython < 4, >= 0.29", "setuptools >= 61"]
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+package-dir.pyjson5 = "src/pyjson5"
+package-data.pyjson5 = ["__init__.pyi", "py.typed"]
+
+## still experimental:
+# [[tool.setuptools.ext-modules]]
+# name = "pyjson5.pyjson5"
+# sources = ["pyjson5.pyx"]
+# include-dirs = ["src"]
+# extra-compile-args = ["-std=c++11", "-O3", "-fPIC", "-g0", "-pipe", "-fomit-frame-pointer"]
+# extra-link-args = ["-std=c++11", "-O3", "-fPIC", "-g0", "-pipe", "-fomit-frame-pointer"]
+# language = "c++"

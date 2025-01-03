@@ -619,6 +619,6 @@ __all__ = (
 
 __doc__ = PyUnicode_FromKindAndData(PyUnicode_1BYTE_KIND, LONGDESCRIPTION, LONGDESCRIPTION_LENGTH)
 
-__license__ = 'Apache-2.0'
+__license__ = 'MIT OR Apache-2.0'
 
-__author__ = '2018-2024 René Kijewski <pypi.org@k6i.de>'
+__author__ = '2018-2025 René Kijewski <pypi.org@k6i.de>'

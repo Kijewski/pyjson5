@@ -1,15 +1,14 @@
-black
 build
 colorama == 0.4.*
 cython < 4, >= 0.29
 more_itertools == 10.*
 mypy
-setuptools
+setuptools >= 61
 wheel
 
 # keep synchronous to requirements-readthedocs.txt
-docutils == 0.20.*
+docutils == 0.21.*
 furo
-myst-parser == 2.*
-sphinx == 7.*
-sphinx_autodoc_typehints == 2.*
+myst-parser == 4.*
+sphinx == 8.*
+sphinx-autodoc-typehints == 3.*

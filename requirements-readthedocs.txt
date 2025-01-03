@@ -1,10 +1,10 @@
-# keep synchronous to setup.cfg
+# keep synchronous to pyproject.toml
 # keep synchronous to src/VERSION.inc
-pyjson5 == 1.6.7
+pyjson5 == 1.6.8
 
 # keep synchronous to requirements-dev.txt
-docutils == 0.20.*
+docutils == 0.21.*
 furo
-myst-parser == 2.*
-sphinx == 7.*
-sphinx_autodoc_typehints == 2.*
+myst-parser == 4.*
+sphinx == 8.*
+sphinx-autodoc-typehints == 3.*

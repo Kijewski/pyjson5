@@ -40,4 +40,4 @@ use the functions ``encode_*()`` and ``decode_*()`` instead.
 Compatibility
 -------------
 
-At least CPython 3.5 or a recent Pypy3 version is needed.
+At least CPython 3.7 or a recent Pypy3 version is needed.

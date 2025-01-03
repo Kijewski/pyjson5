@@ -1,5 +1,11 @@
 # Changelog
 
+**1.6.8 (2025-01-03)**
+
+* Requires at least Python 3.7
+* Update dependencies
+* Relicense to MIT OR Apache-2.0
+
 **1.6.7 (2024-10-08)**
 
 * Update to Unicode 16.0.0

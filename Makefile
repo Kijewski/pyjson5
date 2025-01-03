@@ -13,7 +13,7 @@ INCLUDES := \
     src/_escape_dct.hpp src/_stack_heap_string.hpp src/native.hpp \
     src/dragonbox.cc
 
-FILES := Makefile MANIFEST.in pyjson5.pyx README.rst setup.py ${INCLUDES}
+FILES := Makefile MANIFEST.in pyjson5.pyx README.rst pyproject.toml ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
 	curl -s -o $@ https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt

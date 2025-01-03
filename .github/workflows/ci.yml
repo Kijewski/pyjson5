@@ -12,8 +12,7 @@ jobs:
           - macos-latest
           - windows-latest
         python:
-          - '3.8'
-          - '3.11'
+          - '3.10'
           - '3.13'
 
     steps:
@@ -69,7 +68,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Display Python version
         run: python -c 'import sys; print(sys.version)'
@@ -82,6 +81,3 @@ jobs:
 
       - name: Compile project
         run: make install
-
-      - name: Run black
-        run: python -m black --check ./*.py ./src/

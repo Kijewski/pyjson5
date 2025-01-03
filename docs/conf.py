@@ -8,6 +8,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.autosummary',
+    'sphinx.ext.graphviz',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.inheritance_diagram',
@@ -16,21 +17,19 @@ extensions = [
     'myst_parser',
 ]
 
-language = "en"
-
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
 
 project = 'PyJSON5'
-copyright = '2018-2024, René Kijewski'
+copyright = '2018-2025, René Kijewski'
 author = 'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:
     version = eval(f.read().strip())
     release = version
 
-language = None
+language = 'en'
 exclude_patterns = []
 pygments_style = 'sphinx'
 todo_include_todos = False
@@ -43,13 +42,15 @@ autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.12', None),
+    'python': ('https://docs.python.org/3.13', None),
 }
 
+graphviz_output_format = 'svg'
+
 inheritance_graph_attrs = {
-    'size': '"6.0, 8.0"',
+    'size': '"8.0, 10.0"',
     'fontsize': 32,
-    'bgcolor': 'transparent',
+    'bgcolor': 'lightgrey',
 }
 inheritance_node_attrs = {
     'color': 'black',
@@ -57,6 +58,6 @@ inheritance_node_attrs = {
     'style': '"filled,solid"',
 }
 inheritance_edge_attrs = {
-    'penwidth': 1.2,
-    'arrowsize': 0.8,
+    'penwidth': 1.5,
+    'arrowsize': 1.2,
 }
