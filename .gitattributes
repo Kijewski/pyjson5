@@ -1,0 +1,3 @@
+src/dragonbox.cc linguist-vendored
+src/*.hpp linguist-vendored
+third-party/** linguist-vendored
