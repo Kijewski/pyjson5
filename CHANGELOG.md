@@ -1,5 +1,9 @@
 # Changelog
 
+**1.6.9 (2025-05-12)**
+
+* Remove unused import to fix installation on Termux (by veka0, [#105](https://github.com/Kijewski/pyjson5/pull/105))
+
 **1.6.8 (2025-01-03)**
 
 * Requires at least Python 3.7

@@ -174,7 +174,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
           CIBW_DEPENDENCY_VERSIONS: pinned
-          CIBW_PLATFORM: linux
+          CIBW_PLATFORM: macos
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
       - uses: actions/upload-artifact@v4
@@ -219,7 +219,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
           CIBW_DEPENDENCY_VERSIONS: pinned
-          CIBW_PLATFORM: linux
+          CIBW_PLATFORM: windows
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
       - uses: actions/upload-artifact@v4
