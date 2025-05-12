@@ -9,7 +9,6 @@ from cpython.bytes cimport (
 )
 from cpython.dict cimport PyDict_SetItem
 from cpython.float cimport PyFloat_Check, PyFloat_AsDouble, PyFloat_FromDouble
-from cpython.int cimport PyInt_Check
 from cpython.list cimport PyList_Append
 from cpython.long cimport PyLong_FromString, PyLong_Check
 from cpython.object cimport PyObject, PyObject_GetIter
