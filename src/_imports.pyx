@@ -1,9 +1,7 @@
 from cython import final, no_gc, auto_pickle, freelist
 from cpython cimport dict, int, list, long, tuple, type
 from cpython.bool cimport PyBool_Check
-from cpython.buffer cimport (
-    PyObject_GetBuffer, PyObject_GetBuffer, PyBUF_CONTIG_RO, PyBuffer_Release,
-)
+from cpython.buffer cimport PyObject_GetBuffer, PyBUF_CONTIG_RO, PyBuffer_Release
 from cpython.bytes cimport (
     PyBytes_AsStringAndSize, PyBytes_FromStringAndSize, PyBytes_Check,
 )
