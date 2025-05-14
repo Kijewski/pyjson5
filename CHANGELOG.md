@@ -1,5 +1,9 @@
 # Changelog
 
+**Unreleased**
+
+* Update for Python 3.14 and require at least 3.8 (by Edgar Ramírez, [#112](https://github.com/Kijewski/pyjson5/pull/112))
+
 **1.6.9 (2025-05-12)**
 
 * Remove unused import to fix installation on Termux (by veka0, [#105](https://github.com/Kijewski/pyjson5/pull/105))
