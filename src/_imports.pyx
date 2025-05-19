@@ -13,6 +13,7 @@ from cpython.object cimport PyObject, PyObject_GetIter
 from cpython.type cimport PyType_Check
 from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject, PyUnicode_Format
 from libcpp cimport bool as boolean
+from libcpp.string cimport string
 
 
 cdef extern from '<cstddef>' namespace 'std' nogil:
@@ -128,6 +129,9 @@ cdef extern from 'src/_fast_float_compat.hpp' namespace 'chars_format' nogil:
     cdef cppclass chars_format:
         pass
     cdef const chars_format fmt_json_or_infnan
+
+cdef extern from 'src/_fast_float_compat.hpp' namespace 'check_floats' nogil:
+    cdef boolean has_invalid_exponent(string &s)
 
 cdef extern from 'third-party/fast_float/include/fast_float/fast_float.h' namespace 'fast_float' nogil:
     ctypedef struct from_chars_result:
