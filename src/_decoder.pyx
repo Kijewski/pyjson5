@@ -243,14 +243,14 @@ cdef object _decode_string(ReaderRef reader, int32_t *c_in_out):
 
 cdef object _decode_double(StackHeapString[char] &buf, Py_ssize_t start):
     cdef double d0
-    cdef const char *end_of_double
+    cdef from_chars_result result
 
     d0 = 0.0  # silence warning
-    end_of_double = parse_number(buf.data(), &d0)
-    if end_of_double != NULL and end_of_double[0] == b'\0':
-        return PyFloat_FromDouble(d0)
+    result = from_chars(buf.data(), buf.data() + buf.size(), d0)
+    if <int>(result.ec):
+        _raise_unclosed('NumericLiteral', start)
 
-    _raise_unclosed('NumericLiteral', start)
+    return PyFloat_FromDouble(d0)
 
 
 cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] &buf,

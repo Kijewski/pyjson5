@@ -1,5 +1,7 @@
 # Changelog
 
+* Switch from ``fast_double_parser`` to ``fast_float``
+
 **1.6.9 (2025-05-12)**
 
 * Remove unused import to fix installation on Termux (by veka0, [#105](https://github.com/Kijewski/pyjson5/pull/105))

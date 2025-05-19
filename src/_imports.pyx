@@ -124,9 +124,12 @@ cdef extern from 'src/_decoder_recursive_select.hpp' namespace 'JSON5EncoderCpp'
 
     DrsKind drs_lookup[128]
 
+cdef extern from 'third-party/fast_float/include/fast_float/fast_float.h' namespace 'fast_float' nogil:
+    ctypedef struct from_chars_result:
+        char *ptr
+        int ec
 
-cdef extern from 'third-party/fast_double_parser/include/fast_double_parser.h' namespace 'fast_double_parser' nogil:
-    const char *parse_number(const char *p, double *outDouble)
+    cdef from_chars_result from_chars(char *first, char *last, double &value);
 
 
 cdef extern from 'src/dragonbox.cc' namespace 'dragonbox' nogil:
