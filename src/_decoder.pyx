@@ -246,7 +246,7 @@ cdef object _decode_double(StackHeapString[char] &buf, Py_ssize_t start):
     cdef from_chars_result result
 
     d0 = 0.0  # silence warning
-    result = from_chars(buf.data(), buf.data() + buf.size(), d0)
+    result = from_chars(buf.data(), buf.data() + buf.size(), d0, fmt_json_or_infnan)
     if <int>(result.ec):
         _raise_unclosed('NumericLiteral', start)
 
