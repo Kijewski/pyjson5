@@ -1,10 +1,11 @@
 # Changelog
 
-**1.7.0 (2025-10-02)**
+**2.0.0 (2025-10-02)**
 
 * Update for Python 3.14 and require at least 3.8 (by Edgar Ramírez, [#112](https://github.com/Kijewski/pyjson5/pull/112))
 * Update to Unicode 17.0.0 ([#117](https://github.com/Kijewski/pyjson5/pull/117))
 * Fix typing for `_SupportsRead` ([#118](https://github.com/Kijewski/pyjson5/pull/118))
+* Let `dump()` write `str` instead of `bytes` ([#119](https://github.com/Kijewski/pyjson5/pull/119))
 
 **1.6.9 (2025-05-12)**
 

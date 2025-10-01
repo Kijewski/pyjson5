@@ -29,7 +29,7 @@ src/_escape_dct.hpp: scripts/make_escape_dct.py
 	python $< $@
 
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
-	python -m cython -f -o $@ $<
+	python -m cython --line-directives --cplus --force --output-file $@ $<
 
 prepare: pyjson5.cpp ${FILES}
 
