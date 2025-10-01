@@ -13,10 +13,10 @@ from typing import (
     Union,
 )
 
-_Data = TypeVar("_Data")
+_Data = TypeVar("_Data", contravariant=True)
 
 class _SupportsRead(Protocol):
-    def read(self, size: int = ...) -> str: ...
+    def read(self, size: int | None = ...) -> str | bytes: ...
 
 class _SupportsWrite(Protocol[_Data]):
     def write(self, s: _Data) -> Any: ...
