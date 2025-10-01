@@ -1,6 +1,6 @@
 # keep synchronous to pyproject.toml
 # keep synchronous to src/VERSION.inc
-pyjson5 == 1.6.9
+pyjson5 == 2.0.0
 
 # keep synchronous to requirements-dev.txt
 docutils == 0.21.*

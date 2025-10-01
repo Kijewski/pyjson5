@@ -97,4 +97,4 @@ def dump(object obj, object fp, **kw):
     kw
         Silently ignored.
     '''
-    encode_io(obj, fp)
+    encode_io(obj, fp, supply_bytes=False)

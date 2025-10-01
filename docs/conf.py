@@ -42,7 +42,7 @@ autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.13', None),
+    'python': ('https://docs.python.org/3.14', None),
 }
 
 graphviz_output_format = 'svg'
