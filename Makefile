@@ -16,7 +16,7 @@ INCLUDES := \
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst pyproject.toml ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
-	curl -s -o $@ https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt
+	curl -s -o $@ https://www.unicode.org/Public/17.0.0/ucd/extracted/DerivedGeneralCategory.txt
 	python scripts/sha512sum.py -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt scripts/make_unicode_categories.py
