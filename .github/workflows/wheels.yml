@@ -160,7 +160,7 @@ jobs:
           CIBW_PLATFORM: linux
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
@@ -205,7 +205,7 @@ jobs:
           CIBW_PLATFORM: linux
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
@@ -250,7 +250,7 @@ jobs:
           CIBW_PLATFORM: macos
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
@@ -295,7 +295,7 @@ jobs:
           CIBW_PLATFORM: windows
           CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
@@ -319,7 +319,7 @@ jobs:
           find -type d -delete
         shell: bash
         working-directory: ./wheelhouse
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wheelhouse
           path: ./wheelhouse
