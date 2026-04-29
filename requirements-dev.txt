@@ -10,5 +10,5 @@ wheel
 docutils == 0.21.*
 furo
 myst-parser == 4.*
-sphinx == 8.*
+sphinx == 9.*
 sphinx-autodoc-typehints == 3.*
