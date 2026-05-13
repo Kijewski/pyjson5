@@ -29,6 +29,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
 
@@ -57,6 +58,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          # Pyodide does not currently ship a free-threaded build.
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: pyodide
 
@@ -85,6 +87,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
 
@@ -113,6 +116,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
 
@@ -156,9 +160,12 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
 
       - uses: actions/upload-artifact@v7
         with:
@@ -246,9 +253,12 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
 
       - uses: actions/upload-artifact@v7
         with:
@@ -291,9 +301,12 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
 
       - uses: actions/upload-artifact@v7
         with:

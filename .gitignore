@@ -2,6 +2,7 @@
 *.egg-info/
 
 /env*/
+/.venv/
 /build/
 /cython_debug/
 /dist/

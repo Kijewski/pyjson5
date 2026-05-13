@@ -57,3 +57,4 @@ test: wheel
 	pip install --force dist/pyjson5-*.whl
 	python scripts/run-minefield-test.py
 	python scripts/run-tests.py
+	python scripts/run-threaded-test.py

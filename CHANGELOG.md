@@ -1,5 +1,16 @@
 # Changelog
 
+**Unreleased**
+
+* Support Python free-threaded builds (PEP 703). The extension now opts into
+  the no-GIL ABI via Cython's `freethreading_compatible` directive, so it is
+  loaded on `python3.13t` / `python3.14t` without re-enabling the GIL. All
+  module state is set once at import and the encode/decode hot paths keep
+  per-call state on the C stack, so the extension is safe to call from many
+  OS threads concurrently. Bumps the build-time Cython requirement to
+  `>= 3.1`. A new threaded stress test (`scripts/run-threaded-test.py`) is run
+  in CI on every free-threaded build identifier produced by cibuildwheel.
+
 **2.0.0 (2025-10-02)**
 
 * Update for Python 3.14 and require at least 3.8 (by Edgar Ramírez, [#112](https://github.com/Kijewski/pyjson5/pull/112))
