@@ -6,6 +6,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -15,6 +16,8 @@ jobs:
           - '3.10'
           - '3.13'
           - '3.14'
+          - '3.13t'
+          - '3.14t'
 
     steps:
       - uses: actions/checkout@v6
@@ -35,7 +38,10 @@ jobs:
           allow-prereleases: true
 
       - name: Display Python version
-        run: python -c 'import sys; print(sys.version)'
+        run: |
+          python -c 'import sys; print(sys.version)'
+          python -c 'import sysconfig; print("Py_GIL_DISABLED =", sysconfig.get_config_var("Py_GIL_DISABLED"))'
+        shell: bash
 
       - name: Update pip
         run: python -m pip install -U pip wheel setuptools
@@ -46,11 +52,30 @@ jobs:
       - name: Compile project
         run: make install
 
+      - name: Verify free-threading opt-in (free-threaded builds only)
+        if: endsWith(matrix.python, 't')
+        run: |
+          python -W error::RuntimeWarning -c "
+          import sys, warnings
+          with warnings.catch_warnings(record=True) as caught:
+              warnings.simplefilter('always')
+              import pyjson5
+              assert pyjson5.encode({'ok': True}) == '{\"ok\":true}'
+          gil_reenable = [w for w in caught if 'GIL' in str(w.message) and 'enabled' in str(w.message)]
+          assert not gil_reenable, f'GIL was re-enabled on import: {gil_reenable}'
+          assert sys._is_gil_enabled() is False, 'GIL is enabled at runtime'
+          print('OK: pyjson5 loaded without re-enabling the GIL')
+          "
+        shell: bash
+
       - name: Run JSON5 tests suite
         run: python scripts/run-tests.py
 
       - name: Run "JSON is a Minefield" suite
         run: python scripts/run-minefield-test.py
+
+      - name: Run threaded stress test
+        run: python scripts/run-threaded-test.py --iterations 1000
 
   lint:
     runs-on: ubuntu-latest
