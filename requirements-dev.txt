@@ -1,7 +1,7 @@
 build
 colorama == 0.4.*
 cython < 4, >= 3.1
-more_itertools == 10.*
+more_itertools == 11.*
 mypy
 setuptools >= 61
 wheel
