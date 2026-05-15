@@ -63,7 +63,7 @@ jobs:
           CIBW_PLATFORM: pyodide
 
   macos-define-matrix:
-    runs-on: macos-13
+    runs-on: macos-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -92,7 +92,7 @@ jobs:
           CIBW_PLATFORM: macos
 
   windows-define-matrix:
-    runs-on: windows-2022
+    runs-on: windows-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -220,7 +220,7 @@ jobs:
           retention-days: 1
 
   macos-build:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     needs:
       - macos-define-matrix
@@ -268,7 +268,7 @@ jobs:
           retention-days: 1
 
   windows-build:
-    runs-on: windows-2022
+    runs-on: windows-latest
 
     needs:
       - windows-define-matrix
