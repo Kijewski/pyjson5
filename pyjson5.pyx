@@ -2,7 +2,7 @@
 # cython: embedsignature = True, language_level = 3, warn.undeclared = True, warn.unreachable = True, warn.maybe_uninitialized = True, freethreading_compatible = True
 
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# SPDX-FileCopyrightText: 2018-2025 René Kijewski <pypi.org@k6i.de>
+# SPDX-FileCopyrightText: 2018-2026 René Kijewski <pypi.org@k6i.de>
 
 include 'src/_imports.pyx'
 include 'src/_constants.pyx'

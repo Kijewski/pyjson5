@@ -1,6 +1,6 @@
 # Changelog
 
-**Unreleased**
+**2.0.1 (2026-05-15)**
 
 * Support Python free-threaded builds (PEP 703). The extension now opts into
   the no-GIL ABI via Cython's `freethreading_compatible` directive, so it is
@@ -10,6 +10,7 @@
   OS threads concurrently. Bumps the build-time Cython requirement to
   `>= 3.1`. A new threaded stress test (`scripts/run-threaded-test.py`) is run
   in CI on every free-threaded build identifier produced by cibuildwheel.
+  (By Eric Buehl, [#143](https://github.com/Kijewski/pyjson5/pull/143))
 
 **2.0.0 (2025-10-02)**
 
