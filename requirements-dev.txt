@@ -1,6 +1,6 @@
 build
 colorama == 0.4.*
-cython < 4, >= 3.1
+cython >= 3.2.4, < 4
 more_itertools == 11.*
 mypy
 setuptools >= 61
