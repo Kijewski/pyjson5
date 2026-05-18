@@ -3,7 +3,7 @@ colorama == 0.4.*
 cython < 4, >= 3.1
 more_itertools == 11.*
 mypy
-setuptools >= 61
+setuptools >= 82.0.1
 wheel
 
 # keep synchronous to requirements-readthedocs.txt
