@@ -39,3 +39,10 @@ cdef int32_t _reader_good(ReaderRef self) except -1:
         return _reader_ucs_good(self)
     elif ReaderRef is ReaderCallbackRef:
         return _reader_Callback_good(self)
+
+
+cdef int32_t _reader_peek(ReaderRef self) except -2:
+    if ReaderRef in ReaderUCSRef:
+        return _reader_ucs_peek(self)
+    elif ReaderRef is ReaderCallbackRef:
+        return _reader_Callback_peek(self)
