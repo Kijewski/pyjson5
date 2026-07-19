@@ -48,3 +48,10 @@ cdef int32_t _reader_Callback_good(ReaderCallbackRef self) except -1:
     self.lookahead = c
 
     return True
+
+
+cdef inline int32_t _reader_Callback_peek(ReaderCallbackRef self) except -2:
+    if not _reader_Callback_good(self):
+        return -1
+
+    return self.lookahead

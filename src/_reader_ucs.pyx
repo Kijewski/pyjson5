@@ -86,3 +86,12 @@ cdef inline uint32_t _reader_utf8_get(ReaderUCSRef self) noexcept nogil:
         c0 = (c0 << 6) | (_reader_ucs_get(self) & 0b00_111111)
 
     return c0
+
+
+cdef inline int32_t _reader_ucs_peek(ReaderUCSRef self) noexcept nogil:
+    # Next raw code unit without consuming, or -1 if exhausted. For UTF-8 this
+    # is the next byte, which is enough to test for a trailing ASCII digit.
+    if self.base.remaining <= 0:
+        return -1
+
+    return <int32_t> self.string[0]

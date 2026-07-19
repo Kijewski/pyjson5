@@ -141,6 +141,7 @@ cdef int32_t _get_escaped_unicode_maybe_surrogate(ReaderRef reader, Py_ssize_t s
 cdef int32_t _get_escape_sequence(ReaderRef reader,
                                   Py_ssize_t start) except 0x7ffffff:
     cdef uint32_t c0
+    cdef int32_t c1
 
     c0 = _reader_get(reader)
     if expect(not _reader_good(reader), False):
@@ -159,6 +160,11 @@ cdef int32_t _get_escape_sequence(ReaderRef reader,
     elif c0 == b'v':
         return 0x000b
     elif c0 == b'0':
+        # \0 is NUL only if not followed by a decimal digit; \00..\09 would be
+        # a legacy octal escape, which JSON5/ECMAScript forbids.
+        c1 = _reader_peek(reader)
+        if expect(_is_decimal(<uint32_t> c1), False):
+            _raise_expected_s('escape sequence', start, <uint32_t> c1)
         return 0x0000
     elif c0 == b'x':
         return _get_hex_character(reader, 2)
@@ -250,6 +256,13 @@ cdef object _decode_double(StackHeapString[char] &buf, Py_ssize_t start):
     if end_of_double != NULL and end_of_double[0] == b'\0':
         return PyFloat_FromDouble(d0)
 
+    # fast_double_parser rejects out-of-range magnitudes (1e999 -> Infinity)
+    # and 0.e1-style tokens; ECMAScript ToNumber accepts both, so fall back.
+    try:
+        return float(<bytes> buf.data())
+    except ValueError:
+        pass
+
     _raise_unclosed('NumericLiteral', start)
 
 
@@ -272,7 +285,7 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
             c0 = _reader_get(reader)
             if _is_hexadecimal(c0):
                 buf.push_back(<char> <unsigned char> c0)
-            elif c0 != b'_':
+            else:
                 c1 = cast_to_int32(c0)
                 break
 
@@ -283,47 +296,11 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
             return PyLong_FromString(buf.data(), NULL, 16)
         except Exception:
             _raise_unclosed('NumericLiteral', start)
-    elif c0 == b'.':
+    elif c0 == b'.' or _is_e(c0):
+        # a leading zero is the integer part of "0.xxx" / "0exxx"
         buf.push_back(b'0')
-        buf.push_back(b'.')
-
-        while True:
-            if not _reader_good(reader):
-                c1 = -1
-                break
-
-            c0 = _reader_get(reader)
-            if _is_in_float_representation(c0):
-                buf.push_back(<char> <unsigned char> c0)
-            elif c0 != b'_':
-                c1 = cast_to_int32(c0)
-                break
-
-        c_in_out[0] = c1
-
-        if buf.data()[buf.size() - 1] == b'.':
-            (<char*> buf.data())[buf.size() - 1] = b'\0'
-        else:
-            buf.push_back(b'\0')
-
-        return _decode_double(buf, start)
-    elif _is_e(c0):
-        while True:
-            if not _reader_good(reader):
-                c1 = -1
-                break
-
-            c0 = _reader_get(reader)
-            if _is_in_float_representation(c0):
-                pass
-            elif c0 == b'_':
-                pass
-            else:
-                c1 = cast_to_int32(c0)
-                break
-
-        c_in_out[0] = c1
-        return 0.0
+        c_in_out[0] = cast_to_int32(c0)
+        return _decode_number_any(reader, buf, c_in_out, start, True)
     else:
         c1 = cast_to_int32(c0)
         c_in_out[0] = c1
@@ -331,42 +308,49 @@ cdef object _decode_number_leading_zero(ReaderRef reader, StackHeapString[char] 
 
 
 cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
-                               int32_t *c_in_out, Py_ssize_t start):
+                               int32_t *c_in_out, Py_ssize_t start,
+                               boolean have_int_part=False):
     cdef uint32_t c0
     cdef int32_t c1
-    cdef boolean is_float = False
-    cdef boolean was_point = False
-    cdef boolean leading_point = False
+    cdef uint32_t prev = 0
+    cdef boolean is_float = have_int_part
+    cdef boolean seen_dot = False
+    cdef boolean seen_exp = False
+    cdef boolean need_frac_digit = False
 
     c1 = c_in_out[0]
     c0 = cast_to_uint32(c1)
 
-    if c0 == b'.':
+    if not have_int_part and c0 == b'.':
+        # a leading '.' has no integer part; synthesize a zero and require a
+        # fractional digit ('.e5' and a lone '.' are both invalid)
         buf.push_back(b'0')
         is_float = True
-        leading_point = True
+        need_frac_digit = True
 
     while True:
         if _is_decimal(c0):
-            pass
-        elif _is_in_float_representation(c0):
+            if not seen_exp:
+                need_frac_digit = False
+        elif c0 == b'.':
+            if expect(seen_dot or seen_exp, False):
+                _raise_unclosed('NumericLiteral', start)
+            seen_dot = True
             is_float = True
-        elif c0 != b'_':
+        elif _is_e(c0):
+            if expect(seen_exp or need_frac_digit, False):
+                _raise_unclosed('NumericLiteral', start)
+            seen_exp = True
+            is_float = True
+        elif c0 == b'+' or c0 == b'-':
+            if expect(not _is_e(prev), False):  # a sign is only valid after e/E
+                _raise_unclosed('NumericLiteral', start)
+        else:
             c1 = cast_to_int32(c0)
             break
 
-        if c0 == b'_':
-            pass
-        elif c0 != b'.':
-            if was_point:
-                was_point = False
-                if not _is_e(c0):
-                    buf.push_back(b'.')
-            buf.push_back(<char> <unsigned char> c0)
-        elif not was_point:
-            was_point = True
-        else:
-            _raise_unclosed('NumericLiteral', start)
+        buf.push_back(<char> <unsigned char> c0)
+        prev = c0
 
         if not _reader_good(reader):
             c1 = -1
@@ -376,7 +360,7 @@ cdef object _decode_number_any(ReaderRef reader, StackHeapString[char] &buf,
 
     c_in_out[0] = c1
 
-    if leading_point and buf.size() == 1:  # single '.'
+    if expect(need_frac_digit, False):
         _raise_unclosed('NumericLiteral', start)
 
     buf.push_back(b'\0')

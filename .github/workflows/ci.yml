@@ -71,6 +71,9 @@ jobs:
       - name: Run JSON5 tests suite
         run: python scripts/run-tests.py
 
+      - name: Run JSON5 conformance checks
+        run: python scripts/run-conformance-test.py
+
       - name: Run "JSON is a Minefield" suite
         run: python scripts/run-minefield-test.py
 

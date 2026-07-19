@@ -1,5 +1,13 @@
 # Changelog
 
+**Unreleased**
+
+* Fix number and string-escape grammar conformance in the parser: reject
+  numeric underscores, a leading `.` without a fractional digit, doubled or
+  trailing dots, stray signs and empty exponents, and `\0` followed by a digit;
+  accept `0.e1` and parse out-of-range magnitudes to `±Infinity` per ECMAScript
+  `ToNumber` (by gaoflow, [#153](https://github.com/Kijewski/pyjson5/pull/153))
+
 **2.0.1 (2026-05-15)**
 
 * Support Python free-threaded builds (PEP 703). The extension now opts into

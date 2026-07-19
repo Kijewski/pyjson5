@@ -33,13 +33,3 @@ cdef inline boolean _is_hex(uint32_t c) nogil:
 
 cdef inline boolean _is_hexadecimal(uint32_t c) nogil:
     return _is_decimal(c) or _is_hex(c)
-
-cdef boolean _is_in_float_representation(uint32_t c) nogil:
-    if _is_decimal(c):
-        return True
-    if _is_e(c):
-        return True
-    elif c in b'.+-':
-        return True
-    else:
-        return False
