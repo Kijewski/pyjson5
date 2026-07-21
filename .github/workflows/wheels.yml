@@ -14,7 +14,7 @@ jobs:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -43,7 +43,7 @@ jobs:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -72,7 +72,7 @@ jobs:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -101,7 +101,7 @@ jobs:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -146,7 +146,7 @@ jobs:
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -194,7 +194,7 @@ jobs:
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -240,7 +240,7 @@ jobs:
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -288,7 +288,7 @@ jobs:
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
