@@ -16,23 +16,24 @@ jobs:
           - '3.10'
           - '3.13'
           - '3.14'
-          - '3.13t'
+          - '3.15'
           - '3.14t'
+          - '3.15t'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: cache--${{ matrix.os }}--${{ matrix.python }}--${{ hashFiles('./requirements*.txt', './Makefile') }}
           restore-keys: cache--${{ matrix.os }}--${{ matrix.python }}--
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           allow-prereleases: true
@@ -81,19 +82,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: lint--${{ hashFiles('./requirements*.txt', './Makefile') }}
           restore-keys: lint--
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
