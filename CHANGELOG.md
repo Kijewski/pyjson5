@@ -1,5 +1,12 @@
 # Changelog
 
+**Unreleased**
+
+* Decode binary streams as UTF-8 in `decode_io()` and `load()`. Before, every
+  byte was read as one character, so e.g. `"é"` was returned as `"Ã©"`.
+  Invalid UTF-8 raises `Json5IllegalCharacter`. Successive `decode_io()` calls
+  still read successive values, also from non-seekable streams.
+
 **2.0.1 (2026-05-15)**
 
 * Support Python free-threaded builds (PEP 703). The extension now opts into

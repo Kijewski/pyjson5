@@ -233,6 +233,64 @@ def decode_callback(object cb, object maxdepth=None, object some=False,
     return _decode_callback(cb, args, maxdepth, bool(some))
 
 
+class _Utf8CharReader:
+    '''
+    Reads one character per call from a file-like object.
+
+    Text streams are passed through. Binary streams are decoded as UTF-8, one
+    code point at a time, so nothing past the current character is consumed.
+    This keeps successive :func:`decode_io(…) <pyjson5.decode_io>` calls on the
+    same stream working, even if the stream is not seekable.
+    '''
+
+    __slots__ = ('read', 'position')
+
+    def __init__(self, read):
+        self.read = read
+        self.position = 0
+
+    def __call__(self):
+        cdef Py_ssize_t lead, length
+
+        chunk = self.read(1)
+        if not chunk:
+            return None
+        elif isinstance(chunk, unicode):
+            return chunk
+
+        lead = chunk[0]
+        if lead < 0x80:
+            length = 1
+        elif 0xC2 <= lead <= 0xDF:
+            length = 2
+        elif 0xE0 <= lead <= 0xEF:
+            length = 3
+        elif 0xF0 <= lead <= 0xF4:
+            length = 4
+        else:
+            self._raise('Invalid UTF-8 start byte', chunk)
+
+        # Raw streams such as pipes may return fewer bytes than requested.
+        while len(chunk) < length:
+            more = self.read(length - len(chunk))
+            if not more:
+                self._raise('Truncated UTF-8 sequence', chunk)
+            chunk += more
+
+        try:
+            result = bytes(chunk).decode('UTF-8')
+        except UnicodeDecodeError:
+            self._raise('Invalid UTF-8 sequence', chunk)
+
+        self.position += 1
+        return result
+
+    def _raise(self, msg, chunk):
+        raise Json5IllegalCharacter(
+            f'{msg} near {self.position}', None, bytes(chunk),
+        ) from None
+
+
 def decode_io(object fp, object maxdepth=None, object some=True):
     '''
     Decodes JSON5 serialized data from a file-like object.
@@ -252,6 +310,10 @@ def decode_io(object fp, object maxdepth=None, object some=True):
         decode_io(fp, some=False)
         # raises Json5ExtraData('Extra data U+0027 near 56', ['Hello'], "'")
 
+    If ``fp`` is a binary stream, e.g. a file opened in ``'rb'`` mode, its
+    content is decoded as UTF-8. Only as many bytes as needed are read, so the
+    example above works with binary and non-seekable streams, too.
+
     Parameters
     ----------
     fp : IOBase
@@ -265,6 +327,8 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     ------
     Json5DecoderException
         An exception occured while decoding.
+    Json5IllegalCharacter
+        A binary stream contained data that is not valid UTF-8.
     TypeError
         An argument had a wrong type.
 
@@ -283,7 +347,7 @@ def decode_io(object fp, object maxdepth=None, object some=True):
     if maxdepth is None:
         maxdepth = DEFAULT_MAX_NESTING_LEVEL
 
-    return _decode_callback(fp.read, (1,), maxdepth, bool(some))
+    return _decode_callback(_Utf8CharReader(fp.read), (), maxdepth, bool(some))
 
 
 def encode(object data, *, options=None, **options_kw):
