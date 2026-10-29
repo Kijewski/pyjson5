@@ -306,13 +306,17 @@ cdef int _encode_float(WriterRef writer, object data) except -1:
     cdef char *string
     cdef Py_ssize_t length
 
-    if classification == FP_NORMAL:
-        end = Dtoa(buf, PyFloat_AsDouble(data))
+    if classification in (FP_NORMAL, FP_SUBNORMAL):
+        end = Dtoa(buf, value)
         length = end - buf
         string = buf
-    elif classification in (FP_SUBNORMAL, FP_ZERO):
-        string = b'0.0'
-        length = 3
+    elif classification == FP_ZERO:
+        if signbit(value):
+            string = b'-0.0'
+            length = 4
+        else:
+            string = b'0.0'
+            length = 3
     elif classification == FP_NAN:
         string = b'NaN'
         length = 3

@@ -48,6 +48,7 @@ cdef extern from '<cmath>' nogil:
 
 cdef extern from '<cmath>' namespace 'std' nogil:
     int fpclassify(...)
+    boolean signbit(...)
 
 
 cdef extern from '<utility>' namespace 'std' nogil:

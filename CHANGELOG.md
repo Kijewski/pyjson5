@@ -1,5 +1,10 @@
 # Changelog
 
+**Unreleased**
+
+* Encode subnormal floats and negative zero correctly. Before, e.g. `5e-324`
+  and `-0.0` were both encoded as `0.0`.
+
 **2.0.1 (2026-05-15)**
 
 * Support Python free-threaded builds (PEP 703). The extension now opts into
