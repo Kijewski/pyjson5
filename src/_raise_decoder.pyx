@@ -2,6 +2,16 @@ cdef AlwaysTrue _raise_decoder(cls, msg, extra=None, result=None) except True:
     raise _DecoderException(cls, msg, extra, result)
 
 
+cdef inline object _format_found(uint32_t found):
+    # ``f'{found:c}'`` raises ``OverflowError: %c arg not in range(0x110000)``
+    # when the offending value is not a Unicode code point, e.g. an out-of-range
+    # eight-digit ``\U`` escape (issue #72) or EOF cast to ``uint32_t``.
+    # Fall back to the plain code point notation in that case.
+    if found <= 0x10ffff:
+        return f'{found:c}'
+    return f'U+{found:04X}'
+
+
 cdef AlwaysTrue _raise_unclosed(const char *what, Py_ssize_t start) except True:
     return _raise_decoder(
         Json5EOF,
@@ -28,7 +38,7 @@ cdef AlwaysTrue _raise_expected_sc(const char *char_a, uint32_t char_b, Py_ssize
     return _raise_decoder(
         Json5IllegalCharacter,
         f'Expected {char_a} or U+{char_b:04x} near {near}, found U+{found:04x}',
-        f'{found:c}',
+        _format_found(found),
     )
 
 
@@ -36,7 +46,7 @@ cdef AlwaysTrue _raise_expected_s(const char *char_a, Py_ssize_t near, uint32_t 
     return _raise_decoder(
         Json5IllegalCharacter,
         f'Expected {char_a} near {near}, found U+{found:04x}',
-        f'{found:c}',
+        _format_found(found),
     )
 
 
@@ -44,7 +54,7 @@ cdef AlwaysTrue _raise_expected_c(uint32_t char_a, Py_ssize_t near, uint32_t fou
     return _raise_decoder(
         Json5IllegalCharacter,
         f'Expected U+{char_a:04x} near {near}, found U+{found:04x}',
-        f'{found:c}',
+        _format_found(found),
     )
 
 
@@ -52,7 +62,7 @@ cdef AlwaysTrue _raise_extra_data(uint32_t found, Py_ssize_t where) except True:
     return _raise_decoder(
         Json5ExtraData,
         f'Extra data U+{found:04X} near {where}',
-        f'{found:c}',
+        _format_found(found),
     )
 
 
@@ -60,7 +70,7 @@ cdef AlwaysTrue _raise_unframed_data(uint32_t found, Py_ssize_t where) except Tr
     return _raise_decoder(
         Json5ExtraData,
         f'Lost unframed data near {where}',
-        f'{found:c}',
+        _format_found(found),
     )
 
 
