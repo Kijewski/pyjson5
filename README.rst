@@ -1,6 +1,22 @@
 PyJSON5
 ==========
 
+.. image:: https://img.shields.io/github/actions/workflow/status/Kijewski/pyjson5/ci.yml?branch=main&style=flat-square&logo=github&logoColor=white&label=ci
+   :target: https://github.com/Kijewski/pyjson5/actions/workflows/ci.yml
+   :alt: GitHub Workflow Status
+
+.. image:: https://img.shields.io/readthedocs/pyjson5?style=flat-square&logo=readthedocs&logoColor=white
+   :target: https://pyjson5.k6i.de/
+   :alt: Documentation
+
+.. image:: https://img.shields.io/pypi/v/pyjson5?style=flat-square&logo=pypi&logoColor=white&label=version
+   :target: https://pypi.org/project/pyjson5/
+   :alt: PyPI
+
+.. image:: https://static.pepy.tech/badge/pyjson5/month
+   :target: https://pyoven.org/package/pyjson5
+   :alt: Monthly downloads
+
 A JSON5 serializer and parser library for Python 3 written in
 `Cython <http://cython.org/>`_.
 
@@ -40,4 +56,4 @@ use the functions ``encode_*()`` and ``decode_*()`` instead.
 Compatibility
 -------------
 
-At least CPython 3.7 or a recent Pypy3 version is needed.
+At least CPython 3.9 or a recent Pypy3 version is needed.

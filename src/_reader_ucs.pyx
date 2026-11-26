@@ -45,11 +45,11 @@ ctypedef fused UCSString:
     UCS4String
 
 
-cdef inline int32_t _reader_ucs_good(ReaderUCSRef self):
+cdef inline int32_t _reader_ucs_good(ReaderUCSRef self) noexcept nogil:
     return self.base.remaining > 0
 
 
-cdef inline uint32_t _reader_ucs_get(ReaderUCSRef self):
+cdef inline uint32_t _reader_ucs_get(ReaderUCSRef self) noexcept nogil:
     cdef int32_t c = self.string[0]
 
     self.string += 1
@@ -59,7 +59,7 @@ cdef inline uint32_t _reader_ucs_get(ReaderUCSRef self):
     return cast_to_uint32(c)
 
 
-cdef inline uint32_t _reader_utf8_get(ReaderUCSRef self):
+cdef inline uint32_t _reader_utf8_get(ReaderUCSRef self) noexcept nogil:
     cdef uint32_t c0 = _reader_ucs_get(self)
     cdef unsigned int n
 

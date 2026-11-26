@@ -24,23 +24,23 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: true
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         key: codeql-analysis--${{ github.event.inputs.os }}--${{ github.event.inputs.python }}--${{ hashFiles('./requirements-dev.txt') }}
         path: ~/.cache/pip
 
     - name: Setup python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ github.event.inputs.python }}
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4.37.4
       with:
         languages: ${{ matrix.language }}
 
@@ -54,4 +54,4 @@ jobs:
       run: make wheel
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4.37.4

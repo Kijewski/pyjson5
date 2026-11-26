@@ -22,7 +22,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = 'PyJSON5'
-copyright = '2018-2025, René Kijewski'
+copyright = '2018-2026, René Kijewski'
 author = 'René Kijewski'
 
 with open('../src/VERSION.inc', 'rt') as f:
@@ -42,7 +42,7 @@ autodoc_default_flags = ['members']
 autosummary_generate = True
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.13', None),
+    'python': ('https://docs.python.org/3.14', None),
 }
 
 graphviz_output_format = 'svg'

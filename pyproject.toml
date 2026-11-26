@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# SPDX-FileCopyrightText: 2018-2025 René Kijewski <pypi.org@k6i.de>
+# SPDX-FileCopyrightText: 2018-2026 René Kijewski <pypi.org@k6i.de>
 
 [build-system]
 requires = [
-    "Cython < 4, >= 0.29",
+    "Cython < 4, >= 3.1",
     "setuptools >= 61",
 ]
 build-backend = "setuptools.build_meta"

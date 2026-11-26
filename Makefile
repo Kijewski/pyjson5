@@ -16,7 +16,7 @@ INCLUDES := \
 FILES := Makefile MANIFEST.in pyjson5.pyx README.rst pyproject.toml ${INCLUDES}
 
 DerivedGeneralCategory.txt: DerivedGeneralCategory.txt.sha
-	curl -s -o $@ https://www.unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt
+	python -c 'import urllib.request; urllib.request.urlretrieve("https://www.unicode.org/Public/17.0.0/ucd/extracted/DerivedGeneralCategory.txt", "DerivedGeneralCategory.txt")'
 	python scripts/sha512sum.py -c $@.sha
 
 src/_unicode_cat_of.hpp: DerivedGeneralCategory.txt scripts/make_unicode_categories.py
@@ -29,7 +29,7 @@ src/_escape_dct.hpp: scripts/make_escape_dct.py
 	python $< $@
 
 pyjson5.cpp: pyjson5.pyx $(wildcard src/*.pyx) $(wildcard src/*.hpp)
-	python -m cython -f -o $@ $<
+	python -m cython --line-directives --cplus --force --output-file $@ $<
 
 prepare: pyjson5.cpp ${FILES}
 
@@ -57,3 +57,4 @@ test: wheel
 	pip install --force dist/pyjson5-*.whl
 	python scripts/run-minefield-test.py
 	python scripts/run-tests.py
+	python scripts/run-threaded-test.py

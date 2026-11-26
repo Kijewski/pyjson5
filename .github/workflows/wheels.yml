@@ -9,45 +9,75 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
-          TARGETS="$(python -m cibuildwheel --archs "x86_64 i686 aarch64 ppc64le s390x armv7l" --print-build-identifiers)"
+          TARGETS="$(python -m cibuildwheel --archs "x86_64 i686 aarch64 ppc64le s390x armv7l riscv64" --print-build-identifiers)"
           echo 'matrix=["'$(echo $TARGETS | sed -e 's/ /","/g')'"]' >> $GITHUB_OUTPUT
         shell: bash
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
 
-  macos-define-matrix:
-    runs-on: macos-13
+  pyodide-define-matrix:
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
+
+      - id: set-matrix
+        run: |
+          TARGETS="$(python -m cibuildwheel --platform pyodide --archs "wasm32" --print-build-identifiers)"
+          echo 'matrix=["'$(echo $TARGETS | sed -e 's/ /","/g')'"]' >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          CIBW_BUILD_FRONTEND: build
+          CIBW_SKIP: 'cp27-* cp36-* pp*'
+          # Pyodide does not currently ship a free-threaded build.
+          CIBW_DEPENDENCY_VERSIONS: pinned
+          CIBW_PLATFORM: pyodide
+
+  macos-define-matrix:
+    runs-on: macos-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Setup python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - run: python -m pip install -U pip wheel setuptools
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -57,25 +87,26 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
 
   windows-define-matrix:
-    runs-on: windows-2022
+    runs-on: windows-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -85,6 +116,7 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
 
@@ -98,29 +130,77 @@ jobs:
         only: ${{ fromJSON(needs.linux-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: all
-  
+
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           key: linux--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
-  
+
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
+
+      - run: make prepare
+
+      - run: python -m cibuildwheel --output-dir wheelhouse --only ${{ matrix.only }}
+        env:
+          CIBW_BUILD_FRONTEND: build
+          CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
+          CIBW_DEPENDENCY_VERSIONS: pinned
+          CIBW_PLATFORM: linux
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.only }}
+          path: ./wheelhouse
+          retention-days: 1
+
+  pyodide-build:
+    runs-on: ubuntu-latest
+
+    needs:
+      - pyodide-define-matrix
+    strategy:
+      matrix:
+        only: ${{ fromJSON(needs.pyodide-define-matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Cache pip
+        uses: actions/cache@v6
+        with:
+          key: pyodide--${{ hashFiles('./requirements-dev.txt') }}
+          path: ~/.cache/pip
+
+      - name: Setup python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - run: python -m pip install -U pip wheel setuptools
+      - run: python -m pip install -Ur requirements-dev.txt
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -130,16 +210,17 @@ jobs:
           CIBW_SKIP: 'cp27-* pp*'
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          ## Cannot run subprocesses on emscripten
+          # CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
           retention-days: 1
 
   macos-build:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     needs:
       - macos-define-matrix
@@ -148,24 +229,24 @@ jobs:
         only: ${{ fromJSON(needs.macos-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
-  
+
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           key: windows--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
-  
+
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -173,18 +254,21 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
           retention-days: 1
 
   windows-build:
-    runs-on: windows-2022
+    runs-on: windows-latest
 
     needs:
       - windows-define-matrix
@@ -193,24 +277,24 @@ jobs:
         only: ${{ fromJSON(needs.windows-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
-  
+
       - name: Cache pip
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           key: windows--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
-  
+
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-  
+
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==2.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -218,11 +302,14 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
+          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
-          CIBW_TEST_COMMAND: python {project}/scripts/run-tests.py
+          CIBW_TEST_COMMAND: >-
+            python {project}/scripts/run-tests.py &&
+            python {project}/scripts/run-threaded-test.py --iterations 500
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.only }}
           path: ./wheelhouse
@@ -232,10 +319,11 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - linux-build
+      - pyodide-build
       - macos-build
       - windows-build
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: ./wheelhouse
       - run: |
@@ -245,7 +333,7 @@ jobs:
           find -type d -delete
         shell: bash
         working-directory: ./wheelhouse
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheelhouse
           path: ./wheelhouse
