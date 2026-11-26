@@ -9,17 +9,17 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -38,17 +38,17 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -67,17 +67,17 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -96,17 +96,17 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - id: set-matrix
         run: |
@@ -130,7 +130,7 @@ jobs:
         only: ${{ fromJSON(needs.linux-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
@@ -140,19 +140,19 @@ jobs:
           platforms: all
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: linux--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -183,24 +183,24 @@ jobs:
         only: ${{ fromJSON(needs.pyodide-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: pyodide--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -229,24 +229,24 @@ jobs:
         only: ${{ fromJSON(needs.macos-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: windows--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 
@@ -277,24 +277,24 @@ jobs:
         only: ${{ fromJSON(needs.windows-define-matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Cache pip
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           key: windows--${{ hashFiles('./requirements-dev.txt') }}
           path: ~/.cache/pip
 
       - name: Setup python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
       - run: python -m pip install -U pip wheel setuptools
       - run: python -m pip install -Ur requirements-dev.txt
-      - run: python -m pip install -U 'cibuildwheel==3.*'
+      - run: python -m pip install -U 'cibuildwheel==4.*
 
       - run: make prepare
 

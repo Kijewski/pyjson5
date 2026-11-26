@@ -56,4 +56,4 @@ use the functions ``encode_*()`` and ``decode_*()`` instead.
 Compatibility
 -------------
 
-At least CPython 3.8 or a recent Pypy3 version is needed.
+At least CPython 3.9 or a recent Pypy3 version is needed.
