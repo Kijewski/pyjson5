@@ -7,8 +7,8 @@ setuptools >= 61
 wheel
 
 # keep synchronous to requirements-readthedocs.txt
-docutils == 0.21.*
+docutils == 0.23.*
 furo
-myst-parser == 4.*
-sphinx == 8.*
+myst-parser == 5.*
+sphinx == 9.*
 sphinx-autodoc-typehints == 3.*
