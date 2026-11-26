@@ -2,7 +2,7 @@
 
 **Unreleased**
 
-* Update for Python 3.15, require at least 3.9 and drop 3.13t wheels (by Edgar Ramírez, [#157](https://github.com/Kijewski/pyjson5/pull/157))
+* Update for Python 3.15, require at least 3.10 and drop 3.13t wheels (by Edgar Ramírez, [#157](https://github.com/Kijewski/pyjson5/pull/157))
 
 **2.0.1 (2026-05-15)**
 
