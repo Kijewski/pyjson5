@@ -9,6 +9,8 @@ wheel
 # keep synchronous to requirements-readthedocs.txt
 docutils == 0.23.*
 furo
-myst-parser == 5.*
-sphinx == 9.*
+myst-parser == 4.* ; python_version < '3.11'
+myst-parser == 5.* ; python_version >= '3.11'
+sphinx == 8.* ; python_version < '3.11'
+sphinx == 9.* ; python_version >= '3.11'
 sphinx-autodoc-typehints == 3.*
