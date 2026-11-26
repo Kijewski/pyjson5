@@ -4,10 +4,10 @@ include Makefile
 include pyjson5.cpp
 include pyjson5.pyx
 include pyproject.toml
-include third-party/fast_double_parser/include/fast_double_parser.h
 include requirements*.txt
 recursive-include docs **
 recursive-include scripts **
 recursive-include src **
 recursive-include third-party/json5-tests **
 recursive-include third-party/JSONTestSuite/test_parsing **
+recursive-include third-party/fast_float/include **

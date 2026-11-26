@@ -13,6 +13,7 @@ from cpython.object cimport PyObject, PyObject_GetIter
 from cpython.type cimport PyType_Check
 from cpython.unicode cimport PyUnicode_Check, PyUnicode_FromEncodedObject, PyUnicode_Format
 from libcpp cimport bool as boolean
+from libcpp.string cimport string
 
 
 cdef extern from '<cstddef>' namespace 'std' nogil:
@@ -124,9 +125,20 @@ cdef extern from 'src/_decoder_recursive_select.hpp' namespace 'JSON5EncoderCpp'
 
     DrsKind drs_lookup[128]
 
+cdef extern from 'src/_fast_float_compat.hpp' namespace 'chars_format' nogil:
+    cdef cppclass chars_format:
+        pass
+    cdef const chars_format fmt_json_or_infnan
 
-cdef extern from 'third-party/fast_double_parser/include/fast_double_parser.h' namespace 'fast_double_parser' nogil:
-    const char *parse_number(const char *p, double *outDouble)
+cdef extern from 'src/_fast_float_compat.hpp' namespace 'check_floats' nogil:
+    cdef boolean has_invalid_exponent(string &s)
+
+cdef extern from 'third-party/fast_float/include/fast_float/fast_float.h' namespace 'fast_float' nogil:
+    ctypedef struct from_chars_result:
+        char *ptr
+        int ec
+
+    cdef from_chars_result from_chars(char *first, char *last, double &value, chars_format fmt);
 
 
 cdef extern from 'src/dragonbox.cc' namespace 'dragonbox' nogil:

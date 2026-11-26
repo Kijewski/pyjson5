@@ -4,6 +4,6 @@
 [submodule "third-party/JSONTestSuite"]
 	path = third-party/JSONTestSuite
 	url = https://github.com/nst/JSONTestSuite.git
-[submodule "third-party/fast_double_parser"]
-	path = third-party/fast_double_parser
-	url = https://github.com/lemire/fast_double_parser.git
+[submodule "third-party/fast_float"]
+	path = third-party/fast_float
+	url = https://github.com/fastfloat/fast_float
