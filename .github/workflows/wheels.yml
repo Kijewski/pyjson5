@@ -29,7 +29,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
 
@@ -87,7 +86,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
 
@@ -116,7 +114,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* cp36-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
 
@@ -160,7 +157,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: linux
           CIBW_TEST_COMMAND: >-
@@ -254,7 +250,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: macos
           CIBW_TEST_COMMAND: >-
@@ -302,7 +297,6 @@ jobs:
         env:
           CIBW_BUILD_FRONTEND: build
           CIBW_SKIP: 'cp27-* pp*'
-          CIBW_ENABLE: cpython-freethreading
           CIBW_DEPENDENCY_VERSIONS: pinned
           CIBW_PLATFORM: windows
           CIBW_TEST_COMMAND: >-
