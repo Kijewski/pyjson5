@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 
 extra_compile_args = [
     "-std=c++11",
@@ -20,6 +20,6 @@ setup(
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_compile_args,
             language="c++",
-        )
+        ),
     ],
 )
