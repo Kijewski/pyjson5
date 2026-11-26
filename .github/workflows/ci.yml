@@ -22,6 +22,8 @@ jobs:
         include:
           - os: ubuntu-latest
             python: '3.16'
+          - os: ubuntu-latest
+            python: pypy3.12
           - os: ubuntu-24.04
             python: '3.9'
 
